@@ -1,6 +1,6 @@
 import * as Joi from 'joi';
 
-export const SignupSchema = Joi.object({
+export const SignupValidation = Joi.object({
   firstName: Joi.string().required(),
   lastName: Joi.string().required(),
   password: Joi.string().required(),

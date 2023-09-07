@@ -28,6 +28,6 @@ model User {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   isPhoneVerified   Boolean @default(false)
-  otp               Int
-  otpExpireData     DateTime
+  otp               Int?
+  otpExpireData     DateTime?
 }

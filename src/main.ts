@@ -16,8 +16,8 @@ async function bootstrap() {
   await app.listen(8000);
 
   process.on('beforeExit', async () => {
-    await prismaService.$disconnect(); // Disconnect from the database or perform cleanup
-    await app.close(); // Close the NestJS application
+    await prismaService.$disconnect();
+    await app.close();
   });
 }
 bootstrap();
