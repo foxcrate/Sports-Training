@@ -1,38 +1,46 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateUserDto } from 'src/user/dtos/create.dto';
+import { SignupUserDto } from 'src/user/dtos/signup.dto';
 import { BadRequestException } from 'src/exceptions/badRequest.exception';
-import { hashPassword } from '../utils/passwordHasher.util';
-import { ReturnUserSerializer } from './serializers/returnUser.serializer';
 
 @Injectable()
 export class UserService {
-  constructor(
-    private prisma: PrismaService, // private jwt: JwtService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
-  async signup(signupData: CreateUserDto) {
-    let repeatedAccount = await this.prisma.user.findFirst({
+  async findByMobile(mobileNumber: string): Promise<any> {
+    let foundedAccount = await this.prisma.user.findFirst({
       where: {
-        OR: [
-          { email: signupData.email },
-          { mobileNumber: signupData.mobileNumber },
-        ],
+        mobileNumber: mobileNumber,
       },
     });
 
+    if (!foundedAccount) {
+      throw new BadRequestException('MOBILE_NUMBER_NOT_FOUND');
+    }
+
+    return foundedAccount;
+  }
+
+  async findRepeated(email, mobileNumber): Promise<Boolean> {
+    let repeatedAccount = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: email }, { mobileNumber: mobileNumber }],
+      },
+    });
     if (repeatedAccount) {
-      if (repeatedAccount.email == signupData.email) {
+      if (repeatedAccount.email == email) {
         throw new BadRequestException('REPEATED_EMAIL');
       }
-      if (repeatedAccount.mobileNumber == signupData.mobileNumber) {
+      if (repeatedAccount.mobileNumber == mobileNumber) {
         throw new BadRequestException('REPEATED_MOBILE_NUMBER');
       }
     }
-    signupData.password = await hashPassword(signupData.password);
+    return false;
+  }
 
+  async create(signupData: SignupUserDto): Promise<any> {
     const newUser = await this.prisma.user.create({ data: signupData });
-    return new ReturnUserSerializer().serialize(newUser);
+    return newUser;
   }
 }

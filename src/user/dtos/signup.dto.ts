@@ -4,7 +4,7 @@ enum Gender {
   Unknown = 'unknown',
 }
 
-export class CreateUserDto {
+export class SignupUserDto {
   firstName: string;
   lastName: string;
   password: string;

@@ -1,5 +1,4 @@
 import { Catch, ArgumentsHost, HttpException } from '@nestjs/common';
-import savedErrors from '../utils/errors';
 
 @Catch(HttpException)
 export class GeneralFilter {

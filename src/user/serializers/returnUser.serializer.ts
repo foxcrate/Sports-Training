@@ -17,7 +17,7 @@ export class ReturnUserSerializer {
       return usersMapped;
     } else {
       let user = users;
-      return {
+      user = {
         id: user.id,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -26,6 +26,7 @@ export class ReturnUserSerializer {
         gender: user.gender,
         birthday: user.birthday,
       };
+      return user;
     }
   }
 }
