@@ -12,7 +12,7 @@ export class BadRequestFilter {
     let exceptionObject = exception.getResponse();
 
     let errorCode = '';
-    if (exceptionObject['message']) {
+    if (exceptionObject['code']) {
       errorCode = exceptionObject['code'];
     } else {
       errorCode = exceptionObject.toString();
@@ -20,14 +20,12 @@ export class BadRequestFilter {
 
     if (errorCode == 'VALIDATION_ERROR') {
       response.status(status).json({
-        // statusCode: status,
         success: false,
         error: errorCode,
         message: exceptionObject['message'],
       });
     } else {
       response.status(status).json({
-        // statusCode: status,
         success: false,
         error: errorCode,
         message: savedErrors.get('en').get(errorCode),
