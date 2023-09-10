@@ -2,6 +2,7 @@ import { ReturnUserDto } from '../dtos/return.dto';
 
 export class ReturnUserSerializer {
   serialize(users: any | any[]): ReturnUserDto | ReturnUserDto[] {
+    //If array of users passed
     if (Array.isArray(users)) {
       let usersMapped = users.map((user) => {
         return {
@@ -15,6 +16,7 @@ export class ReturnUserSerializer {
         };
       });
       return usersMapped;
+      //If one user passed
     } else {
       let user = users;
       user = {

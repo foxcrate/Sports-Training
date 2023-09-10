@@ -28,6 +28,7 @@ export class BadRequestFilter {
       response.status(status).json({
         success: false,
         error: errorCode,
+        //getting the error by its code from errors file
         message: savedErrors.get('en').get(errorCode),
       });
     }

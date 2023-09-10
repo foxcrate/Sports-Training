@@ -23,6 +23,7 @@ export class AuthGuard implements CanActivate {
       throw new BadRequestException('JWT_ERROR');
     }
 
+    //There are two types of token normal or refresh
     if (payload.tokenType !== 'normal') {
       throw new BadRequestException('WRONG_JWT_ERROR');
     }
