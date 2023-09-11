@@ -1,8 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-
+import { HttpException, HttpStatus, Injectable, Request } from '@nestjs/common';
+import { Request as ExressRequest } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
 import { BadRequestException } from 'src/exceptions/badRequest.exception';
+import { ReturnUserSerializer } from './serializers/returnUser.serializer';
 
 @Injectable()
 export class UserService {
@@ -42,5 +43,19 @@ export class UserService {
   async create(signupData: SignupUserDto): Promise<any> {
     const newUser = await this.prisma.user.create({ data: signupData });
     return newUser;
+  }
+
+  async verifyPhone(req) {
+    // console.log('req:', req);
+    let user = await this.prisma.user.update({
+      where: {
+        id: req.id,
+      },
+      data: {
+        isPhoneVerified: true,
+      },
+    });
+
+    return new ReturnUserSerializer().serialize(user);
   }
 }
