@@ -1,6 +1,6 @@
 import * as Joi from 'joi';
 
-export const UserSigninValidation = Joi.object({
+export const ChildActivateAccountValidation = Joi.object({
   mobileNumber: Joi.string().required(),
   password: Joi.string().required(),
 });

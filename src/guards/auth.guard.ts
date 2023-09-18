@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { BadRequestException } from 'src/exceptions/badRequest.exception';
+import { BadRequestException } from 'src/exceptions/bad_request.exception';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -25,7 +25,7 @@ export class AuthGuard implements CanActivate {
 
     //There are two types of token normal or refresh
     if (payload.tokenType !== 'normal') {
-      throw new BadRequestException('WRONG_JWT_ERROR');
+      throw new BadRequestException('JWT_ERROR');
     }
 
     request['authType'] = payload.authType;
@@ -41,10 +41,7 @@ export class AuthGuard implements CanActivate {
 
   private verifyToken(token) {
     try {
-      const decoded = this.jwtService.verify(
-        token,
-        this.config.get('JWT_SECRET'),
-      );
+      const decoded = this.jwtService.verify(token, this.config.get('JWT_SECRET'));
       return decoded;
     } catch (error) {
       return false;

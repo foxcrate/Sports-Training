@@ -1,7 +1,11 @@
-import { Catch, ArgumentsHost, HttpException } from '@nestjs/common';
+import { Catch, ArgumentsHost, HttpException, ExceptionFilter } from '@nestjs/common';
 
-@Catch(HttpException)
-export class GeneralFilter {
+@Catch(
+  HttpException,
+  // Prisma?.PrismaClientKnownRequestError,
+  // Prisma?.NotFoundError,
+)
+export class GeneralFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
@@ -10,17 +14,23 @@ export class GeneralFilter {
 
     if (status >= 500) {
       response.status(status).json({
-        // statusCode: status,
         success: false,
-        error: 'SERVER_ERROR',
-        message: message,
+        statusCode: status,
+        data: null,
+        error: {
+          type: 'SERVER_ERROR',
+          message: message,
+        },
       });
     } else if (status >= 400 || status < 500) {
       response.status(status).json({
-        // statusCode: status,
         success: false,
-        error: 'REQUEST_ERROR',
-        message: message,
+        statusCode: status,
+        data: null,
+        error: {
+          type: 'REQUEST_ERROR',
+          message: message,
+        },
       });
     }
   }

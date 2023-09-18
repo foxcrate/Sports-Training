@@ -1,7 +1,6 @@
 enum Gender {
   Female = 'female',
   Male = 'male',
-  Unknown = 'unknown',
 }
 
 export class ReturnUserDto {

@@ -3,12 +3,13 @@ enum Gender {
   Male = 'male',
 }
 
-export class SignupUserDto {
+export class ReturnChildDto {
+  id: number;
   firstName: string;
   lastName: string;
-  password: string;
   email: string;
   mobileNumber: string;
   gender: Gender;
   birthday: Date;
+  userId: number;
 }

@@ -3,7 +3,7 @@ enum Gender {
   Male = 'male',
 }
 
-export class SignupUserDto {
+export class SignupChildDto {
   firstName: string;
   lastName: string;
   password: string;
@@ -11,4 +11,5 @@ export class SignupUserDto {
   mobileNumber: string;
   gender: Gender;
   birthday: Date;
+  userId: number;
 }

@@ -6,11 +6,14 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { GeneralFilter } from './filters/general.filter';
-import { BadRequestFilter } from './filters/badRequest.filter';
-import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
+import { BadRequestFilter } from './filters/bad_request.filter';
+import { APP_FILTER, APP_INTERCEPTOR, HttpAdapterHost } from '@nestjs/core';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { AuthService } from './auth/auth.service';
 import { AuthModule } from './auth/auth.module';
+import { ChildService } from './child/child.service';
+import { ChildModule } from './child/child.module';
+import { PrismaErrorsFilter } from './filters/prisma_errors.filter';
 
 @Module({
   imports: [
@@ -19,6 +22,7 @@ import { AuthModule } from './auth/auth.module';
     JwtModule,
     UserModule,
     AuthModule,
+    ChildModule,
   ],
   controllers: [AppController],
   providers: [
@@ -29,6 +33,10 @@ import { AuthModule } from './auth/auth.module';
     },
     {
       provide: APP_FILTER,
+      useClass: PrismaErrorsFilter,
+    },
+    {
+      provide: APP_FILTER,
       useClass: BadRequestFilter,
     },
     {
@@ -36,6 +44,7 @@ import { AuthModule } from './auth/auth.module';
       useClass: TransformInterceptor,
     },
     AuthService,
+    ChildService,
   ],
 })
 export class AppModule {}

@@ -1,6 +1,6 @@
 import { Catch, ArgumentsHost } from '@nestjs/common';
-import { BadRequestException } from 'src/exceptions/badRequest.exception';
-import savedErrors from '../utils/errors';
+import { BadRequestException } from 'src/exceptions/bad_request.exception';
+import savedErrors from '../error_codes';
 
 @Catch(BadRequestException)
 export class BadRequestFilter {
@@ -21,15 +21,22 @@ export class BadRequestFilter {
     if (errorCode == 'VALIDATION_ERROR') {
       response.status(status).json({
         success: false,
-        error: errorCode,
-        message: exceptionObject['message'],
+        statusCode: status,
+        data: null,
+        error: {
+          type: errorCode,
+          message: exceptionObject['message'],
+        },
       });
     } else {
       response.status(status).json({
         success: false,
-        error: errorCode,
-        //getting the error by its code from errors file
-        message: savedErrors.get('en').get(errorCode),
+        statusCode: status,
+        data: null,
+        error: {
+          type: errorCode,
+          message: savedErrors.get('en').get(errorCode),
+        },
       });
     }
   }

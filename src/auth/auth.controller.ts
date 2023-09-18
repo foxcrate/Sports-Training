@@ -4,16 +4,25 @@ import {
   Get,
   Post,
   UseGuards,
+  Request,
   UsePipes,
   Version,
+  Query,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { JoiValidation } from 'src/pipes/joiValidaiton.pipe';
+import { JoiValidation } from 'src/pipes/joi_validaiton.pipe';
 import { SignupValidation } from 'src/user/validations/signup.validation';
-import { SigninValidation } from 'src/user/validations/signin.validaiton';
+import { UserSigninValidation } from 'src/user/validations/signin.validaiton';
+import { ChildSigninValidation } from 'src/child/validaitons/signin.validation';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
 import { SigninUserDto } from 'src/user/dtos/signin.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
+import { Request as ExpressRequest } from 'express';
+import { Roles } from 'src/decorators/roles.decorator';
+import { RoleGuard } from 'src/guards/role.guard';
+import { SigninChildDto } from 'src/child/dtos/signin.dto';
+import { GoogleReturnDataSerializer } from './serializers/googleReturnData.serializer';
+import { FacebookReturnDataSerializer } from './serializers/facebookReturnData.serializer';
 
 @Controller('auth')
 export class AuthController {
@@ -28,21 +37,67 @@ export class AuthController {
 
   @Version('1')
   @Post('/user/signin')
-  @UsePipes(new JoiValidation(SigninValidation))
-  async signin1(@Body() signinData: SigninUserDto) {
+  @UsePipes(new JoiValidation(UserSigninValidation))
+  async userSignin1(@Body() signinData: SigninUserDto) {
     return this.authService.userSignin(signinData);
   }
 
   @Version('1')
-  @UseGuards(AuthGuard)
-  @Get('testJWT')
-  test() {
-    return 'Arrived';
+  @Post('/child/signin')
+  @UsePipes(new JoiValidation(ChildSigninValidation))
+  async childSignin(@Body() signinData: SigninChildDto) {
+    return this.authService.childSignin(signinData);
   }
 
   @Version('1')
   @Get('refresh_token')
-  refreshToken(@Body('refreshToken') refreshToken) {
-    return this.authService.refreshToken(refreshToken);
+  refreshToken(@Body('refreshToken') refreshToken, @Request() req: ExpressRequest) {
+    return this.authService.refreshToken(refreshToken, req['authType']);
+  }
+
+  @Version('1')
+  @Roles('child')
+  @UseGuards(AuthGuard, RoleGuard)
+  @Get('user/testJWT')
+  test() {
+    return 'User Arrived';
+  }
+
+  @Get('google/redirect')
+  @Version('1')
+  async googleRedirect(@Query() queryParams: any) {
+    // console.log('queryParams:', queryParams);
+
+    let returnGoogleData = await this.authService.googleGetAccessTokenFromCode(
+      queryParams.code,
+    );
+    // console.log('accessToken:', accessToken);
+
+    let userData = await this.authService.getGoogleUserData(returnGoogleData);
+
+    // console.log('userData:', userData);
+
+    return GoogleReturnDataSerializer.serialize(userData);
+
+    // return googleDataSerializer(userData);
+  }
+
+  @Get('facebook/redirect')
+  @Version('1')
+  async facebookRedirect(@Query() queryParams: any) {
+    // console.log('queryParams:', queryParams);
+
+    let accessToken = await this.authService.facebookGetAccessTokenFromCode(
+      queryParams.code,
+    );
+
+    // console.log('accessToken:', accessToken);
+
+    let userData = await this.authService.getFacebookUserData(accessToken);
+    // console.log('userData:', userData);
+
+    return FacebookReturnDataSerializer.serialize(userData);
+
+    // return facebookDataSerializer(userData);
   }
 }

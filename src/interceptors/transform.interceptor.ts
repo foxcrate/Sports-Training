@@ -11,6 +11,17 @@ import { map } from 'rxjs/operators';
 export class TransformInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     //Generalization of response
-    return next.handle().pipe(map((data) => ({ success: true, data: data })));
+    let statusCode = context.getArgs()[1].statusCode;
+
+    return next
+      .handle()
+      .pipe(
+        map((data) => ({
+          success: true,
+          statusCode: statusCode,
+          data: data,
+          error: null,
+        })),
+      );
   }
 }
