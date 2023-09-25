@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 
-export class BadRequestException extends HttpException {
+export class NewBadRequestException extends HttpException {
   constructor(
     /*
     -In case of Joi validation error, first param will be an object {code:VALIDATION_ERROR,message:[]}

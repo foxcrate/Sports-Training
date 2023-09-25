@@ -14,6 +14,10 @@ import { AuthModule } from './auth/auth.module';
 import { ChildService } from './child/child.service';
 import { ChildModule } from './child/child.module';
 import { PrismaErrorsFilter } from './filters/prisma_errors.filter';
+import { PlayerProfileModule } from './player_profile/player_profile.module';
+import { RegionModule } from './region/region.module';
+import { SportModule } from './sport/sport.module';
+import { ChildProfileModule } from './child_profile/child_profile.module';
 
 @Module({
   imports: [
@@ -23,6 +27,10 @@ import { PrismaErrorsFilter } from './filters/prisma_errors.filter';
     UserModule,
     AuthModule,
     ChildModule,
+    PlayerProfileModule,
+    RegionModule,
+    SportModule,
+    ChildProfileModule,
   ],
   controllers: [AppController],
   providers: [

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { SigninUserDto } from 'src/user/dtos/signin.dto';
 import { JwtService } from '@nestjs/jwt';
-import { BadRequestException } from 'src/exceptions/bad_request.exception';
+import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
 import { ReturnUserSerializer } from 'src/user/serializers/return_user.serializer';
 import { PasswordUtility } from '../utils/password.util';
@@ -44,7 +44,7 @@ export class AuthService {
     );
 
     if (!validPassword) {
-      throw new BadRequestException('WRONG_CREDENTIALS');
+      throw new NewBadRequestException('WRONG_CREDENTIALS');
     }
 
     return this.generateNormalAndRefreshJWTToken('user', user.id);
@@ -59,7 +59,7 @@ export class AuthService {
     );
 
     if (!validPassword) {
-      throw new BadRequestException('WRONG_CREDENTIALS');
+      throw new NewBadRequestException('WRONG_CREDENTIALS');
     }
 
     return this.generateNormalAndRefreshJWTToken('child', child.id);
@@ -68,10 +68,10 @@ export class AuthService {
   refreshToken(refreshToken: string, authType: string) {
     let payload = this.verifyToken(refreshToken);
     if (payload === false) {
-      throw new BadRequestException('JWT_ERROR');
+      throw new NewBadRequestException('JWT_ERROR');
     }
     if (payload.tokenType !== 'refresh') {
-      throw new BadRequestException('JWT_ERROR');
+      throw new NewBadRequestException('JWT_ERROR');
     }
 
     let tokenPayload = {

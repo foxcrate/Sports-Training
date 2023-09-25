@@ -1,6 +1,6 @@
 import { PipeTransform, Injectable, ArgumentMetadata } from '@nestjs/common';
 import { ObjectSchema } from 'joi';
-import { BadRequestException } from 'src/exceptions/bad_request.exception';
+import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
 
 @Injectable()
 export class JoiValidation implements PipeTransform {
@@ -18,7 +18,7 @@ export class JoiValidation implements PipeTransform {
           message: details.message.replace(/"/g, ''),
         };
       });
-      throw new BadRequestException({
+      throw new NewBadRequestException({
         code: 'VALIDATION_ERROR',
         message: errorMessages,
       });

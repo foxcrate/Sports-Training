@@ -1,10 +1,10 @@
 import { Catch, ArgumentsHost } from '@nestjs/common';
-import { BadRequestException } from 'src/exceptions/bad_request.exception';
+import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
 import savedErrors from '../error_codes';
 
-@Catch(BadRequestException)
+@Catch(NewBadRequestException)
 export class BadRequestFilter {
-  catch(exception: BadRequestException, host: ArgumentsHost) {
+  catch(exception: NewBadRequestException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
     const status = exception.getStatus();

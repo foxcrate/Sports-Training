@@ -1,6 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { BadRequestException } from 'src/exceptions/bad_request.exception';
+import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
@@ -22,7 +22,7 @@ export class RoleGuard implements CanActivate {
     // console.log('authType:', authType);
 
     if (!accepted) {
-      throw new BadRequestException('UNAUTHORIZED');
+      throw new NewBadRequestException('UNAUTHORIZED');
     }
 
     return true;

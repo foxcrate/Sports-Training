@@ -12,8 +12,8 @@ export class ChildController {
   constructor(private childService: ChildService) {}
 
   @Version('1')
-  @Roles('child')
-  @UseGuards(AuthGuard, RoleGuard)
+  // @Roles('child')
+  // @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(ChildActivateAccountValidation))
   @Post('activate_account')
   async activateAccount1(@Request() req: ExpressRequest) {
