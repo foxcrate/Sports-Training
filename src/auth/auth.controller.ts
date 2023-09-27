@@ -39,6 +39,7 @@ export class AuthController {
   @Post('/user/signin')
   @UsePipes(new JoiValidation(UserSigninValidation))
   async userSignin1(@Body() signinData: SigninUserDto) {
+    console.log('-- user signin route --');
     return this.authService.userSignin(signinData);
   }
 
@@ -60,6 +61,7 @@ export class AuthController {
   @UseGuards(AuthGuard, RoleGuard)
   @Get('user/testJWT')
   test() {
+    console.log('-- test jwt route --');
     return 'User Arrived';
   }
 
