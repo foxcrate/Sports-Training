@@ -15,6 +15,32 @@ export class UserService {
     private childService: ChildService,
   ) {}
 
+  async update(reqBody, userId) {
+    let user = await this.getUserById(userId);
+
+    //update
+    await this.prisma.$queryRaw`
+      UPDATE User
+      SET
+      firstName = ${reqBody.firstName},
+      lastName = ${reqBody.lastName},
+      profileImage = ${reqBody.profileImage},
+      gender = ${reqBody.gender},
+      birthday = ${reqBody.birthday},
+      updatedAt = ${new Date()}
+      WHERE
+      id = ${user.id};
+    `;
+
+    let updatedUser = await this.prisma.$queryRaw`
+      SELECT *
+      FROM User
+      ORDER BY updatedAt DESC
+      LIMIT 1`;
+
+    return new ReturnUserSerializer().serialize(updatedUser[0]);
+  }
+
   async createChild(reqBody, userId) {
     let repeatedChild = await this.childService.findRepeated(
       reqBody.email,
@@ -25,6 +51,7 @@ export class UserService {
       INSERT INTO Child
         (firstName,
         lastName,
+        profileImage,
         email,
         mobileNumber,
         gender,
@@ -34,6 +61,7 @@ export class UserService {
         VALUES
       (${reqBody.firstName},
       ${reqBody.lastName},
+      ${reqBody.profileImage},
       ${reqBody.email},
       ${reqBody.mobileNumber},
       ${reqBody.gender},
@@ -77,6 +105,7 @@ export class UserService {
       SET
       firstName = ${reqBody.firstName},
       lastName = ${reqBody.lastName},
+      profileImage = ${reqBody.profileImage},
       gender = ${reqBody.gender},
       birthday = ${reqBody.birthday},
       updatedAt = ${new Date()}

@@ -1,6 +1,8 @@
 import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 
 export class PasswordUtility {
+  constructor(private config: ConfigService) {}
   static async verifyPassword(password, hash): Promise<boolean> {
     const isMatch = await bcrypt.compare(password, hash);
     return isMatch;

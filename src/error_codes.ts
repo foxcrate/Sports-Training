@@ -27,6 +27,7 @@ enErrors
   .set('ACCOUNT_ALREADY_ACTIVATED', 'The account is already activated')
   .set('UNAUTHENTICATED', 'You are not authenticated')
   .set('UNAUTHORIZED', 'You are not authorized')
+  .set('UPLOAD_IMAGE_ERROR', 'Error in uploading image')
   .set('SERVER_ERROR', 'Server problem, it will be fixed soon');
 
 arErrors
@@ -50,6 +51,7 @@ arErrors
   .set('WRONG_JWT_ERROR', 'wrong bearer token')
   .set('ACCOUNT_ALREADY_ACTIVATED', 'تم تفعيل الحساب بالفعل')
   .set('UNAUTHORIZED', 'أنت لا تملك الصلاحيات الكافية')
+  .set('UPLOAD_IMAGE_ERROR', 'خطأ في رفع الصورة')
   .set('SERVER_ERROR', 'حدث مشكلة في السيرفر، سوف تحل قريبا');
 
 export default errors;

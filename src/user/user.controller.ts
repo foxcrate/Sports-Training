@@ -22,10 +22,20 @@ import * as Joi from 'joi';
 import { GetOneChildValidation } from './validations/get_one_child.validation';
 import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
 import { UpdateChildValidation } from './validations/update_child.validation';
+import { UpdateUserValidation } from './validations/update-user.validation';
 
 @Controller('user')
 export class UserController {
   constructor(private userService: UserService) {}
+
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  @UsePipes(new JoiValidation(UpdateUserValidation))
+  @Put()
+  async update1(@Body() reqBody, @Request() req: ExpressRequest) {
+    return this.userService.update(reqBody, req['id']);
+  }
 
   @Version('1')
   @Roles('user')
