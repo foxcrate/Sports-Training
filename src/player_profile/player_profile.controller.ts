@@ -56,4 +56,12 @@ export class PlayerProfileController {
   async delete1(@Request() req: ExpressRequest) {
     return this.playerProfileService.delete(req['id']);
   }
+
+  // @Version('1')
+  // @Roles('user')
+  // @UseGuards(AuthGuard, RoleGuard)
+  @Get('testHesham')
+  async testHesham(@Request() req: ExpressRequest) {
+    return this.playerProfileService.testHesham();
+  }
 }

@@ -11,6 +11,7 @@ import { SigninChildDto } from 'src/child/dtos/signin.dto';
 import { ChildService } from 'src/child/child.service';
 
 import axios from 'axios';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +20,7 @@ export class AuthService {
     private childService: ChildService,
     private jwtService: JwtService,
     private config: ConfigService,
+    private prisma: PrismaService,
   ) {}
 
   async userSignup(signupData: SignupUserDto) {
@@ -46,6 +48,8 @@ export class AuthService {
     if (!validPassword) {
       throw new NewBadRequestException('WRONG_CREDENTIALS');
     }
+
+    // return user;
 
     return this.generateNormalAndRefreshJWTToken('user', user.id);
   }

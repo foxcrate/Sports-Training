@@ -142,19 +142,21 @@ export class PlayerProfileService {
   }
 
   private async getLastCreated(): Promise<any> {
-    return await this.prisma.$queryRaw`
+    let playerProfile = await this.prisma.$queryRaw`
     SELECT *
     FROM PlayerProfile
     ORDER BY createdAt DESC
     LIMIT 1`;
+    return playerProfile[0];
   }
 
   private async getLastUpdated(): Promise<any> {
-    return await this.prisma.$queryRaw`
+    let playerProfile = await this.prisma.$queryRaw`
     SELECT *
     FROM PlayerProfile
     ORDER BY updatedAt DESC
     LIMIT 1`;
+    return playerProfile[0];
   }
 
   private async getByUserId(userId): Promise<any> {
@@ -164,12 +166,7 @@ export class PlayerProfileService {
       WHERE userId = ${userId}
       LIMIT 1
     `;
-    // if (playerProfile[0]) {
     return playerProfile[0];
-    // } else {
-    //   console.log('exception --');
-    //   throw new NewBadRequestException('RECORD_NOT_FOUND');
-    // }
   }
 
   private async deletePastPlayerSports(playerProfileId: number): Promise<any> {
@@ -178,5 +175,15 @@ export class PlayerProfileService {
       FROM PlayerProfileSports
       WHERE playerProfileId = ${playerProfileId}
     `;
+  }
+
+  async testHesham(): Promise<any> {
+    console.log('-- test Hesham');
+    let x = await this.prisma.$queryRaw`
+      SELECT *
+      FROM PlayerProfile;
+    `;
+    // return x;
+    return new ReturnPlayerProfileSerializer().serialize(x);
   }
 }

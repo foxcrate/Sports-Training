@@ -129,44 +129,67 @@ export class UserService {
   }
 
   async create(signupData: SignupUserDto): Promise<any> {
-    const newUser = await this.prisma.user.create({
-      data: signupData,
-    });
-    return newUser;
+    await this.prisma.$queryRaw`
+    INSERT INTO User
+    (
+      firstName,
+      lastName,
+      profileImage,
+      password,
+      email,
+      mobileNumber,
+      gender,
+      birthday,
+      updatedAt
+    )
+    VALUES
+    (
+      ${signupData.firstName},
+      ${signupData.lastName},
+      ${signupData.profileImage},
+      ${signupData.password},
+      ${signupData.email},
+      ${signupData.mobileNumber},
+      ${signupData.gender},
+      ${new Date(signupData.birthday)},
+      ${new Date()}
+    )`;
+
+    let newUser = await this.getLastCreated();
+
+    return newUser[0];
   }
 
   async findByMobile(mobileNumber: string): Promise<any> {
-    let foundedAccount = await this.prisma.user.findFirst({
-      where: {
-        mobileNumber: mobileNumber,
-      },
-    });
+    let foundedAccount = await this.prisma.$queryRaw`
+    SELECT *
+    FROM User
+    WHERE mobileNumber = ${mobileNumber}
+    LIMIT 1
+    `;
 
-    if (!foundedAccount) {
+    if (!foundedAccount[0]) {
       throw new NewBadRequestException('WRONG_CREDENTIALS');
     }
-
-    return foundedAccount;
+    return foundedAccount[0];
   }
 
   async findRepeated(email, mobileNumber): Promise<Boolean> {
-    let repeatedAccount = await this.prisma.user.findFirst({
-      where: {
-        OR: [
-          {
-            email: email,
-          },
-          {
-            mobileNumber: mobileNumber,
-          },
-        ],
-      },
-    });
-    if (repeatedAccount) {
-      if (repeatedAccount.email == email) {
+    //Chick existed email or phone number
+    let repeatedUserProfile = await this.prisma.$queryRaw`
+    SELECT *
+    FROM User
+    WHERE email = ${email}
+    OR
+    mobileNumber = ${mobileNumber}
+    LIMIT 1
+    `;
+
+    if (repeatedUserProfile[0]) {
+      if (repeatedUserProfile[0].email == email) {
         throw new NewBadRequestException('REPEATED_EMAIL');
       }
-      if (repeatedAccount.mobileNumber == mobileNumber) {
+      if (repeatedUserProfile[0].mobileNumber == mobileNumber) {
         throw new NewBadRequestException('REPEATED_MOBILE_NUMBER');
       }
     }
@@ -226,6 +249,14 @@ export class UserService {
     // }
   }
 
+  private async getLastCreated(): Promise<any> {
+    return await this.prisma.$queryRaw`
+    SELECT *
+    FROM User
+    ORDER BY createdAt DESC
+    LIMIT 1`;
+  }
+
   private async authorizeResource(userId: number, childId: number): Promise<any> {
     //get childProfile
     let child = await this.getChildById(childId);
@@ -248,63 +279,5 @@ export class UserService {
       throw new NewBadRequestException('UNAUTHORIZED');
     }
     return child;
-  }
-
-  async test1() {
-    let x = await this.prisma.$queryRaw`
-    SELECT
-      u.firstName As FirstName,
-      u.mobileNumber As MobileNumber,
-      pp.userId AS PlayerProfileId,
-      r.enName AS RegionName
-    FROM
-      PlayerProfile pp
-    JOIN
-      Region r
-    ON
-      pp.regionId = r.id
-    JOIN
-      User u
-    ON
-      u.id = pp.userId
-    `;
-    return x;
-  }
-  async test2() {
-    let x = await this.prisma.$queryRaw`
-    SELECT
-      r.enName,
-      COUNT(u.id) AS user_count
-    FROM
-      Region r
-    JOIN
-      PlayerProfile p ON r.id = p.regionId
-    JOIN
-      User u ON p.userId = u.id
-    GROUP BY
-      r.enName;
-    `;
-
-    console.log('x:', x);
-
-    x[0]['user_count'] = Number(x[0]['user_count']);
-    x[1]['user_count'] = Number(x[1]['user_count']);
-
-    return x;
-  }
-
-  async test() {
-    let x = await this.prisma.sport.findMany({
-      where: {
-        playerProfiles: {
-          some: {
-            playerProfile: {
-              level: 'beginner',
-            },
-          },
-        },
-      },
-    });
-    return x;
   }
 }

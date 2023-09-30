@@ -10,22 +10,23 @@ export class ChildService {
   constructor(private prisma: PrismaService) {}
 
   async findByMobile(mobileNumber: string): Promise<any> {
-    let foundedAccount = await this.prisma.child.findFirst({
-      where: {
-        mobileNumber: mobileNumber,
-      },
-    });
+    let foundedAccount = await this.prisma.$queryRaw`
+    SELECT *
+    FROM Child
+    WHERE mobileNumber = ${mobileNumber}
+    LIMIT 1
+    `;
 
-    if (!foundedAccount) {
+    if (!foundedAccount[0]) {
       throw new NewBadRequestException('WRONG_CREDENTIALS');
     }
-
-    return foundedAccount;
+    return foundedAccount[0];
   }
 
   async findRepeated(email, mobileNumber): Promise<Boolean> {
     //Chick existed email or phone number
-    let repeatedChild = await this.prisma.$queryRaw`SELECT *
+    let repeatedChild = await this.prisma.$queryRaw`
+    SELECT *
     FROM Child
     WHERE email = ${email} OR mobileNumber = ${mobileNumber}
     LIMIT 1
@@ -40,11 +41,6 @@ export class ChildService {
       }
     }
     return false;
-  }
-
-  async create(signupData: SignupChildDto): Promise<any> {
-    const newChild = await this.prisma.child.create({ data: signupData });
-    return newChild;
   }
 
   async findByMobileNumber(mobileNumber: string) {

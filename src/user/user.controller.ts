@@ -23,6 +23,7 @@ import { GetOneChildValidation } from './validations/get_one_child.validation';
 import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
 import { UpdateChildValidation } from './validations/update_child.validation';
 import { UpdateUserValidation } from './validations/update-user.validation';
+import { ChildIdValidation } from 'src/child_profile/validations/childId.validation';
 
 @Controller('user')
 export class UserController {
@@ -75,12 +76,14 @@ export class UserController {
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  @UsePipes(new JoiValidation(UpdateChildValidation))
+  // @UsePipes(new JoiValidation(UpdateChildValidation))
   @Put('childs/:childId')
-  async updateChild(@Body() reqBody, @Request() req: ExpressRequest) {
-    //throw error if path params validation failed
-    this.validatePathParams(req.params);
-    return this.userService.updateChild(reqBody, req.params.childId, req['id']);
+  async updateChild(
+    @Body(new JoiValidation(UpdateChildValidation)) reqBody,
+    @Param(new JoiValidation(ChildIdValidation)) params,
+    @Request() req: ExpressRequest,
+  ) {
+    return this.userService.updateChild(reqBody, params.childId, req['id']);
   }
 
   @Version('1')
@@ -96,27 +99,6 @@ export class UserController {
   @Version('1')
   @Get('test')
   test() {
-    return this.userService.test();
-  }
-
-  private validatePathParams(reqParams) {
-    const pathParamSchema = Joi.object({
-      childId: Joi.number().integer().positive().required(),
-    });
-
-    const { error } = pathParamSchema.validate(reqParams);
-
-    if (error) {
-      let errorMessages = error.details.map((details) => {
-        return {
-          path: details.path[0],
-          message: details.message.replace(/"/g, ''),
-        };
-      });
-      throw new NewBadRequestException({
-        code: 'VALIDATION_ERROR',
-        message: errorMessages,
-      });
-    }
+    return 'test';
   }
 }

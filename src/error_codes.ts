@@ -8,6 +8,7 @@ errors.set('ar', arErrors);
 enErrors
   .set('WELCOME', 'Welcome')
   .set('REPEATED_EMAIL', 'Email already exist')
+  .set('REPEATED_CREDENTIALS', 'Credentials already exist')
   .set('REPEATED_NAME', 'Name already exist')
   .set('PROFILE_EXISTED', 'Profile already exist')
   .set('REPEATED_MOBILE_NUMBER', 'Mobile number already exist')
@@ -33,6 +34,7 @@ enErrors
 arErrors
   .set('WELCOME', 'مرحبا')
   .set('REPEATED_EMAIL', 'الإيميل مسجل مسبقا')
+  .set('REPEATED_CREDENTIALS', 'البيانات مسجلة مسبقا')
   .set('REPEATED_NAME', 'الإسم مستخدم مسبقا')
   .set('PROFILE_EXISTED', 'الحساب مسجل بالفعل')
   .set('REPEATED_MOBILE_NUMBER', 'رقم الموبيل مسجل مسبقا')

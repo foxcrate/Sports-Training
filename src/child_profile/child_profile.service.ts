@@ -9,12 +9,12 @@ import { ReturnChildProfileSerializer } from './serializers/return.serializer';
 export class ChildProfileService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createData: ChildProfileCreateDto, userId): Promise<any> {
+  async create(createData: ChildProfileCreateDto, childId, userId): Promise<any> {
     //throw an error if child not exist
-    await this.getChildById(createData.childId);
+    await this.getChildById(childId);
 
     //throw an error if repeated
-    await this.findRepeated(createData.childId);
+    await this.findRepeated(childId);
 
     //insert
     await this.prisma.$queryRaw`
@@ -26,7 +26,7 @@ export class ChildProfileService {
       VALUES
     (${createData.level},
     ${createData.regionId},
-    ${createData.childId},
+    ${childId},
     ${new Date()})`;
 
     let newChildProfile: any = await this.getLastCreated();
@@ -44,12 +44,10 @@ export class ChildProfileService {
     return new ReturnChildProfileSerializer().serialize(newChildProfile);
   }
 
-  async update(createData: ChildProfileCreateDto, childProfileId): Promise<any> {
-    //throw an error if child not exist
-    await this.getChildById(createData.childId);
-
+  async update(createData: ChildProfileCreateDto, childProfileId, userId): Promise<any> {
     //check profile existance
-    let childProfile = await this.getById(childProfileId);
+    let childProfile = await this.authorizeResource(userId, childProfileId);
+
     if (!childProfile) {
       throw new NewBadRequestException('RECORD_NOT_FOUND');
     }
@@ -133,7 +131,8 @@ export class ChildProfileService {
 
   private async findRepeated(childId): Promise<Boolean> {
     //Chick existed email or phone number
-    let repeatedChildProfile = await this.prisma.$queryRaw`SELECT *
+    let repeatedChildProfile = await this.prisma.$queryRaw`
+    SELECT *
     FROM ChildProfile
     WHERE childId = ${childId}
     LIMIT 1

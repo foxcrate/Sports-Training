@@ -16,6 +16,9 @@ export class ReturnPlayerProfileSerializer {
         return x.id;
       });
 
+      console.log({ playerProfiles });
+      console.log({ playerProfileIds });
+
       //object with userId next to user sports
       let usersSports = await this.getPlayersSports(playerProfileIds);
 

@@ -29,7 +29,8 @@ export class RegionService {
 
   async findRepeated(enName, arName): Promise<Boolean> {
     //Chick existed email or phone number
-    let repeatedRegion = await this.prisma.$queryRaw`SELECT *
+    let repeatedRegion = await this.prisma.$queryRaw`
+    SELECT *
     FROM Region
     WHERE enName = ${enName} OR arName = ${arName}
     LIMIT 1
