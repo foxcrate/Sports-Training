@@ -1,9 +1,15 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { GlobalService } from 'src/global/global.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -11,34 +17,41 @@ export class AuthGuard implements CanActivate {
     private jwtService: JwtService,
     private config: ConfigService,
     private prisma: PrismaService,
+    private globalService: GlobalService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
     if (!token) {
-      // throw new BadRequestException('NO_BEARER_TOKEN');
-      throw new NewBadRequestException('UNAUTHENTICATED');
+      // throw new NewBadRequestException('UNAUTHENTICATED');
+      throw new UnauthorizedException(
+        this.globalService.getError('en', 'NO_BEARER_TOKEN'),
+      );
     }
 
     let payload = this.verifyToken(token);
     if (payload === false) {
-      // throw new BadRequestException('JWT_ERROR');
-      throw new NewBadRequestException('UNAUTHENTICATED');
+      // throw new NewBadRequestException('UNAUTHENTICATED');
+      throw new UnauthorizedException(
+        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+      );
     }
 
     //There are two types of token normal or refresh
     if (payload.tokenType !== 'normal') {
-      // throw new BadRequestException('JWT_ERROR');
-      throw new NewBadRequestException('UNAUTHENTICATED');
+      // throw new NewBadRequestException('UNAUTHENTICATED');
+      throw new UnauthorizedException(this.globalService.getError('en', 'JWT_ERROR'));
     }
 
     request['authType'] = payload.authType;
     request['id'] = payload.id;
 
     if (!(await this.userAvailable(request['id']))) {
-      // throw new BadRequestException('JWT_ERROR');
-      throw new NewBadRequestException('UNAUTHENTICATED');
+      // throw new NewBadRequestException('UNAUTHENTICATED');
+      throw new UnauthorizedException(
+        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+      );
     }
 
     return true;

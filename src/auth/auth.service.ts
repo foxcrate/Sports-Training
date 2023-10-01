@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { SigninUserDto } from 'src/user/dtos/signin.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -12,6 +12,8 @@ import { ChildService } from 'src/child/child.service';
 
 import axios from 'axios';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { AuthTokensDTO } from './dtos/auth-tokens.dto';
+import { GlobalService } from 'src/global/global.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +23,7 @@ export class AuthService {
     private jwtService: JwtService,
     private config: ConfigService,
     private prisma: PrismaService,
+    private globalService: GlobalService,
   ) {}
 
   async userSignup(signupData: SignupUserDto) {
@@ -37,7 +40,7 @@ export class AuthService {
     }
   }
 
-  async userSignin(signinData: SigninUserDto): Promise<any> {
+  async userSignin(signinData: SigninUserDto): Promise<AuthTokensDTO> {
     const user = await this.userService.findByMobile(signinData.mobileNumber);
 
     const validPassword = await PasswordUtility.verifyPassword(
@@ -46,7 +49,10 @@ export class AuthService {
     );
 
     if (!validPassword) {
-      throw new NewBadRequestException('WRONG_CREDENTIALS');
+      // throw new NewBadRequestException('WRONG_CREDENTIALS');
+      throw new UnauthorizedException(
+        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+      );
     }
 
     // return user;
@@ -54,8 +60,10 @@ export class AuthService {
     return this.generateNormalAndRefreshJWTToken('user', user.id);
   }
 
-  async childSignin(signinData: SigninChildDto): Promise<any> {
+  async childSignin(signinData: SigninChildDto): Promise<AuthTokensDTO> {
     const child = await this.childService.findByMobile(signinData.mobileNumber);
+
+    console.log({ child });
 
     const validPassword = await PasswordUtility.verifyPassword(
       signinData.password,
@@ -63,7 +71,10 @@ export class AuthService {
     );
 
     if (!validPassword) {
-      throw new NewBadRequestException('WRONG_CREDENTIALS');
+      // throw new NewBadRequestException('WRONG_CREDENTIALS');
+      throw new UnauthorizedException(
+        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+      );
     }
 
     return this.generateNormalAndRefreshJWTToken('child', child.id);
@@ -72,10 +83,14 @@ export class AuthService {
   refreshToken(refreshToken: string, authType: string) {
     let payload = this.verifyToken(refreshToken);
     if (payload === false) {
-      throw new NewBadRequestException('JWT_ERROR');
+      // throw new NewBadRequestException('JWT_ERROR');
+      throw new UnauthorizedException(
+        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+      );
     }
     if (payload.tokenType !== 'refresh') {
-      throw new NewBadRequestException('JWT_ERROR');
+      // throw new NewBadRequestException('JWT_ERROR');
+      throw new UnauthorizedException(this.globalService.getError('en', 'JWT_ERROR'));
     }
 
     let tokenPayload = {

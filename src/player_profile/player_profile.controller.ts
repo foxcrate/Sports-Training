@@ -57,7 +57,7 @@ export class PlayerProfileController {
     return this.playerProfileService.delete(req['id']);
   }
 
-  // @Version('1')
+  @Version('1')
   // @Roles('user')
   // @UseGuards(AuthGuard, RoleGuard)
   @Get('testHesham')

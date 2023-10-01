@@ -1,4 +1,4 @@
-export class SportCreateDto {
+export class CreateSportDto {
   enName: String;
   arName: String;
 }

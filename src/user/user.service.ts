@@ -1,4 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
 import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
@@ -7,12 +13,17 @@ import { log } from 'console';
 import { ChildService } from 'src/child/child.service';
 import { ReturnChildSerializer } from 'src/child/serializers/return_child.serializer';
 import { ReturnChildProfileSerializer } from 'src/child_profile/serializers/return.serializer';
+import { ReturnUserDto } from './dtos/return.dto';
+import { NativeUserDto } from './dtos/native.dto';
+import { ReturnChildDto } from 'src/child/dtos/return.dto';
+import { GlobalService } from 'src/global/global.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private prisma: PrismaService,
     private childService: ChildService,
+    private globalService: GlobalService,
   ) {}
 
   async update(reqBody, userId) {
@@ -124,6 +135,7 @@ export class UserService {
 
   async deleteChild(childId, userId): Promise<any> {
     let child = await this.authorizeResource(userId, childId);
+    await this.deleteChildProfileByChildId(childId);
     await this.deleteChildById(childId);
     return new ReturnChildSerializer().serialize(child);
   }
@@ -160,7 +172,7 @@ export class UserService {
     return newUser[0];
   }
 
-  async findByMobile(mobileNumber: string): Promise<any> {
+  async findByMobile(mobileNumber: string): Promise<NativeUserDto> {
     let foundedAccount = await this.prisma.$queryRaw`
     SELECT *
     FROM User
@@ -169,7 +181,10 @@ export class UserService {
     `;
 
     if (!foundedAccount[0]) {
-      throw new NewBadRequestException('WRONG_CREDENTIALS');
+      // throw new NewBadRequestException('WRONG_CREDENTIALS');
+      throw new UnauthorizedException(
+        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+      );
     }
     return foundedAccount[0];
   }
@@ -187,16 +202,22 @@ export class UserService {
 
     if (repeatedUserProfile[0]) {
       if (repeatedUserProfile[0].email == email) {
-        throw new NewBadRequestException('REPEATED_EMAIL');
+        // throw new NewBadRequestException('REPEATED_EMAIL');
+        throw new BadRequestException(
+          this.globalService.getError('en', 'REPEATED_EMAIL'),
+        );
       }
       if (repeatedUserProfile[0].mobileNumber == mobileNumber) {
-        throw new NewBadRequestException('REPEATED_MOBILE_NUMBER');
+        // throw new NewBadRequestException('REPEATED_MOBILE_NUMBER');
+        throw new BadRequestException(
+          this.globalService.getError('en', 'REPEATED_MOBILE_NUMBER'),
+        );
       }
     }
     return false;
   }
 
-  private async getUserById(userId): Promise<any> {
+  private async getUserById(userId): Promise<ReturnUserDto> {
     let theUser = await this.prisma.$queryRaw`
       SELECT *
       FROM User
@@ -211,7 +232,7 @@ export class UserService {
     // }
   }
 
-  private async getChildById(childId): Promise<any> {
+  private async getChildById(childId): Promise<ReturnChildDto> {
     let theChild = await this.prisma.$queryRaw`
       SELECT *
       FROM Child
@@ -231,8 +252,32 @@ export class UserService {
     DELETE FROM
     Child
     WHERE
-    id = ${childId};
-`;
+    id = ${childId};`;
+  }
+
+  private async deleteChildProfileByChildId(childId) {
+    let childProfile = await this.prisma.$queryRaw`
+      SELECT *
+      FROM
+      ChildProfile
+      WHERE
+      childId = ${childId};`;
+
+    await this.deleteChildProfileSportsByChildProfileId(childProfile[0].id);
+
+    await this.prisma.$queryRaw`
+      DELETE FROM
+      ChildProfile
+      WHERE
+      id = ${childProfile[0].id};`;
+  }
+
+  private async deleteChildProfileSportsByChildProfileId(childProfileId) {
+    await this.prisma.$queryRaw`
+      DELETE FROM
+      ChildProfileSports
+      WHERE
+      childProfileId = ${childProfileId};`;
   }
 
   private async getUserChilds(userId): Promise<any> {
@@ -249,7 +294,7 @@ export class UserService {
     // }
   }
 
-  private async getLastCreated(): Promise<any> {
+  private async getLastCreated(): Promise<ReturnUserDto> {
     return await this.prisma.$queryRaw`
     SELECT *
     FROM User
@@ -257,13 +302,17 @@ export class UserService {
     LIMIT 1`;
   }
 
-  private async authorizeResource(userId: number, childId: number): Promise<any> {
+  private async authorizeResource(
+    userId: number,
+    childId: number,
+  ): Promise<ReturnChildDto> {
     //get childProfile
     let child = await this.getChildById(childId);
     if (!child) {
-      throw new NewBadRequestException('RECORD_NOT_FOUND');
+      // throw new NewBadRequestException('RECORD_NOT_FOUND');
+      throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
     }
-    console.log({ child });
+    // console.log({ child });
 
     // let childId = child.id;
 
@@ -276,7 +325,8 @@ export class UserService {
 
     //check if the child is the current user's child
     if (!childsIds.includes(child.id)) {
-      throw new NewBadRequestException('UNAUTHORIZED');
+      // throw new NewBadRequestException('UNAUTHORIZED');
+      throw new ForbiddenException(this.globalService.getError('en', 'UNAUTHORIZED'));
     }
     return child;
   }

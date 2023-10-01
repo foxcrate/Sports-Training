@@ -1,15 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SignupChildDto } from 'src/child/dtos/signup.dto';
 import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
 import { ReturnChildSerializer } from './serializers/return_child.serializer';
 import { PasswordUtility } from '../utils/password.util';
+import { ReturnChildDto } from './dtos/return.dto';
+import { NativeChildDto } from './dtos/native.dto';
+import { GlobalService } from 'src/global/global.service';
 
 @Injectable()
 export class ChildService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private globalService: GlobalService,
+  ) {}
 
-  async findByMobile(mobileNumber: string): Promise<any> {
+  async findByMobile(mobileNumber: string): Promise<NativeChildDto> {
     let foundedAccount = await this.prisma.$queryRaw`
     SELECT *
     FROM Child
@@ -17,14 +30,18 @@ export class ChildService {
     LIMIT 1
     `;
 
-    if (!foundedAccount[0]) {
-      throw new NewBadRequestException('WRONG_CREDENTIALS');
+    if (!foundedAccount[0] || foundedAccount[0].password == null) {
+      // throw new NewBadRequestException('WRONG_CREDENTIALS');
+      throw new UnauthorizedException(
+        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+      );
     }
     return foundedAccount[0];
   }
 
   async findRepeated(email, mobileNumber): Promise<Boolean> {
     //Chick existed email or phone number
+    // throw new HttpException('toto error', HttpStatus.INTERNAL_SERVER_ERROR);
     let repeatedChild = await this.prisma.$queryRaw`
     SELECT *
     FROM Child
@@ -34,10 +51,16 @@ export class ChildService {
 
     if (repeatedChild[0]) {
       if (repeatedChild[0].email == email) {
-        throw new NewBadRequestException('REPEATED_EMAIL');
+        // throw new NewBadRequestException('REPEATED_EMAIL');
+        throw new BadRequestException(
+          this.globalService.getError('en', 'REPEATED_EMAIL'),
+        );
       }
       if (repeatedChild[0].mobileNumber == mobileNumber) {
-        throw new NewBadRequestException('REPEATED_MOBILE_NUMBER');
+        // throw new NewBadRequestException('REPEATED_MOBILE_NUMBER');
+        throw new BadRequestException(
+          this.globalService.getError('en', 'REPEATED_MOBILE_NUMBER'),
+        );
       }
     }
     return false;
@@ -52,7 +75,10 @@ export class ChildService {
         `;
 
     if (!foundedChild[0]) {
-      throw new NewBadRequestException('WRONG_CREDENTIALS');
+      // throw new NewBadRequestException('WRONG_CREDENTIALS');
+      throw new UnauthorizedException(
+        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+      );
     }
 
     return foundedChild[0];
@@ -62,7 +88,10 @@ export class ChildService {
     let child = await this.findByMobileNumber(reqBody.mobileNumber);
 
     if (child.password !== null) {
-      throw new NewBadRequestException('ACCOUNT_ALREADY_ACTIVATED');
+      // throw new NewBadRequestException('ACCOUNT_ALREADY_ACTIVATED');
+      throw new NotFoundException(
+        this.globalService.getError('en', 'ACCOUNT_ALREADY_ACTIVATED'),
+      );
     }
 
     let hashedPassword = await PasswordUtility.hashPassword(reqBody.password);

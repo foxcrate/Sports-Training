@@ -2,6 +2,7 @@
 import { ReturnChildProfileDto } from '../dtos/return.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { ReturnSportDto } from 'src/sport/dtos/return.dto';
 
 export class ReturnChildProfileSerializer {
   public prisma: any;
@@ -43,7 +44,7 @@ export class ReturnChildProfileSerializer {
       return childProfile;
     }
   }
-  async getChildSports(childProfileId: number): Promise<any[]> {
+  async getChildSports(childProfileId: number): Promise<ReturnSportDto[]> {
     let sports: any = await this.prisma.$queryRaw`
     SELECT
       s.id As id,
@@ -62,7 +63,7 @@ export class ReturnChildProfileSerializer {
     return sports;
   }
 
-  async getChildsSports(childsProfileIds: number[]): Promise<any[]> {
+  async getChildsSports(childsProfileIds: number[]): Promise<[]> {
     //return empty array if childProfileIds is empty
     if (childsProfileIds.length == 0) {
       return [];

@@ -1,18 +1,32 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ChildProfileCreateDto } from './dtos/create.dto';
 import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
 import { Prisma } from '@prisma/client';
 import { ReturnChildProfileSerializer } from './serializers/return.serializer';
+import { ReturnChildProfileDto } from './dtos/return.dto';
+import { ReturnSportDto } from 'src/sport/dtos/return.dto';
+import { ReturnChildDto } from 'src/child/dtos/return.dto';
+import { GlobalService } from 'src/global/global.service';
 
 @Injectable()
 export class ChildProfileService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private globalService: GlobalService,
+  ) {}
 
   async create(createData: ChildProfileCreateDto, childId, userId): Promise<any> {
     //throw an error if child not exist
-    await this.getChildById(childId);
-
+    let child = await this.getChildById(childId);
+    if (child.userId != userId) {
+      throw new ForbiddenException(this.globalService.getError('en', 'UNAUTHORIZED'));
+    }
     //throw an error if repeated
     await this.findRepeated(childId);
 
@@ -29,7 +43,7 @@ export class ChildProfileService {
     ${childId},
     ${new Date()})`;
 
-    let newChildProfile: any = await this.getLastCreated();
+    let newChildProfile: ReturnChildProfileDto = await this.getLastCreated();
 
     //if sportsIds array is provided, insert them in PlayerProfileSports
     //else do nothing
@@ -49,7 +63,8 @@ export class ChildProfileService {
     let childProfile = await this.authorizeResource(userId, childProfileId);
 
     if (!childProfile) {
-      throw new NewBadRequestException('RECORD_NOT_FOUND');
+      // throw new NewBadRequestException('RECORD_NOT_FOUND');
+      throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
     }
 
     //update
@@ -63,7 +78,7 @@ export class ChildProfileService {
       id = ${childProfileId};
     `;
 
-    let updatedChildProfile: any = await this.getLastUpdated();
+    let updatedChildProfile: ReturnChildProfileDto = await this.getLastUpdated();
 
     //if sportsIds array is provided, insert them in PlayerProfileSports
     //else do nothing
@@ -139,7 +154,8 @@ export class ChildProfileService {
     `;
 
     if (repeatedChildProfile[0]) {
-      throw new NewBadRequestException('PROFILE_EXISTED');
+      // throw new NewBadRequestException('PROFILE_EXISTED');
+      throw new BadRequestException(this.globalService.getError('en', 'PROFILE_EXISTED'));
     }
     return false;
   }
@@ -165,19 +181,22 @@ export class ChildProfileService {
   }
 
   private async checkSportsExistance(sportsArray): Promise<Boolean> {
-    let foundedSports: Array<any> = await this.prisma.$queryRaw`
+    let foundedSports: Array<ReturnSportDto> = await this.prisma.$queryRaw`
     SELECT *
     FROM Sport
     WHERE id IN (${Prisma.join(sportsArray)});
     `;
 
     if (foundedSports.length < sportsArray.length) {
-      throw new NewBadRequestException('NOT_EXISTED_SPORT');
+      // throw new NewBadRequestException('NOT_EXISTED_SPORT');
+      throw new BadRequestException(
+        this.globalService.getError('en', 'NOT_EXISTED_SPORT'),
+      );
     }
     return true;
   }
 
-  private async getLastCreated(): Promise<any> {
+  private async getLastCreated(): Promise<ReturnChildProfileDto> {
     let childProfile = await this.prisma.$queryRaw`
     SELECT *
     FROM ChildProfile
@@ -186,7 +205,7 @@ export class ChildProfileService {
     return childProfile[0];
   }
 
-  private async getLastUpdated(): Promise<any> {
+  private async getLastUpdated(): Promise<ReturnChildProfileDto> {
     let childProfile = await this.prisma.$queryRaw`
     SELECT *
     FROM ChildProfile
@@ -195,7 +214,7 @@ export class ChildProfileService {
     return childProfile[0];
   }
 
-  private async getChildById(childId): Promise<any> {
+  private async getChildById(childId): Promise<ReturnChildDto> {
     let theChild = await this.prisma.$queryRaw`
       SELECT *
       FROM Child
@@ -204,7 +223,8 @@ export class ChildProfileService {
     `;
 
     if (!theChild[0]) {
-      throw new NewBadRequestException('RECORD_NOT_FOUND');
+      // throw new NewBadRequestException('RECORD_NOT_FOUND');
+      throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
     }
     return theChild[0];
   }
@@ -219,6 +239,16 @@ export class ChildProfileService {
     return childProfile[0];
   }
 
+  private async getChildProfileByChildId(childId): Promise<any> {
+    let childProfile = await this.prisma.$queryRaw`
+      SELECT *
+      FROM ChildProfile
+      WHERE childId = ${childId}
+      LIMIT 1
+    `;
+    return childProfile[0];
+  }
+
   private async deletePastChildSports(childProfileId: number): Promise<any> {
     await this.prisma.$queryRaw`
       DELETE
@@ -227,7 +257,7 @@ export class ChildProfileService {
     `;
   }
 
-  private async getUserChildsIds(userId: number): Promise<any> {
+  private async getUserChildsIds(userId: number): Promise<number[]> {
     let idsObject: any = await this.prisma.$queryRaw`
       SELECT id
       FROM Child
@@ -239,11 +269,15 @@ export class ChildProfileService {
     return childsIds;
   }
 
-  private async authorizeResource(userId: number, childProfileId: number): Promise<any> {
+  private async authorizeResource(
+    userId: number,
+    childProfileId: number,
+  ): Promise<ReturnChildProfileDto> {
     //get childProfile
     let childProfile = await this.getById(childProfileId);
     if (!childProfile) {
-      throw new NewBadRequestException('RECORD_NOT_FOUND');
+      // throw new NewBadRequestException('RECORD_NOT_FOUND');
+      throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
     }
     let childId = childProfile.childId;
 
@@ -253,7 +287,8 @@ export class ChildProfileService {
 
     //check if the child is the current user's child
     if (!childsIds.includes(childId)) {
-      throw new NewBadRequestException('UNAUTHORIZED');
+      // throw new NewBadRequestException('UNAUTHORIZED');
+      throw new ForbiddenException(this.globalService.getError('en', 'UNAUTHORIZED'));
     }
     return childProfile;
   }

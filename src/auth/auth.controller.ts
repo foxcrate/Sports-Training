@@ -67,7 +67,7 @@ export class AuthController {
 
   @Get('google/redirect')
   @Version('1')
-  async googleRedirect(@Query() queryParams: any) {
+  async googleRedirect(@Query() queryParams) {
     // console.log('queryParams:', queryParams);
 
     let returnGoogleData = await this.authService.googleGetAccessTokenFromCode(
@@ -86,7 +86,7 @@ export class AuthController {
 
   @Get('facebook/redirect')
   @Version('1')
-  async facebookRedirect(@Query() queryParams: any) {
+  async facebookRedirect(@Query() queryParams) {
     // console.log('queryParams:', queryParams);
 
     let accessToken = await this.authService.facebookGetAccessTokenFromCode(

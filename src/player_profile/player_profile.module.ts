@@ -4,6 +4,7 @@ import { PlayerProfileService } from './player_profile.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { GlobalModule } from 'src/global/global.module';
 
 @Module({
   imports: [

@@ -1,12 +1,15 @@
+import { InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as AWS from 'aws-sdk';
 import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
+import { GlobalService } from 'src/global/global.service';
 
 export class AWSS3Utility {
   static config: ConfigService = new ConfigService();
+  static globalService: GlobalService = new GlobalService();
 
   static async uploadFile(file) {
-    let s3: any = new AWS.S3({
+    let s3 = new AWS.S3({
       accessKeyId: AWSS3Utility.config.get('AWS_ACCESS_KEY'),
       secretAccessKey: AWSS3Utility.config.get('AWS_SECRET_ACCESS_KEY'),
       region: AWSS3Utility.config.get('AWS_S3_REGION'),
@@ -43,7 +46,10 @@ export class AWSS3Utility {
     } catch (e) {
       console.log('--error in uploading image');
       console.log(e);
-      throw new NewBadRequestException('UPLOAD_IMAGE_ERROR');
+      // throw new NewBadRequestException('UPLOAD_IMAGE_ERROR');
+      throw new InternalServerErrorException(
+        this.globalService.getError('en', 'UPLOAD_IMAGE_ERROR'),
+      );
     }
   }
 

@@ -1,11 +1,15 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegionCreateDto } from './dtos/create.dto';
+import { GlobalService } from 'src/global/global.service';
 
 @Injectable()
 export class RegionService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private globalService: GlobalService,
+  ) {}
   async create(createData: RegionCreateDto, userId): Promise<any> {
     await this.findRepeated(createData.enName, createData.arName);
 
@@ -38,10 +42,16 @@ export class RegionService {
 
     if (repeatedRegion[0]) {
       if (repeatedRegion[0].enName == enName) {
-        throw new NewBadRequestException('REPEATED_REGION');
+        // throw new NewBadRequestException('REPEATED_REGION');
+        throw new BadRequestException(
+          this.globalService.getError('en', 'REPEATED_REGION'),
+        );
       }
       if (repeatedRegion[0].arName == arName) {
-        throw new NewBadRequestException('REPEATED_REGION');
+        // throw new NewBadRequestException('REPEATED_REGION');
+        throw new BadRequestException(
+          this.globalService.getError('en', 'REPEATED_REGION'),
+        );
       }
     }
     return false;

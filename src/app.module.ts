@@ -18,6 +18,7 @@ import { PlayerProfileModule } from './player_profile/player_profile.module';
 import { RegionModule } from './region/region.module';
 import { SportModule } from './sport/sport.module';
 import { ChildProfileModule } from './child_profile/child_profile.module';
+import { GlobalModule } from './global/global.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ChildProfileModule } from './child_profile/child_profile.module';
     RegionModule,
     SportModule,
     ChildProfileModule,
+    GlobalModule,
   ],
   controllers: [AppController],
   providers: [
