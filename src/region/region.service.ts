@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
+import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegionCreateDto } from './dtos/create.dto';
 import { GlobalService } from 'src/global/global.service';

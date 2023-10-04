@@ -10,7 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { JoiValidation } from 'src/pipes/joi_validaiton.pipe';
+import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { SignupValidation } from 'src/user/validations/signup.validation';
 import { UserSigninValidation } from 'src/user/validations/signin.validaiton';
 import { ChildSigninValidation } from 'src/child/validaitons/signin.validation';
@@ -21,8 +21,8 @@ import { Request as ExpressRequest } from 'express';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/guards/role.guard';
 import { SigninChildDto } from 'src/child/dtos/signin.dto';
-import { GoogleReturnDataSerializer } from './serializers/googleReturnData.serializer';
-import { FacebookReturnDataSerializer } from './serializers/facebookReturnData.serializer';
+import { GoogleReturnDataSerializer } from './serializers/google-return-data.serializer';
+import { FacebookReturnDataSerializer } from './serializers/facebook-return-data.serializer';
 
 @Controller('auth')
 export class AuthController {
@@ -51,7 +51,7 @@ export class AuthController {
   }
 
   @Version('1')
-  @Get('refresh_token')
+  @Get('refresh-token')
   refreshToken(@Body('refreshToken') refreshToken, @Request() req: ExpressRequest) {
     return this.authService.refreshToken(refreshToken, req['authType']);
   }

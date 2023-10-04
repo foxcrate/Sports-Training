@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ChildProfileCreateDto } from './dtos/create.dto';
-import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
+import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 import { Prisma } from '@prisma/client';
 import { ReturnChildProfileSerializer } from './serializers/return.serializer';
 import { ReturnChildProfileDto } from './dtos/return.dto';

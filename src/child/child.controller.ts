@@ -4,8 +4,8 @@ import { ChildService } from './child.service';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { RoleGuard } from 'src/guards/role.guard';
 import { Roles } from 'src/decorators/roles.decorator';
-import { JoiValidation } from 'src/pipes/joi_validaiton.pipe';
-import { ChildActivateAccountValidation } from './validaitons/activate_account.validation';
+import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
+import { ChildActivateAccountValidation } from './validaitons/activate-account.validation';
 
 @Controller('child')
 export class ChildController {
@@ -15,7 +15,7 @@ export class ChildController {
   // @Roles('child')
   // @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(ChildActivateAccountValidation))
-  @Post('activate_account')
+  @Post('activate-account')
   async activateAccount1(@Request() req: ExpressRequest) {
     return this.childService.activateAccount(req.body);
   }

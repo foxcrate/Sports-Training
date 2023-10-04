@@ -10,8 +10,8 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { PlayerProfileCreateDto } from 'src/player_profile/dtos/create.dto';
-import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
+import { PlayerProfileCreateDto } from 'src/player-profile/dtos/create.dto';
+import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 import { Prisma } from '@prisma/client';
 import { ReturnPlayerProfileSerializer } from './serializers/return.serializer';
 import { ReturnPlayerProfileDto } from './dtos/return.dto';

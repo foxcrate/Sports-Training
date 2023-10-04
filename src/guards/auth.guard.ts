@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
+import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GlobalService } from 'src/global/global.service';

@@ -7,9 +7,9 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
-import { ReturnUserSerializer } from './serializers/return_user.serializer';
+import { ReturnUserSerializer } from './serializers/return-user.serializer';
 import { ChildService } from 'src/child/child.service';
-import { ReturnChildSerializer } from 'src/child/serializers/return_child.serializer';
+import { ReturnChildSerializer } from 'src/child/serializers/return-child.serializer';
 import { ReturnUserDto } from './dtos/return.dto';
 import { NativeUserDto } from './dtos/native.dto';
 import { ReturnChildDto } from 'src/child/dtos/return.dto';

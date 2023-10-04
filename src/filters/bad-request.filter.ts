@@ -1,5 +1,5 @@
 import { Catch, ArgumentsHost } from '@nestjs/common';
-import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
+import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 
 @Catch(NewBadRequestException)
 export class BadRequestFilter {

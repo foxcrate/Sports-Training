@@ -8,8 +8,8 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SignupChildDto } from 'src/child/dtos/signup.dto';
-import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
-import { ReturnChildSerializer } from './serializers/return_child.serializer';
+import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
+import { ReturnChildSerializer } from './serializers/return-child.serializer';
 import { PasswordUtility } from '../utils/password.util';
 import { ReturnChildDto } from './dtos/return.dto';
 import { NativeChildDto } from './dtos/native.dto';

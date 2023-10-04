@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
+import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 import { GlobalService } from 'src/global/global.service';
 
 @Injectable()

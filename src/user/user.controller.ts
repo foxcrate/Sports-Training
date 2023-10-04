@@ -13,17 +13,17 @@ import {
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
 import { UserService } from './user.service';
-import { JoiValidation } from 'src/pipes/joi_validaiton.pipe';
-import { AddChildValidation } from 'src/user/validations/add_child.validation';
+import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
+import { AddChildValidation } from 'src/user/validations/add-child.validation';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/guards/role.guard';
 import * as Joi from 'joi';
-import { GetOneChildValidation } from './validations/get_one_child.validation';
-import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
-import { UpdateChildValidation } from './validations/update_child.validation';
+import { GetOneChildValidation } from './validations/get-one-child.validation';
+import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
+import { UpdateChildValidation } from './validations/update-child.validation';
 import { UpdateUserValidation } from './validations/update-user.validation';
-import { ChildIdValidation } from 'src/child_profile/validations/childId.validation';
+import { ChildIdValidation } from 'src/child-profile/validations/child-id.validation';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Controller('user')

@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
 import { RegionService } from './region.service';
-import { JoiValidation } from 'src/pipes/joi_validaiton.pipe';
+import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { AddRegionValidation } from 'src/region/validaitons/create.validation';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Roles } from 'src/decorators/roles.decorator';

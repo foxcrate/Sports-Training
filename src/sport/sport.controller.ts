@@ -8,7 +8,7 @@ import {
   Body,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
-import { JoiValidation } from 'src/pipes/joi_validaiton.pipe';
+import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/guards/role.guard';

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ChildProfileController } from './child_profile.controller';
-import { ChildProfileService } from './child_profile.service';
+import { ChildProfileController } from './child-profile.controller';
+import { ChildProfileService } from './child-profile.service';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';

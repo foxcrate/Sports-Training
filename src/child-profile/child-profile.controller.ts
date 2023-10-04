@@ -14,22 +14,22 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
-import { ChildProfileService } from './child_profile.service';
-import { JoiValidation } from 'src/pipes/joi_validaiton.pipe';
+import { ChildProfileService } from './child-profile.service';
+import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { AddChildProfileValidation } from './validations/create.validation';
 import { UpdateChildProfileValidation } from './validations/update.validation';
-import { UpdateChildProfileParamsValidation } from './validations/update_params.validation';
+import { UpdateChildProfileParamsValidation } from './validations/update-params.validation';
 import { DeleteChildProfileValidation } from './validations/delete.validation';
-import { GetOneChildProfileValidation } from './validations/get_one.validation';
+import { GetOneChildProfileValidation } from './validations/get-one.validation';
 import { AuthGuard } from 'src/guards/auth.guard';
 import * as Joi from 'joi';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/guards/role.guard';
-import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
-import { ChildIdValidation } from './validations/childId.validation';
-import { ChildProfileIdValidation } from './validations/childProfileId.validaiton';
+import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
+import { ChildIdValidation } from './validations/child-id.validation';
+import { ChildProfileIdValidation } from './validations/child-profile-id.validaiton';
 
-@Controller('child_profile')
+@Controller('child-profile')
 export class ChildProfileController {
   constructor(private childProfileService: ChildProfileService) {}
 

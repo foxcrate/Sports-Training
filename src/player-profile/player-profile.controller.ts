@@ -11,14 +11,14 @@ import {
   Get,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
-import { PlayerProfileService } from './player_profile.service';
-import { JoiValidation } from 'src/pipes/joi_validaiton.pipe';
-import { AddPlayerProfileValidation } from 'src/player_profile/validations/create.validation';
+import { PlayerProfileService } from './player-profile.service';
+import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
+import { AddPlayerProfileValidation } from 'src/player-profile/validations/create.validation';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/guards/role.guard';
 
-@Controller('player_profile')
+@Controller('player-profile')
 export class PlayerProfileController {
   constructor(private playerProfileService: PlayerProfileService) {}
 
