@@ -68,11 +68,12 @@ export class ChildService {
 
   async findByMobileNumber(mobileNumber: string) {
     //Chick existed email or phone number
-    let foundedChild = await this.prisma.$queryRaw`SELECT *
-        FROM Child
-        WHERE mobileNumber = ${mobileNumber}
-        LIMIT 1
-        `;
+    let foundedChild = await this.prisma.$queryRaw`
+      SELECT *
+      FROM Child
+      WHERE mobileNumber = ${mobileNumber}
+      LIMIT 1
+      `;
 
     if (!foundedChild[0]) {
       // throw new NewBadRequestException('WRONG_CREDENTIALS');
@@ -101,11 +102,23 @@ export class ChildService {
       WHERE id = ${child.id}
       `;
 
-    let updatedChild = await this.prisma.$queryRaw`SELECT *
+    let updatedChild = await this.prisma.$queryRaw`
+      SELECT
+      id,
+        firstName,
+        lastName,
+        profileImage,
+        email,
+        mobileNumber,
+        gender,
+        birthday,
+        userId
       FROM Child
       WHERE id = ${child.id}
       LIMIT 1
-      `;
-    return new ReturnChildSerializer().serialize(updatedChild);
+    `;
+
+    return updatedChild[0];
+    // return new ReturnChildSerializer().serialize(updatedChild);
   }
 }

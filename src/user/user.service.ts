@@ -7,12 +7,9 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
-import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
 import { ReturnUserSerializer } from './serializers/return_user.serializer';
-import { log } from 'console';
 import { ChildService } from 'src/child/child.service';
 import { ReturnChildSerializer } from 'src/child/serializers/return_child.serializer';
-import { ReturnChildProfileSerializer } from 'src/child_profile/serializers/return.serializer';
 import { ReturnUserDto } from './dtos/return.dto';
 import { NativeUserDto } from './dtos/native.dto';
 import { ReturnChildDto } from 'src/child/dtos/return.dto';
@@ -25,120 +22,6 @@ export class UserService {
     private childService: ChildService,
     private globalService: GlobalService,
   ) {}
-
-  async update(reqBody, userId) {
-    let user = await this.getUserById(userId);
-
-    //update
-    await this.prisma.$queryRaw`
-      UPDATE User
-      SET
-      firstName = ${reqBody.firstName},
-      lastName = ${reqBody.lastName},
-      profileImage = ${reqBody.profileImage},
-      gender = ${reqBody.gender},
-      birthday = ${reqBody.birthday},
-      updatedAt = ${new Date()}
-      WHERE
-      id = ${user.id};
-    `;
-
-    let updatedUser = await this.prisma.$queryRaw`
-      SELECT *
-      FROM User
-      ORDER BY updatedAt DESC
-      LIMIT 1`;
-
-    return new ReturnUserSerializer().serialize(updatedUser[0]);
-  }
-
-  async createChild(reqBody, userId) {
-    let repeatedChild = await this.childService.findRepeated(
-      reqBody.email,
-      reqBody.mobileNumber,
-    );
-
-    await this.prisma.$queryRaw`
-      INSERT INTO Child
-        (firstName,
-        lastName,
-        profileImage,
-        email,
-        mobileNumber,
-        gender,
-        birthday,
-        userId,
-        updatedAt)
-        VALUES
-      (${reqBody.firstName},
-      ${reqBody.lastName},
-      ${reqBody.profileImage},
-      ${reqBody.email},
-      ${reqBody.mobileNumber},
-      ${reqBody.gender},
-      ${reqBody.birthday},
-      ${userId},
-      ${new Date()})`;
-
-    let newChild = await this.prisma.$queryRaw`
-      SELECT *
-      FROM Child
-      ORDER BY createdAt DESC
-      LIMIT 1`;
-
-    return new ReturnChildSerializer().serialize(newChild[0]);
-  }
-
-  async getOne(userId): Promise<any> {
-    let user = await this.getUserById(userId);
-
-    return new ReturnUserSerializer().serialize(user);
-  }
-
-  async getChilds(userId): Promise<any> {
-    let userChilds = await this.getUserChilds(userId);
-
-    return new ReturnChildSerializer().serialize(userChilds);
-  }
-
-  async getChild(childId, userId): Promise<any> {
-    let child = await this.authorizeResource(userId, childId);
-
-    return new ReturnChildSerializer().serialize(child);
-  }
-
-  async updateChild(reqBody, childId, userId) {
-    let child = await this.authorizeResource(userId, childId);
-
-    //update
-    await this.prisma.$queryRaw`
-      UPDATE Child
-      SET
-      firstName = ${reqBody.firstName},
-      lastName = ${reqBody.lastName},
-      profileImage = ${reqBody.profileImage},
-      gender = ${reqBody.gender},
-      birthday = ${reqBody.birthday},
-      updatedAt = ${new Date()}
-      WHERE
-      id = ${child.id};
-    `;
-
-    let updatedChild = await this.prisma.$queryRaw`
-      SELECT *
-      FROM Child
-      ORDER BY updatedAt DESC
-      LIMIT 1`;
-
-    return new ReturnChildSerializer().serialize(updatedChild[0]);
-  }
-
-  async deleteChild(childId, userId): Promise<any> {
-    let child = await this.authorizeResource(userId, childId);
-    await this.deleteChildProfileByChildId(childId);
-    await this.deleteChildById(childId);
-    return new ReturnChildSerializer().serialize(child);
-  }
 
   async create(signupData: SignupUserDto): Promise<any> {
     await this.prisma.$queryRaw`
@@ -169,7 +52,126 @@ export class UserService {
 
     let newUser = await this.getLastCreated();
 
-    return newUser[0];
+    return newUser;
+  }
+
+  async update(reqBody, userId) {
+    let user = await this.getUserById(userId);
+
+    //update
+    await this.prisma.$queryRaw`
+      UPDATE User
+      SET
+      firstName = ${reqBody.firstName},
+      lastName = ${reqBody.lastName},
+      profileImage = ${reqBody.profileImage},
+      gender = ${reqBody.gender},
+      birthday = ${reqBody.birthday},
+      updatedAt = ${new Date()}
+      WHERE
+      id = ${user.id};
+    `;
+
+    let updatedUser = this.getLastUpdated();
+    return updatedUser;
+
+    // return new ReturnUserSerializer().serialize(updatedUser[0]);
+  }
+
+  async getOne(userId): Promise<any> {
+    let user = await this.getUserById(userId);
+
+    // return new ReturnUserSerializer().serialize(user);
+    return user;
+  }
+
+  async createChild(reqBody, userId) {
+    let repeatedChild = await this.childService.findRepeated(
+      reqBody.email,
+      reqBody.mobileNumber,
+    );
+
+    await this.prisma.$queryRaw`
+      INSERT INTO Child
+        (firstName,
+        lastName,
+        profileImage,
+        email,
+        mobileNumber,
+        gender,
+        birthday,
+        userId,
+        updatedAt)
+        VALUES
+      (${reqBody.firstName},
+      ${reqBody.lastName},
+      ${reqBody.profileImage},
+      ${reqBody.email},
+      ${reqBody.mobileNumber},
+      ${reqBody.gender},
+      ${reqBody.birthday},
+      ${userId},
+      ${new Date()})`;
+
+    // let newChild = await this.prisma.$queryRaw`
+    //   SELECT *
+    //   FROM Child
+    //   ORDER BY createdAt DESC
+    //   LIMIT 1`;
+
+    let newChild = this.getLastCreatedChild();
+
+    // return new ReturnChildSerializer().serialize(newChild[0]);
+    return newChild;
+  }
+
+  async getChilds(userId): Promise<any> {
+    let userChilds = await this.getUserChilds(userId);
+
+    return userChilds;
+
+    // return new ReturnChildSerializer().serialize(userChilds);
+  }
+
+  async getChild(childId, userId): Promise<any> {
+    let child = await this.authorizeResource(userId, childId);
+
+    // return new ReturnChildSerializer().serialize(child);
+    return child;
+  }
+
+  async updateChild(reqBody, childId, userId) {
+    let child = await this.authorizeResource(userId, childId);
+
+    //update
+    await this.prisma.$queryRaw`
+      UPDATE Child
+      SET
+      firstName = ${reqBody.firstName},
+      lastName = ${reqBody.lastName},
+      profileImage = ${reqBody.profileImage},
+      gender = ${reqBody.gender},
+      birthday = ${reqBody.birthday},
+      updatedAt = ${new Date()}
+      WHERE
+      id = ${child.id};
+    `;
+
+    /////////////////////////////////////////////
+
+    let updatedChild = this.getLastUpdatedChild();
+
+    return updatedChild;
+
+    // return new ReturnChildSerializer().serialize(updatedChild[0]);
+  }
+
+  async deleteChild(childId, userId): Promise<any> {
+    let child = await this.authorizeResource(userId, childId);
+    await this.deleteChildProfileByChildId(childId);
+    await this.deleteChildById(childId);
+    return child;
+    // return new ReturnChildSerializer().serialize(child);
   }
 
   async findByMobile(mobileNumber: string): Promise<NativeUserDto> {
@@ -219,32 +221,39 @@ export class UserService {
 
   private async getUserById(userId): Promise<ReturnUserDto> {
     let theUser = await this.prisma.$queryRaw`
-      SELECT *
+      SELECT
+      id,
+        firstName,
+        lastName,
+        profileImage,
+        email,
+        mobileNumber,
+        gender,
+        birthday
       FROM User
       WHERE id = ${userId}
       LIMIT 1
     `;
-    // if (playerProfile[0]) {
     return theUser[0];
-    // } else {
-    //   console.log('exception --');
-    //   throw new NewBadRequestException('RECORD_NOT_FOUND');
-    // }
   }
 
   private async getChildById(childId): Promise<ReturnChildDto> {
     let theChild = await this.prisma.$queryRaw`
-      SELECT *
+      SELECT
+        id,
+        firstName,
+        lastName,
+        profileImage,
+        email,
+        mobileNumber,
+        gender,
+        birthday,
+        userId
       FROM Child
       WHERE id = ${childId}
       LIMIT 1
     `;
-    // if (playerProfile[0]) {
     return theChild[0];
-    // } else {
-    //   console.log('exception --');
-    //   throw new NewBadRequestException('RECORD_NOT_FOUND');
-    // }
   }
 
   private async deleteChildById(childId) {
@@ -263,13 +272,15 @@ export class UserService {
       WHERE
       childId = ${childId};`;
 
-    await this.deleteChildProfileSportsByChildProfileId(childProfile[0].id);
+    if (childProfile[0]) {
+      await this.deleteChildProfileSportsByChildProfileId(childProfile[0].id);
 
-    await this.prisma.$queryRaw`
+      await this.prisma.$queryRaw`
       DELETE FROM
       ChildProfile
       WHERE
       id = ${childProfile[0].id};`;
+    }
   }
 
   private async deleteChildProfileSportsByChildProfileId(childProfileId) {
@@ -282,7 +293,16 @@ export class UserService {
 
   private async getUserChilds(userId): Promise<any> {
     let userChilds = await this.prisma.$queryRaw`
-      SELECT *
+      SELECT
+      id,
+      firstName,
+      lastName,
+      profileImage,
+      email,
+      mobileNumber,
+      gender,
+      birthday,
+      userId
       FROM Child
       WHERE userId = ${userId}
     `;
@@ -295,11 +315,74 @@ export class UserService {
   }
 
   private async getLastCreated(): Promise<ReturnUserDto> {
-    return await this.prisma.$queryRaw`
-    SELECT *
+    let lastCreated = await this.prisma.$queryRaw`
+    SELECT
+    id,
+      firstName,
+      lastName,
+      profileImage,
+      email,
+      mobileNumber,
+      gender,
+      birthday
     FROM User
     ORDER BY createdAt DESC
     LIMIT 1`;
+    return lastCreated[0];
+  }
+
+  private async getLastUpdated(): Promise<ReturnUserDto> {
+    let lastUpdated = await this.prisma.$queryRaw`
+    SELECT
+    id,
+      firstName,
+      lastName,
+      profileImage,
+      email,
+      mobileNumber,
+      gender,
+      birthday
+    FROM User
+    ORDER BY updatedAt DESC
+    LIMIT 1`;
+    return lastUpdated[0];
+  }
+
+  private async getLastCreatedChild(): Promise<ReturnChildDto> {
+    let createdChild = await this.prisma.$queryRaw`
+    SELECT
+    id,
+      firstName,
+      lastName,
+      profileImage,
+      email,
+      mobileNumber,
+      gender,
+      birthday,
+      userId
+    FROM Child
+    ORDER BY createdAt DESC
+    LIMIT 1`;
+    return createdChild[0];
+  }
+
+  private async getLastUpdatedChild(): Promise<ReturnChildDto> {
+    let updatedChild = await this.prisma.$queryRaw`
+      SELECT
+      id,
+        firstName,
+        lastName,
+        profileImage,
+        email,
+        mobileNumber,
+        gender,
+        birthday,
+        userId
+      FROM Child
+      ORDER BY updatedAt DESC
+      LIMIT 1`;
+
+    return updatedChild[0];
   }
 
   private async authorizeResource(

@@ -62,6 +62,6 @@ export class PlayerProfileController {
   // @UseGuards(AuthGuard, RoleGuard)
   @Get('testHesham')
   async testHesham(@Request() req: ExpressRequest) {
-    return this.playerProfileService.testHesham();
+    // return this.playerProfileService.testHesham();
   }
 }

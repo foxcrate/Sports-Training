@@ -1,6 +1,5 @@
 import { Catch, ArgumentsHost } from '@nestjs/common';
 import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
-import savedErrors from '../error_codes';
 
 @Catch(NewBadRequestException)
 export class BadRequestFilter {
@@ -35,7 +34,7 @@ export class BadRequestFilter {
         data: null,
         error: {
           type: errorCode,
-          message: savedErrors.get('en').get(errorCode),
+          // message: savedErrors.get('en').get(errorCode),
         },
       });
     }

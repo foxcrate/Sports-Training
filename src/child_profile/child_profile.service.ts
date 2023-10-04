@@ -43,7 +43,8 @@ export class ChildProfileService {
     ${childId},
     ${new Date()})`;
 
-    let newChildProfile: ReturnChildProfileDto = await this.getLastCreated();
+    let newChildProfile: ReturnChildProfileDto =
+      await this.getChildProfileByChildId(childId);
 
     //if sportsIds array is provided, insert them in PlayerProfileSports
     //else do nothing
@@ -55,7 +56,10 @@ export class ChildProfileService {
       await this.createProfileSports(createData.sports, newChildProfile.id);
     }
 
-    return new ReturnChildProfileSerializer().serialize(newChildProfile);
+    let newChildProfileWithSports = this.getChildProfileWithSportsByChildId(childId);
+    return newChildProfileWithSports;
+
+    // return new ReturnChildProfileSerializer().serialize(newChildProfile);
   }
 
   async update(createData: ChildProfileCreateDto, childProfileId, userId): Promise<any> {
@@ -78,7 +82,7 @@ export class ChildProfileService {
       id = ${childProfileId};
     `;
 
-    let updatedChildProfile: ReturnChildProfileDto = await this.getLastUpdated();
+    let updatedChildProfile: ReturnChildProfileDto = await this.getById(childProfileId);
 
     //if sportsIds array is provided, insert them in PlayerProfileSports
     //else do nothing
@@ -88,7 +92,11 @@ export class ChildProfileService {
       await this.deletePastChildSports(childProfile.id);
     }
 
-    return new ReturnChildProfileSerializer().serialize(updatedChildProfile);
+    let newChildProfileWithSports = this.getChildProfileWithSportsByChildId(
+      childProfile.childId,
+    );
+    return newChildProfileWithSports;
+    // return new ReturnChildProfileSerializer().serialize(updatedChildProfile);
   }
 
   async delete(userId, childProfileId): Promise<any> {
@@ -96,7 +104,8 @@ export class ChildProfileService {
     let childProfile = await this.authorizeResource(userId, childProfileId);
 
     //serialize it
-    let deletedChildProfile = new ReturnChildProfileSerializer().serialize(childProfile);
+    // let deletedChildProfile = new ReturnChildProfileSerializer().serialize(childProfile);
+    let deletedChildProfile: ReturnChildProfileDto = await this.getById(childProfileId);
 
     //delete childProfileSports
     await this.deletePastChildSports(childProfile.id);
@@ -117,31 +126,42 @@ export class ChildProfileService {
     //get all user's childs
     let childsIds = await this.getUserChildsIds(userId);
 
+    // console.log({ childsIds });
+
     //return empty array if childsIds is empty
     if (childsIds.length == 0) {
       return [];
     }
 
     //select all child's profile
-    let childProfiles = await this.prisma.$queryRaw`
-    SELECT *
-    FROM ChildProfile
-    WHERE childId IN (${Prisma.join(childsIds)});
-    `;
+    // let childProfiles = await this.prisma.$queryRaw`
+    // SELECT *
+    // FROM ChildProfile
+    // WHERE childId IN (${Prisma.join(childsIds)});
+    // `;
+
+    let childsProfilesWithSports = this.getChildsProfilesWithSportsByChildIds(childsIds);
+    return childsProfilesWithSports;
 
     //return them serialized
-    return new ReturnChildProfileSerializer().serialize(childProfiles);
+    // return new ReturnChildProfileSerializer().serialize(childProfiles);
   }
 
   async getOne(userId, childProfileId): Promise<any> {
+    // console.log('aloo');
     // return the childProfile or throw unauthorized error
     let childProfile = await this.authorizeResource(userId, childProfileId);
 
     //get childProfile
     // let childProfile = await this.getById(childProfileId);
 
+    let childProfileWithSports = this.getChildProfileWithSportsByChildId(
+      childProfile.childId,
+    );
+
     //return them serialized
-    return new ReturnChildProfileSerializer().serialize(childProfile);
+    // return new ReturnChildProfileSerializer().serialize(childProfile);
+    return childProfileWithSports;
   }
 
   private async findRepeated(childId): Promise<Boolean> {
@@ -239,6 +259,68 @@ export class ChildProfileService {
     return childProfile[0];
   }
 
+  private async getChildProfileWithSportsByChildId(
+    childId: number,
+  ): Promise<ReturnChildProfileDto> {
+    let childProfileWithSports: any = await this.prisma.$queryRaw`
+    SELECT
+    cp.id AS id,
+    cp.level AS level,
+    cp.regionId AS regionId,
+    cp.childId AS childId,
+    c.id AS childId,
+    c.firstName AS firstName,
+    c.lastName AS lastName,
+    CASE 
+    WHEN COUNT(s.id ) = 0 THEN null
+    ELSE
+    JSON_ARRAYAGG(JSON_OBJECT(
+      'id',s.id,
+      'enName', s.enName,
+      'arName', s.arName)) 
+    END AS sports
+    FROM ChildProfile AS cp
+    LEFT JOIN Child AS c ON cp.childId = c.id
+    LEFT JOIN ChildProfileSports AS cps ON cp.id = cps.childProfileId
+    LEFT JOIN Sport AS s ON cps.sportId = s.id
+    WHERE cp.childId = ${childId}
+    GROUP BY cp.id
+    ;`;
+    return childProfileWithSports[0];
+  }
+
+  private async getChildsProfilesWithSportsByChildIds(
+    childsIds: number[],
+  ): Promise<ReturnChildProfileDto> {
+    // console.log({ childsIds });
+
+    let childProfileWithSports: any = await this.prisma.$queryRaw`
+    SELECT
+    cp.id AS id,
+    cp.level AS level,
+    cp.regionId AS regionId,
+    cp.childId AS childId,
+    c.id AS childId,
+    c.firstName AS firstName,
+    c.lastName AS lastName,
+    CASE 
+    WHEN COUNT(s.id ) = 0 THEN null
+    ELSE
+    JSON_ARRAYAGG(JSON_OBJECT(
+      'id',s.id,
+      'enName', s.enName,
+      'arName', s.arName)) 
+    END AS sports
+    FROM ChildProfile AS cp
+    LEFT JOIN Child AS c ON cp.childId = c.id
+    LEFT JOIN ChildProfileSports AS cps ON cp.id = cps.childProfileId
+    LEFT JOIN Sport AS s ON cps.sportId = s.id
+    WHERE cp.childId IN (${Prisma.join(childsIds)})
+    GROUP BY cp.id
+    ;`;
+    return childProfileWithSports;
+  }
+
   private async getChildProfileByChildId(childId): Promise<any> {
     let childProfile = await this.prisma.$queryRaw`
       SELECT *
@@ -263,6 +345,9 @@ export class ChildProfileService {
       FROM Child
       WHERE userId = ${userId}
     `;
+
+    // console.log({ idsObject });
+
     let childsIds = idsObject.map((obj) => {
       return obj.id;
     });
@@ -282,10 +367,14 @@ export class ChildProfileService {
     let childId = childProfile.childId;
 
     //get current user childs
+    // console.log({ userId });
+
     let childsIds = await this.getUserChildsIds(userId);
+    // console.log({ childsIds });
+
     childId = parseInt(childId);
 
-    //check if the child is the current user's child
+    // check if the child is the current user's child
     if (!childsIds.includes(childId)) {
       // throw new NewBadRequestException('UNAUTHORIZED');
       throw new ForbiddenException(this.globalService.getError('en', 'UNAUTHORIZED'));

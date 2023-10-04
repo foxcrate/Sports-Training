@@ -26,13 +26,18 @@ export class PlayerProfileService {
   ) {}
 
   async getOne(userId): Promise<any> {
-    let playerProfile = await this.getByUserId(userId);
-    if (!playerProfile) {
-      // throw new NewBadRequestException('RECORD_NOT_FOUND');
+    // let playerProfile = await this.getByUserId(userId);
+    // if (!playerProfile) {
+    //   // throw new NewBadRequestException('RECORD_NOT_FOUND');
+    //   throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
+    // }
+    let playerProfileWithSports = await this.getPlayerProfileWithSportsByUserId(userId);
+    if (!playerProfileWithSports) {
       throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
     }
 
-    return new ReturnPlayerProfileSerializer().serialize(playerProfile);
+    return playerProfileWithSports;
+    // return new ReturnPlayerProfileSerializer().serialize(playerProfile);
   }
 
   async create(createData: PlayerProfileCreateDto, userId): Promise<any> {
@@ -52,18 +57,23 @@ export class PlayerProfileService {
     ${userId},
     ${new Date()})`;
 
-    let newPlayerProfile: any = await this.getLastCreated();
+    let newPlayerProfile = await this.getByUserId(userId);
 
     if (createData.sports && createData.sports.length > 0) {
       await this.createProfileSports(createData.sports, newPlayerProfile.id);
     }
 
-    return new ReturnPlayerProfileSerializer().serialize(newPlayerProfile);
+    let newPlayerProfileWithSports: any =
+      await this.getPlayerProfileWithSportsByUserId(userId);
+
+    // return new ReturnPlayerProfileSerializer().serialize(newPlayerProfile);
+    return newPlayerProfileWithSports;
   }
 
   async update(createData: PlayerProfileCreateDto, userId): Promise<any> {
     //check profile existence
-    let playerProfile = await this.getByUserId(userId);
+    // let playerProfile = await this.getByUserId(userId);
+    let playerProfile: any = await this.getPlayerProfileWithSportsByUserId(userId);
     if (!playerProfile) {
       // throw new NewBadRequestException('RECORD_NOT_FOUND');
       throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
@@ -80,23 +90,30 @@ export class PlayerProfileService {
       userId = ${userId};
     `;
 
-    let updatedPlayerProfile: any = await this.getLastUpdated();
+    // let updatedPlayerProfile: any = await this.getLastUpdated();
 
     //if sportsIds array is provided, insert them in PlayerProfileSports
     //else do nothing
 
     if (createData.sports && createData.sports.length > 0) {
-      await this.createProfileSports(createData.sports, updatedPlayerProfile.id);
+      await this.createProfileSports(createData.sports, playerProfile.id);
     } else if (createData.sports && createData.sports.length == 0) {
-      await this.deletePastPlayerSports(updatedPlayerProfile.id);
+      await this.deletePastPlayerSports(playerProfile.id);
     }
 
-    return new ReturnPlayerProfileSerializer().serialize(updatedPlayerProfile);
+    let updatedPlayerProfile: any = await this.getPlayerProfileWithSportsByUserId(userId);
+
+    return updatedPlayerProfile;
+    // return new ReturnPlayerProfileSerializer().serialize(updatedPlayerProfile);
   }
 
   async delete(userId): Promise<any> {
     //get deleted playerProfile
     let deletedPlayerProfile = await this.getByUserId(userId);
+
+    if (!deletedPlayerProfile) {
+      throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
+    }
 
     //delete playerProfileSports
     await this.deletePastPlayerSports(deletedPlayerProfile.id);
@@ -109,12 +126,14 @@ export class PlayerProfileService {
       userId = ${userId};
     `;
 
-    return new ReturnPlayerProfileSerializer().serialize(deletedPlayerProfile);
+    // return new ReturnPlayerProfileSerializer().serialize(deletedPlayerProfile);
+    return deletedPlayerProfile;
   }
 
   private async findRepeated(userId): Promise<Boolean> {
     //Chick existed email or phone number
-    let repeatedPlayerProfile = await this.prisma.$queryRaw`SELECT *
+    let repeatedPlayerProfile = await this.prisma.$queryRaw`
+    SELECT *
     FROM PlayerProfile
     WHERE userId = ${userId}
     LIMIT 1
@@ -162,12 +181,33 @@ export class PlayerProfileService {
   }
 
   private async getLastCreated(): Promise<ReturnPlayerProfileDto> {
-    let playerProfile = await this.prisma.$queryRaw`
-    SELECT *
-    FROM PlayerProfile
+    // let playerProfile = await this.prisma.$queryRaw`
+    // SELECT *
+    // FROM PlayerProfile
+    // ORDER BY createdAt DESC
+    // LIMIT 1`;
+
+    let playerProfileWithSports = await this.prisma.$queryRaw`
+    SELECT
+      pp.id AS id,
+      pp.level AS level,
+      pp.regionId AS regionId,
+      pp.userId AS userId,
+      JSON_ARRAYAGG(json_object(
+        'id',s.id,
+        'enName', s.enName,
+        'arName', s.arName))
+    AS sports
+    FROM PlayerProfile AS pp
+    JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
+    JOIN Sport AS s ON pps.sportId = s.id
+    GROUP BY pp.id
     ORDER BY createdAt DESC
-    LIMIT 1`;
-    return playerProfile[0];
+    LIMIT 1
+    `;
+
+    // return playerProfile[0];
+    return playerProfileWithSports[0];
   }
 
   private async getLastUpdated(): Promise<ReturnPlayerProfileDto> {
@@ -187,6 +227,33 @@ export class PlayerProfileService {
       LIMIT 1
     `;
     return playerProfile[0];
+  }
+
+  private async getPlayerProfileWithSportsByUserId(
+    userId,
+  ): Promise<ReturnPlayerProfileDto> {
+    let playerProfileWithSports: any = await this.prisma.$queryRaw`
+    SELECT
+    pp.id AS id,
+    pp.level AS level,
+    pp.regionId AS regionId,
+    pp.userId AS userId,
+    CASE 
+    WHEN COUNT(s.id ) = 0 THEN null
+    ELSE
+    JSON_ARRAYAGG(JSON_OBJECT(
+      'id',s.id,
+      'enName', s.enName,
+      'arName', s.arName)) 
+    END AS sports
+    FROM PlayerProfile AS pp
+    LEFT JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
+    LEFT JOIN Sport AS s ON pps.sportId = s.id
+    WHERE pp.userId = ${userId}
+    GROUP BY pp.id
+    LIMIT 1
+    ;`;
+    return playerProfileWithSports[0];
   }
 
   private async deletePastPlayerSports(playerProfileId: number): Promise<any> {

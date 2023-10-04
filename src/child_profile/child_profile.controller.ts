@@ -83,6 +83,8 @@ export class ChildProfileController {
   @Get('/:childProfileId')
   async getOne1(@Param() params, @Request() req: ExpressRequest) {
     const childProfileId = params.childProfileId;
+    // console.log("req['id']:", req['id']);
+
     return this.childProfileService.getOne(req['id'], childProfileId);
   }
 }

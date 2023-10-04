@@ -1,10 +1,8 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { SigninUserDto } from 'src/user/dtos/signin.dto';
 import { JwtService } from '@nestjs/jwt';
-import { NewBadRequestException } from 'src/exceptions/new_bad_request.exception';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
-import { ReturnUserSerializer } from 'src/user/serializers/return_user.serializer';
 import { PasswordUtility } from '../utils/password.util';
 import { ConfigService } from '@nestjs/config';
 import { SigninChildDto } from 'src/child/dtos/signin.dto';
@@ -36,7 +34,9 @@ export class AuthService {
       signupData.password = await PasswordUtility.hashPassword(signupData.password);
 
       const newUser = await this.userService.create(signupData);
-      return new ReturnUserSerializer().serialize(newUser);
+
+      // return new ReturnUserSerializer().serialize(newUser);
+      return newUser;
     }
   }
 
@@ -63,7 +63,7 @@ export class AuthService {
   async childSignin(signinData: SigninChildDto): Promise<AuthTokensDTO> {
     const child = await this.childService.findByMobile(signinData.mobileNumber);
 
-    console.log({ child });
+    // console.log({ child });
 
     const validPassword = await PasswordUtility.verifyPassword(
       signinData.password,

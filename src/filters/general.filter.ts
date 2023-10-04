@@ -12,7 +12,6 @@ import {
   ConflictException,
   InternalServerErrorException,
 } from '@nestjs/common';
-import savedErrors from '../error_codes';
 
 @Catch(
   HttpException,
@@ -27,7 +26,7 @@ export class GeneralFilter implements ExceptionFilter {
     const message = exception.message;
     const exceptionBody: any = exception.getResponse();
 
-    console.log({ exceptionBody });
+    // console.log({ exceptionBody });
 
     // if (exception instanceof BadRequestException) {
     //   console.log('BadRequestException');
@@ -47,7 +46,7 @@ export class GeneralFilter implements ExceptionFilter {
     //   console.log('InternalServerErrorException');
     // }
 
-    console.log('-- General Filter');
+    // console.log('-- General Filter');
 
     let errorType = null;
     let errorMessage = null;
