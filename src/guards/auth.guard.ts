@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GlobalService } from 'src/global/global.service';
@@ -26,27 +25,21 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
     if (!token) {
-      // throw new NewBadRequestException('UNAUTHENTICATED');
       throw new UnauthorizedException(
-        // this.globalService.getError('en', 'NO_BEARER_TOKEN'),
         this.i18n.t(`errors.NO_BEARER_TOKEN`, { lang: I18nContext.current().lang }),
       );
     }
 
     let payload = this.verifyToken(token);
     if (payload === false) {
-      // throw new NewBadRequestException('UNAUTHENTICATED');
       throw new UnauthorizedException(
-        // this.globalService.getError('en', 'WRONG_CREDENTIALS'),
         this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
     }
 
     //There are two types of token normal or refresh
     if (payload.tokenType !== 'normal') {
-      // throw new NewBadRequestException('UNAUTHENTICATED');
       throw new UnauthorizedException(
-        // this.globalService.getError('en', 'JWT_ERROR')
         this.i18n.t(`errors.JWT_ERROR`, { lang: I18nContext.current().lang }),
       );
     }
@@ -55,9 +48,7 @@ export class AuthGuard implements CanActivate {
     request['id'] = payload.id;
 
     if (!(await this.userAvailable(request['id']))) {
-      // throw new NewBadRequestException('UNAUTHENTICATED');
       throw new UnauthorizedException(
-        // this.globalService.getError('en', 'WRONG_CREDENTIALS'),
         this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
     }

@@ -26,8 +26,6 @@ export class UserService {
   ) {}
 
   async test() {
-    // console.log('alo');
-
     return this.i18n.t(`test.welcome`, { lang: I18nContext.current().lang });
   }
 
@@ -82,14 +80,11 @@ export class UserService {
 
     let updatedUser = this.getLastUpdated();
     return updatedUser;
-
-    // return new ReturnUserSerializer().serialize(updatedUser[0]);
   }
 
   async getOne(userId): Promise<any> {
     let user = await this.getUserById(userId);
 
-    // return new ReturnUserSerializer().serialize(user);
     return user;
   }
 
@@ -121,15 +116,8 @@ export class UserService {
       ${userId},
       ${new Date()})`;
 
-    // let newChild = await this.prisma.$queryRaw`
-    //   SELECT *
-    //   FROM Child
-    //   ORDER BY createdAt DESC
-    //   LIMIT 1`;
-
     let newChild = this.getLastCreatedChild();
 
-    // return new ReturnChildSerializer().serialize(newChild[0]);
     return newChild;
   }
 
@@ -137,14 +125,11 @@ export class UserService {
     let userChilds = await this.getUserChilds(userId);
 
     return userChilds;
-
-    // return new ReturnChildSerializer().serialize(userChilds);
   }
 
   async getChild(childId, userId): Promise<any> {
     let child = await this.authorizeResource(userId, childId);
 
-    // return new ReturnChildSerializer().serialize(child);
     return child;
   }
 
@@ -165,13 +150,9 @@ export class UserService {
       id = ${child.id};
     `;
 
-    /////////////////////////////////////////////
-
     let updatedChild = this.getLastUpdatedChild();
 
     return updatedChild;
-
-    // return new ReturnChildSerializer().serialize(updatedChild[0]);
   }
 
   async deleteChild(childId, userId): Promise<any> {
@@ -179,7 +160,6 @@ export class UserService {
     await this.deleteChildProfileByChildId(childId);
     await this.deleteChildById(childId);
     return child;
-    // return new ReturnChildSerializer().serialize(child);
   }
 
   async findByMobile(mobileNumber: string): Promise<NativeUserDto> {
@@ -191,9 +171,7 @@ export class UserService {
     `;
 
     if (!foundedAccount[0]) {
-      // throw new NewBadRequestException('WRONG_CREDENTIALS');
       throw new UnauthorizedException(
-        // this.globalService.getError('en', 'WRONG_CREDENTIALS'),
         this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
     }
@@ -213,16 +191,12 @@ export class UserService {
 
     if (repeatedUserProfile[0]) {
       if (repeatedUserProfile[0].email == email) {
-        // throw new NewBadRequestException('REPEATED_EMAIL');
         throw new BadRequestException(
-          // this.globalService.getError('en', 'REPEATED_EMAIL'),
           this.i18n.t(`errors.REPEATED_EMAIL`, { lang: I18nContext.current().lang }),
         );
       }
       if (repeatedUserProfile[0].mobileNumber == mobileNumber) {
-        // throw new NewBadRequestException('REPEATED_MOBILE_NUMBER');
         throw new BadRequestException(
-          // this.globalService.getError('en', 'REPEATED_MOBILE_NUMBER'),
           this.i18n.t(`errors.REPEATED_MOBILE_NUMBER`, {
             lang: I18nContext.current().lang,
           }),
@@ -319,12 +293,7 @@ export class UserService {
       FROM Child
       WHERE userId = ${userId}
     `;
-    // if (playerProfile[0]) {
     return userChilds;
-    // } else {
-    //   console.log('exception --');
-    //   throw new NewBadRequestException('RECORD_NOT_FOUND');
-    // }
   }
 
   private async getLastCreated(): Promise<ReturnUserDto> {
@@ -405,28 +374,20 @@ export class UserService {
     //get childProfile
     let child = await this.getChildById(childId);
     if (!child) {
-      // throw new NewBadRequestException('RECORD_NOT_FOUND');
       throw new NotFoundException(
-        // this.globalService.getError('en', 'RECORD_NOT_FOUND')
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
       );
     }
-    // console.log({ child });
-
-    // let childId = child.id;
 
     //get current user childs
     let childs = await this.getUserChilds(userId);
     let childsIds = childs.map((child) => {
       return child.id;
     });
-    // childId = parseInt(childId);
 
     //check if the child is the current user's child
     if (!childsIds.includes(child.id)) {
-      // throw new NewBadRequestException('UNAUTHORIZED');
       throw new ForbiddenException(
-        // this.globalService.getError('en', 'UNAUTHORIZED')
         this.i18n.t(`errors.UNAUTHORIZED`, { lang: I18nContext.current().lang }),
       );
     }

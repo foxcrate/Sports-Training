@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ChildProfileCreateDto } from './dtos/create.dto';
-import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 import { Prisma } from '@prisma/client';
 import { ReturnChildProfileSerializer } from './serializers/return.serializer';
 import { ReturnChildProfileDto } from './dtos/return.dto';
@@ -28,7 +27,6 @@ export class ChildProfileService {
     let child = await this.getChildById(childId);
     if (child.userId != userId) {
       throw new ForbiddenException(
-        // this.globalService.getError('en', 'UNAUTHORIZED')
         this.i18n.t(`errors.UNAUTHORIZED`, { lang: I18nContext.current().lang }),
       );
     }
@@ -53,9 +51,6 @@ export class ChildProfileService {
 
     //if sportsIds array is provided, insert them in PlayerProfileSports
     //else do nothing
-    // createData.sports
-    //   ? await this.createProfileSports(createData.sports, newPlayerProfile[0].id)
-    //   : undefined;
 
     if (createData.sports && createData.sports.length > 0) {
       await this.createProfileSports(createData.sports, newChildProfile.id);
@@ -63,8 +58,6 @@ export class ChildProfileService {
 
     let newChildProfileWithSports = this.getChildProfileWithSportsByChildId(childId);
     return newChildProfileWithSports;
-
-    // return new ReturnChildProfileSerializer().serialize(newChildProfile);
   }
 
   async update(createData: ChildProfileCreateDto, childProfileId, userId): Promise<any> {
@@ -72,9 +65,7 @@ export class ChildProfileService {
     let childProfile = await this.authorizeResource(userId, childProfileId);
 
     if (!childProfile) {
-      // throw new NewBadRequestException('RECORD_NOT_FOUND');
       throw new NotFoundException(
-        // this.globalService.getError('en', 'RECORD_NOT_FOUND')
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
       );
     }
@@ -104,15 +95,12 @@ export class ChildProfileService {
       childProfile.childId,
     );
     return newChildProfileWithSports;
-    // return new ReturnChildProfileSerializer().serialize(updatedChildProfile);
   }
 
   async delete(userId, childProfileId): Promise<any> {
     // return the childProfile or throw unauthorized error
     let childProfile = await this.authorizeResource(userId, childProfileId);
 
-    //serialize it
-    // let deletedChildProfile = new ReturnChildProfileSerializer().serialize(childProfile);
     let deletedChildProfile: ReturnChildProfileDto = await this.getById(childProfileId);
 
     //delete childProfileSports
@@ -141,34 +129,19 @@ export class ChildProfileService {
       return [];
     }
 
-    //select all child's profile
-    // let childProfiles = await this.prisma.$queryRaw`
-    // SELECT *
-    // FROM ChildProfile
-    // WHERE childId IN (${Prisma.join(childsIds)});
-    // `;
-
     let childsProfilesWithSports = this.getChildsProfilesWithSportsByChildIds(childsIds);
     return childsProfilesWithSports;
-
-    //return them serialized
-    // return new ReturnChildProfileSerializer().serialize(childProfiles);
   }
 
   async getOne(userId, childProfileId): Promise<any> {
-    // console.log('aloo');
     // return the childProfile or throw unauthorized error
     let childProfile = await this.authorizeResource(userId, childProfileId);
 
     //get childProfile
-    // let childProfile = await this.getById(childProfileId);
 
     let childProfileWithSports = this.getChildProfileWithSportsByChildId(
       childProfile.childId,
     );
-
-    //return them serialized
-    // return new ReturnChildProfileSerializer().serialize(childProfile);
     return childProfileWithSports;
   }
 
@@ -182,9 +155,7 @@ export class ChildProfileService {
     `;
 
     if (repeatedChildProfile[0]) {
-      // throw new NewBadRequestException('PROFILE_EXISTED');
       throw new BadRequestException(
-        // this.globalService.getError('en', 'PROFILE_EXISTED')
         this.i18n.t(`errors.PROFILE_EXISTED`, { lang: I18nContext.current().lang }),
       );
     }
@@ -219,9 +190,7 @@ export class ChildProfileService {
     `;
 
     if (foundedSports.length < sportsArray.length) {
-      // throw new NewBadRequestException('NOT_EXISTED_SPORT');
       throw new BadRequestException(
-        // this.globalService.getError('en', 'NOT_EXISTED_SPORT'),
         this.i18n.t(`errors.NOT_EXISTED_SPORT`, { lang: I18nContext.current().lang }),
       );
     }
@@ -255,9 +224,7 @@ export class ChildProfileService {
     `;
 
     if (!theChild[0]) {
-      // throw new NewBadRequestException('RECORD_NOT_FOUND');
       throw new NotFoundException(
-        // this.globalService.getError('en', 'RECORD_NOT_FOUND')
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
       );
     }
@@ -376,9 +343,7 @@ export class ChildProfileService {
     //get childProfile
     let childProfile = await this.getById(childProfileId);
     if (!childProfile) {
-      // throw new NewBadRequestException('RECORD_NOT_FOUND');
       throw new NotFoundException(
-        // this.globalService.getError('en', 'RECORD_NOT_FOUND')
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
       );
     }
@@ -394,9 +359,7 @@ export class ChildProfileService {
 
     // check if the child is the current user's child
     if (!childsIds.includes(childId)) {
-      // throw new NewBadRequestException('UNAUTHORIZED');
       throw new ForbiddenException(
-        // this.globalService.getError('en', 'UNAUTHORIZED')
         this.i18n.t(`errors.UNAUTHORIZED`, { lang: I18nContext.current().lang }),
       );
     }

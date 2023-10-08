@@ -8,9 +8,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SignupChildDto } from 'src/child/dtos/signup.dto';
-import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 import { ReturnChildSerializer } from './serializers/return-child.serializer';
-import { PasswordUtility } from '../utils/password.util';
 import { ReturnChildDto } from './dtos/return.dto';
 import { NativeChildDto } from './dtos/native.dto';
 import { GlobalService } from 'src/global/global.service';
@@ -33,9 +31,7 @@ export class ChildService {
     `;
 
     if (!foundedAccount[0] || foundedAccount[0].password == null) {
-      // throw new NewBadRequestException('WRONG_CREDENTIALS');
       throw new UnauthorizedException(
-        // this.globalService.getError('en', 'WRONG_CREDENTIALS'),
         this.i18n.t(`errors.JWT_ERROR`, { lang: I18nContext.current().lang }),
       );
     }
@@ -44,7 +40,6 @@ export class ChildService {
 
   async findRepeated(email, mobileNumber): Promise<Boolean> {
     //Chick existed email or phone number
-    // throw new HttpException('toto error', HttpStatus.INTERNAL_SERVER_ERROR);
     let repeatedChild = await this.prisma.$queryRaw`
     SELECT *
     FROM Child
@@ -54,16 +49,12 @@ export class ChildService {
 
     if (repeatedChild[0]) {
       if (repeatedChild[0].email == email) {
-        // throw new NewBadRequestException('REPEATED_EMAIL');
         throw new BadRequestException(
-          // this.globalService.getError('en', 'REPEATED_EMAIL'),
           this.i18n.t(`errors.REPEATED_EMAIL`, { lang: I18nContext.current().lang }),
         );
       }
       if (repeatedChild[0].mobileNumber == mobileNumber) {
-        // throw new NewBadRequestException('REPEATED_MOBILE_NUMBER');
         throw new BadRequestException(
-          // this.globalService.getError('en', 'REPEATED_MOBILE_NUMBER'),
           this.i18n.t(`errors.REPEATED_MOBILE_NUMBER`, {
             lang: I18nContext.current().lang,
           }),
@@ -83,9 +74,7 @@ export class ChildService {
       `;
 
     if (!foundedChild[0]) {
-      // throw new NewBadRequestException('WRONG_CREDENTIALS');
       throw new UnauthorizedException(
-        // this.globalService.getError('en', 'WRONG_CREDENTIALS'),
         this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
     }
@@ -97,16 +86,13 @@ export class ChildService {
     let child = await this.findByMobileNumber(reqBody.mobileNumber);
 
     if (child.password !== null) {
-      // throw new NewBadRequestException('ACCOUNT_ALREADY_ACTIVATED');
       throw new NotFoundException(
-        // this.globalService.getError('en', 'ACCOUNT_ALREADY_ACTIVATED'),
         this.i18n.t(`errors.ACCOUNT_ALREADY_ACTIVATED`, {
           lang: I18nContext.current().lang,
         }),
       );
     }
 
-    // let hashedPassword = await PasswordUtility.hashPassword(reqBody.password);
     let hashedPassword = await this.globalService.hashPassword(reqBody.password);
     await this.prisma.$queryRaw`
       UPDATE Child
@@ -131,6 +117,5 @@ export class ChildService {
     `;
 
     return updatedChild[0];
-    // return new ReturnChildSerializer().serialize(updatedChild);
   }
 }

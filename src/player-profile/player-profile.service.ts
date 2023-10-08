@@ -11,7 +11,6 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PlayerProfileCreateDto } from 'src/player-profile/dtos/create.dto';
-import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 import { Prisma } from '@prisma/client';
 import { ReturnPlayerProfileSerializer } from './serializers/return.serializer';
 import { ReturnPlayerProfileDto } from './dtos/return.dto';
@@ -28,21 +27,14 @@ export class PlayerProfileService {
   ) {}
 
   async getOne(userId): Promise<any> {
-    // let playerProfile = await this.getByUserId(userId);
-    // if (!playerProfile) {
-    //   // throw new NewBadRequestException('RECORD_NOT_FOUND');
-    //   throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
-    // }
     let playerProfileWithSports = await this.getPlayerProfileWithSportsByUserId(userId);
     if (!playerProfileWithSports) {
       throw new NotFoundException(
-        // this.globalService.getError('en', 'RECORD_NOT_FOUND')
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
       );
     }
 
     return playerProfileWithSports;
-    // return new ReturnPlayerProfileSerializer().serialize(playerProfile);
   }
 
   async create(createData: PlayerProfileCreateDto, userId): Promise<any> {
@@ -71,18 +63,14 @@ export class PlayerProfileService {
     let newPlayerProfileWithSports: any =
       await this.getPlayerProfileWithSportsByUserId(userId);
 
-    // return new ReturnPlayerProfileSerializer().serialize(newPlayerProfile);
     return newPlayerProfileWithSports;
   }
 
   async update(createData: PlayerProfileCreateDto, userId): Promise<any> {
     //check profile existence
-    // let playerProfile = await this.getByUserId(userId);
     let playerProfile: any = await this.getPlayerProfileWithSportsByUserId(userId);
     if (!playerProfile) {
-      // throw new NewBadRequestException('RECORD_NOT_FOUND');
       throw new NotFoundException(
-        // this.globalService.getError('en', 'RECORD_NOT_FOUND')
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
       );
     }
@@ -98,8 +86,6 @@ export class PlayerProfileService {
       userId = ${userId};
     `;
 
-    // let updatedPlayerProfile: any = await this.getLastUpdated();
-
     //if sportsIds array is provided, insert them in PlayerProfileSports
     //else do nothing
 
@@ -112,7 +98,6 @@ export class PlayerProfileService {
     let updatedPlayerProfile: any = await this.getPlayerProfileWithSportsByUserId(userId);
 
     return updatedPlayerProfile;
-    // return new ReturnPlayerProfileSerializer().serialize(updatedPlayerProfile);
   }
 
   async delete(userId): Promise<any> {
@@ -121,7 +106,6 @@ export class PlayerProfileService {
 
     if (!deletedPlayerProfile) {
       throw new NotFoundException(
-        // this.globalService.getError('en', 'RECORD_NOT_FOUND')
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
       );
     }
@@ -137,7 +121,6 @@ export class PlayerProfileService {
       userId = ${userId};
     `;
 
-    // return new ReturnPlayerProfileSerializer().serialize(deletedPlayerProfile);
     return deletedPlayerProfile;
   }
 
@@ -151,9 +134,7 @@ export class PlayerProfileService {
     `;
 
     if (repeatedPlayerProfile[0]) {
-      // throw new NewBadRequestException('PROFILE_EXISTED');
       throw new BadRequestException(
-        // this.globalService.getError('en', 'PROFILE_EXISTED')
         this.i18n.t(`errors.PROFILE_EXISTED`, { lang: I18nContext.current().lang }),
       );
     }
@@ -188,9 +169,7 @@ export class PlayerProfileService {
     `;
 
     if (foundedSports.length < sportsArray.length) {
-      // throw new NewBadRequestException('NOT_EXISTED_SPORT');
       throw new NotFoundException(
-        // this.globalService.getError('en', 'NOT_EXISTED_SPORT')
         this.i18n.t(`errors.NOT_EXISTED_SPORT`, { lang: I18nContext.current().lang }),
       );
     }
@@ -198,12 +177,6 @@ export class PlayerProfileService {
   }
 
   private async getLastCreated(): Promise<ReturnPlayerProfileDto> {
-    // let playerProfile = await this.prisma.$queryRaw`
-    // SELECT *
-    // FROM PlayerProfile
-    // ORDER BY createdAt DESC
-    // LIMIT 1`;
-
     let playerProfileWithSports = await this.prisma.$queryRaw`
     SELECT
       pp.id AS id,

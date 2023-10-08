@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AppService } from './app.service';
-import { AWSS3Utility } from './utils/aws-s3.util';
 import { GlobalService } from './global/global.service';
 
 @Controller()
@@ -30,7 +29,6 @@ export class AppController {
     @UploadedFile(new ParseFilePipe())
     file: Express.Multer.File,
   ) {
-    // return AWSS3Utility.uploadFile(file);
     return this.globalService.uploadFile(file);
   }
 }

@@ -20,7 +20,6 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/guards/role.guard';
 import * as Joi from 'joi';
 import { GetOneChildValidation } from './validations/get-one-child.validation';
-import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 import { UpdateChildValidation } from './validations/update-child.validation';
 import { UpdateUserValidation } from './validations/update-user.validation';
 import { ChildIdValidation } from 'src/child-profile/validations/child-id.validation';
@@ -74,7 +73,6 @@ export class UserController {
   @UsePipes(new JoiValidation(GetOneChildValidation))
   @Get('childs/:childId')
   async getChild(@Param() params, @Request() req: ExpressRequest) {
-    // return params.childId;
     return this.userService.getChild(params.childId, req['id']);
   }
 
@@ -97,63 +95,12 @@ export class UserController {
   @UsePipes(new JoiValidation(GetOneChildValidation))
   @Delete('childs/:childId')
   async deleteChild(@Param() params, @Request() req: ExpressRequest) {
-    // return params.childId;
     return this.userService.deleteChild(params.childId, req['id']);
   }
 
   @Version('1')
   @Get('test')
   async test(@I18n() i18n: I18nContext) {
-    // let childProfileWithSports: any = await this.prisma.$queryRaw`
-    // SELECT
-    // pp.id AS id,
-    // pp.level AS level,
-    // pp.regionId AS regionId,
-    // pp.userId AS userId,
-    // CASE
-    // WHEN COUNT(s.id ) = 0 THEN null
-    // ELSE
-    // JSON_ARRAYAGG(JSON_OBJECT(
-    //   'id',s.id,
-    //   'enName', s.enName,
-    //   'arName', s.arName))
-    // END AS sports
-    // FROM PlayerProfile AS pp
-    // LEFT JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
-    // LEFT JOIN Sport AS s ON pps.sportId = s.id
-    // WHERE pp.userId = 1
-    // GROUP BY pp.id
-    // LIMIT 1
-    // ;`;
-    // return childProfileWithSports;
-    // ----------------------------------
-    // let childProfileWithSports: any = await this.prisma.$queryRaw`
-    // SELECT
-    // cp.id AS id,
-    // cp.level AS level,
-    // cp.regionId AS regionId,
-    // cp.childId AS childId,
-    // c.id AS childId,
-    // c.firstName AS firstName,
-    // c.lastName AS lastName,
-    // CASE
-    // WHEN COUNT(s.id ) = 0 THEN null
-    // ELSE
-    // JSON_ARRAYAGG(JSON_OBJECT(
-    //   'id',s.id,
-    //   'enName', s.enName,
-    //   'arName', s.arName))
-    // END AS sports
-    // FROM ChildProfile AS cp
-    // LEFT JOIN Child AS c ON cp.childId = c.id
-    // LEFT JOIN ChildProfileSports AS cps ON cp.id = cps.childProfileId
-    // LEFT JOIN Sport AS s ON cps.sportId = s.id
-    // WHERE cp.childId = 5
-    // GROUP BY cp.id
-    // ;`;
-    // return childProfileWithSports[0];
-    // -----------------------------------------
     return this.userService.test();
-    // return i18n.t(`test.welcome`);
   }
 }

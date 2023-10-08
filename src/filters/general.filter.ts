@@ -13,11 +13,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 
-@Catch(
-  HttpException,
-  // Prisma?.PrismaClientKnownRequestError,
-  // Prisma?.NotFoundError,
-)
+@Catch(HttpException)
 export class GeneralFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();

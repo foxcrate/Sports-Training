@@ -27,6 +27,5 @@ export class RegionController {
   @UsePipes(new JoiValidation(AddRegionValidation))
   async create1(@Body() reqBody, @Request() req: ExpressRequest) {
     return this.regionService.create(reqBody, req['id']);
-    // return 'Alo';
   }
 }

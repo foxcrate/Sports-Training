@@ -49,9 +49,7 @@ export class GlobalService {
     } catch (e) {
       console.log('--error in uploading image');
       console.log(e);
-      // throw new NewBadRequestException('UPLOAD_IMAGE_ERROR');
       throw new InternalServerErrorException(
-        // this.globalService.getError('en', 'UPLOAD_IMAGE_ERROR'),
         this.i18n.t(`errors.UPLOAD_IMAGE_ERROR`, { lang: I18nContext.current().lang }),
       );
     }

@@ -26,6 +26,5 @@ export class SportController {
   @UsePipes(new JoiValidation(AddSportValidation))
   async create1(@Body() reqBody, @Request() req: ExpressRequest) {
     return this.sportService.create(reqBody, req['id']);
-    // return 'Alo';
   }
 }

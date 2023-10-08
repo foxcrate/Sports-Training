@@ -1,5 +1,4 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegionCreateDto } from './dtos/create.dto';
 import { GlobalService } from 'src/global/global.service';
@@ -44,16 +43,12 @@ export class RegionService {
 
     if (repeatedRegion[0]) {
       if (repeatedRegion[0].enName == enName) {
-        // throw new NewBadRequestException('REPEATED_REGION');
         throw new BadRequestException(
-          // this.globalService.getError('en', 'REPEATED_REGION'),
           this.i18n.t(`errors.REPEATED_REGION`, { lang: I18nContext.current().lang }),
         );
       }
       if (repeatedRegion[0].arName == arName) {
-        // throw new NewBadRequestException('REPEATED_REGION');
         throw new BadRequestException(
-          // this.globalService.getError('en', 'REPEATED_REGION'),
           this.i18n.t(`errors.REPEATED_REGION`, { lang: I18nContext.current().lang }),
         );
       }

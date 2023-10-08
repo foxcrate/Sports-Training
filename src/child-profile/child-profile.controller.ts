@@ -25,7 +25,6 @@ import { AuthGuard } from 'src/guards/auth.guard';
 import * as Joi from 'joi';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/guards/role.guard';
-import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 import { ChildIdValidation } from './validations/child-id.validation';
 import { ChildProfileIdValidation } from './validations/child-profile-id.validaiton';
 

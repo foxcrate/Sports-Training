@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 import { GlobalService } from 'src/global/global.service';
 
 @Injectable()
@@ -33,9 +32,7 @@ export class RoleGuard implements CanActivate {
     // console.log('authType:', authType);
 
     if (!accepted) {
-      // throw new NewBadRequestException('UNAUTHORIZED');
       throw new ForbiddenException(
-        // this.globalService.getError('en', 'UNAUTHORIZED')
         this.i18n.t(`errors.UNAUTHORIZED`, { lang: I18nContext.current().lang }),
       );
     }
