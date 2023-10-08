@@ -10,6 +10,7 @@ import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GlobalService } from 'src/global/global.service';
+import { I18nContext, I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -18,6 +19,7 @@ export class AuthGuard implements CanActivate {
     private config: ConfigService,
     private prisma: PrismaService,
     private globalService: GlobalService,
+    private readonly i18n: I18nService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -26,7 +28,8 @@ export class AuthGuard implements CanActivate {
     if (!token) {
       // throw new NewBadRequestException('UNAUTHENTICATED');
       throw new UnauthorizedException(
-        this.globalService.getError('en', 'NO_BEARER_TOKEN'),
+        // this.globalService.getError('en', 'NO_BEARER_TOKEN'),
+        this.i18n.t(`errors.NO_BEARER_TOKEN`, { lang: I18nContext.current().lang }),
       );
     }
 
@@ -34,14 +37,18 @@ export class AuthGuard implements CanActivate {
     if (payload === false) {
       // throw new NewBadRequestException('UNAUTHENTICATED');
       throw new UnauthorizedException(
-        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+        // this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+        this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
     }
 
     //There are two types of token normal or refresh
     if (payload.tokenType !== 'normal') {
       // throw new NewBadRequestException('UNAUTHENTICATED');
-      throw new UnauthorizedException(this.globalService.getError('en', 'JWT_ERROR'));
+      throw new UnauthorizedException(
+        // this.globalService.getError('en', 'JWT_ERROR')
+        this.i18n.t(`errors.JWT_ERROR`, { lang: I18nContext.current().lang }),
+      );
     }
 
     request['authType'] = payload.authType;
@@ -50,7 +57,8 @@ export class AuthGuard implements CanActivate {
     if (!(await this.userAvailable(request['id']))) {
       // throw new NewBadRequestException('UNAUTHENTICATED');
       throw new UnauthorizedException(
-        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+        // this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+        this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
     }
 

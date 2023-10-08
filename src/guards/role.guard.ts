@@ -5,6 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { I18nContext, I18nService } from 'nestjs-i18n';
 import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 import { GlobalService } from 'src/global/global.service';
 
@@ -13,6 +14,7 @@ export class RoleGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private globalService: GlobalService,
+    private readonly i18n: I18nService,
   ) {}
 
   matchRoles(roles: string[], userRole: string) {
@@ -32,7 +34,10 @@ export class RoleGuard implements CanActivate {
 
     if (!accepted) {
       // throw new NewBadRequestException('UNAUTHORIZED');
-      throw new ForbiddenException(this.globalService.getError('en', 'UNAUTHORIZED'));
+      throw new ForbiddenException(
+        // this.globalService.getError('en', 'UNAUTHORIZED')
+        this.i18n.t(`errors.UNAUTHORIZED`, { lang: I18nContext.current().lang }),
+      );
     }
 
     return true;

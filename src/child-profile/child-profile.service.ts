@@ -13,19 +13,24 @@ import { ReturnChildProfileDto } from './dtos/return.dto';
 import { ReturnSportDto } from 'src/sport/dtos/return.dto';
 import { ReturnChildDto } from 'src/child/dtos/return.dto';
 import { GlobalService } from 'src/global/global.service';
+import { I18nContext, I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class ChildProfileService {
   constructor(
     private prisma: PrismaService,
     private globalService: GlobalService,
+    private readonly i18n: I18nService,
   ) {}
 
   async create(createData: ChildProfileCreateDto, childId, userId): Promise<any> {
     //throw an error if child not exist
     let child = await this.getChildById(childId);
     if (child.userId != userId) {
-      throw new ForbiddenException(this.globalService.getError('en', 'UNAUTHORIZED'));
+      throw new ForbiddenException(
+        // this.globalService.getError('en', 'UNAUTHORIZED')
+        this.i18n.t(`errors.UNAUTHORIZED`, { lang: I18nContext.current().lang }),
+      );
     }
     //throw an error if repeated
     await this.findRepeated(childId);
@@ -68,7 +73,10 @@ export class ChildProfileService {
 
     if (!childProfile) {
       // throw new NewBadRequestException('RECORD_NOT_FOUND');
-      throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
+      throw new NotFoundException(
+        // this.globalService.getError('en', 'RECORD_NOT_FOUND')
+        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
     }
 
     //update
@@ -175,7 +183,10 @@ export class ChildProfileService {
 
     if (repeatedChildProfile[0]) {
       // throw new NewBadRequestException('PROFILE_EXISTED');
-      throw new BadRequestException(this.globalService.getError('en', 'PROFILE_EXISTED'));
+      throw new BadRequestException(
+        // this.globalService.getError('en', 'PROFILE_EXISTED')
+        this.i18n.t(`errors.PROFILE_EXISTED`, { lang: I18nContext.current().lang }),
+      );
     }
     return false;
   }
@@ -210,7 +221,8 @@ export class ChildProfileService {
     if (foundedSports.length < sportsArray.length) {
       // throw new NewBadRequestException('NOT_EXISTED_SPORT');
       throw new BadRequestException(
-        this.globalService.getError('en', 'NOT_EXISTED_SPORT'),
+        // this.globalService.getError('en', 'NOT_EXISTED_SPORT'),
+        this.i18n.t(`errors.NOT_EXISTED_SPORT`, { lang: I18nContext.current().lang }),
       );
     }
     return true;
@@ -244,7 +256,10 @@ export class ChildProfileService {
 
     if (!theChild[0]) {
       // throw new NewBadRequestException('RECORD_NOT_FOUND');
-      throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
+      throw new NotFoundException(
+        // this.globalService.getError('en', 'RECORD_NOT_FOUND')
+        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
     }
     return theChild[0];
   }
@@ -362,7 +377,10 @@ export class ChildProfileService {
     let childProfile = await this.getById(childProfileId);
     if (!childProfile) {
       // throw new NewBadRequestException('RECORD_NOT_FOUND');
-      throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
+      throw new NotFoundException(
+        // this.globalService.getError('en', 'RECORD_NOT_FOUND')
+        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
     }
     let childId = childProfile.childId;
 
@@ -377,7 +395,10 @@ export class ChildProfileService {
     // check if the child is the current user's child
     if (!childsIds.includes(childId)) {
       // throw new NewBadRequestException('UNAUTHORIZED');
-      throw new ForbiddenException(this.globalService.getError('en', 'UNAUTHORIZED'));
+      throw new ForbiddenException(
+        // this.globalService.getError('en', 'UNAUTHORIZED')
+        this.i18n.t(`errors.UNAUTHORIZED`, { lang: I18nContext.current().lang }),
+      );
     }
     return childProfile;
   }

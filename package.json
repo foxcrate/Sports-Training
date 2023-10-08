@@ -30,6 +30,7 @@
     "bcrypt": "^5.1.1",
     "joi": "^17.10.1",
     "moment": "^2.29.4",
+    "nestjs-i18n": "^10.3.6",
     "object-inspect": "^1.12.3",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",

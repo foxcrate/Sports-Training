@@ -14,12 +14,14 @@ import { PasswordUtility } from '../utils/password.util';
 import { ReturnChildDto } from './dtos/return.dto';
 import { NativeChildDto } from './dtos/native.dto';
 import { GlobalService } from 'src/global/global.service';
+import { I18nContext, I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class ChildService {
   constructor(
     private prisma: PrismaService,
     private globalService: GlobalService,
+    private readonly i18n: I18nService,
   ) {}
 
   async findByMobile(mobileNumber: string): Promise<NativeChildDto> {
@@ -33,7 +35,8 @@ export class ChildService {
     if (!foundedAccount[0] || foundedAccount[0].password == null) {
       // throw new NewBadRequestException('WRONG_CREDENTIALS');
       throw new UnauthorizedException(
-        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+        // this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+        this.i18n.t(`errors.JWT_ERROR`, { lang: I18nContext.current().lang }),
       );
     }
     return foundedAccount[0];
@@ -53,13 +56,17 @@ export class ChildService {
       if (repeatedChild[0].email == email) {
         // throw new NewBadRequestException('REPEATED_EMAIL');
         throw new BadRequestException(
-          this.globalService.getError('en', 'REPEATED_EMAIL'),
+          // this.globalService.getError('en', 'REPEATED_EMAIL'),
+          this.i18n.t(`errors.REPEATED_EMAIL`, { lang: I18nContext.current().lang }),
         );
       }
       if (repeatedChild[0].mobileNumber == mobileNumber) {
         // throw new NewBadRequestException('REPEATED_MOBILE_NUMBER');
         throw new BadRequestException(
-          this.globalService.getError('en', 'REPEATED_MOBILE_NUMBER'),
+          // this.globalService.getError('en', 'REPEATED_MOBILE_NUMBER'),
+          this.i18n.t(`errors.REPEATED_MOBILE_NUMBER`, {
+            lang: I18nContext.current().lang,
+          }),
         );
       }
     }
@@ -78,7 +85,8 @@ export class ChildService {
     if (!foundedChild[0]) {
       // throw new NewBadRequestException('WRONG_CREDENTIALS');
       throw new UnauthorizedException(
-        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+        // this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+        this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
     }
 
@@ -91,11 +99,15 @@ export class ChildService {
     if (child.password !== null) {
       // throw new NewBadRequestException('ACCOUNT_ALREADY_ACTIVATED');
       throw new NotFoundException(
-        this.globalService.getError('en', 'ACCOUNT_ALREADY_ACTIVATED'),
+        // this.globalService.getError('en', 'ACCOUNT_ALREADY_ACTIVATED'),
+        this.i18n.t(`errors.ACCOUNT_ALREADY_ACTIVATED`, {
+          lang: I18nContext.current().lang,
+        }),
       );
     }
 
-    let hashedPassword = await PasswordUtility.hashPassword(reqBody.password);
+    // let hashedPassword = await PasswordUtility.hashPassword(reqBody.password);
+    let hashedPassword = await this.globalService.hashPassword(reqBody.password);
     await this.prisma.$queryRaw`
       UPDATE Child
       SET password = ${hashedPassword}

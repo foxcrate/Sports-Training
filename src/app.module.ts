@@ -19,6 +19,9 @@ import { RegionModule } from './region/region.module';
 import { SportModule } from './sport/sport.module';
 import { ChildProfileModule } from './child-profile/child-profile.module';
 import { GlobalModule } from './global/global.module';
+import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
+
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -33,6 +36,14 @@ import { GlobalModule } from './global/global.module';
     SportModule,
     ChildProfileModule,
     GlobalModule,
+    I18nModule.forRoot({
+      fallbackLanguage: 'en',
+      loaderOptions: {
+        path: join(__dirname, '/i18n/'),
+        watch: true,
+      },
+      resolvers: [{ use: QueryResolver, options: ['lang'] }, AcceptLanguageResolver],
+    }),
   ],
   controllers: [AppController],
   providers: [

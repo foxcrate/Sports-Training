@@ -1,0 +1,16 @@
+{
+  "REPEATED_EMAIL": "الإيميل مسجل مسبقا",
+  "REPEATED_MOBILE_NUMBER": "رقم الموبيل مسجل مسبقا",
+  "WRONG_CREDENTIALS": "معلومات الحساب غير صحيحة",
+  "NO_BEARER_TOKEN": "Authorization Bearer token should be provided",
+  "JWT_ERROR": "Invalid bearer token",
+  "UNAUTHORIZED": "أنت لا تملك الصلاحيات الكافية",
+  "UPLOAD_IMAGE_ERROR": "خطأ في رفع الصورة",
+  "RECORD_NOT_FOUND": "هذا المستند غير متوفر",
+  "ACCOUNT_ALREADY_ACTIVATED": "الحساب مفعل بالفعل",
+  "PROFILE_EXISTED": "الحساب موجود بالفعل",
+  "REPEATED_REGION": "المنطقة مسجلة بالفعل",
+  "REPEATED_SPORT": "الرياضة مسجلة بالفعل",
+  "NOT_EXISTED_SPORT": "هذة الرياضة غير متوفرة",
+  "SERVER_ERROR": "حدث مشكلة في السيرفر، سوف تحل قريبا"
+}

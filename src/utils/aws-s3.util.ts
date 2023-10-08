@@ -1,12 +1,13 @@
 import { InternalServerErrorException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as AWS from 'aws-sdk';
+import { I18nService } from 'nestjs-i18n';
 import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception';
 import { GlobalService } from 'src/global/global.service';
 
 export class AWSS3Utility {
   static config: ConfigService = new ConfigService();
-  static globalService: GlobalService = new GlobalService();
+  // static globalService: GlobalService = new GlobalService();
 
   static async uploadFile(file) {
     let s3 = new AWS.S3({
@@ -47,9 +48,9 @@ export class AWSS3Utility {
       console.log('--error in uploading image');
       console.log(e);
       // throw new NewBadRequestException('UPLOAD_IMAGE_ERROR');
-      throw new InternalServerErrorException(
-        this.globalService.getError('en', 'UPLOAD_IMAGE_ERROR'),
-      );
+      throw new InternalServerErrorException();
+      // this.globalService.getError('en', 'UPLOAD_IMAGE_ERROR'),
+      // this.i18n.t(`errors.UPLOAD_IMAGE_ERROR`, { lang: I18nContext.current().lang }),
     }
   }
 

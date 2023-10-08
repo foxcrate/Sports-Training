@@ -17,12 +17,14 @@ import { ReturnPlayerProfileSerializer } from './serializers/return.serializer';
 import { ReturnPlayerProfileDto } from './dtos/return.dto';
 import { ReturnSportDto } from 'src/sport/dtos/return.dto';
 import { GlobalService } from 'src/global/global.service';
+import { I18nContext, I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class PlayerProfileService {
   constructor(
     private prisma: PrismaService,
     private globalService: GlobalService,
+    private readonly i18n: I18nService,
   ) {}
 
   async getOne(userId): Promise<any> {
@@ -33,7 +35,10 @@ export class PlayerProfileService {
     // }
     let playerProfileWithSports = await this.getPlayerProfileWithSportsByUserId(userId);
     if (!playerProfileWithSports) {
-      throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
+      throw new NotFoundException(
+        // this.globalService.getError('en', 'RECORD_NOT_FOUND')
+        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
     }
 
     return playerProfileWithSports;
@@ -76,7 +81,10 @@ export class PlayerProfileService {
     let playerProfile: any = await this.getPlayerProfileWithSportsByUserId(userId);
     if (!playerProfile) {
       // throw new NewBadRequestException('RECORD_NOT_FOUND');
-      throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
+      throw new NotFoundException(
+        // this.globalService.getError('en', 'RECORD_NOT_FOUND')
+        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
     }
 
     //update
@@ -112,7 +120,10 @@ export class PlayerProfileService {
     let deletedPlayerProfile = await this.getByUserId(userId);
 
     if (!deletedPlayerProfile) {
-      throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
+      throw new NotFoundException(
+        // this.globalService.getError('en', 'RECORD_NOT_FOUND')
+        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
     }
 
     //delete playerProfileSports
@@ -141,7 +152,10 @@ export class PlayerProfileService {
 
     if (repeatedPlayerProfile[0]) {
       // throw new NewBadRequestException('PROFILE_EXISTED');
-      throw new BadRequestException(this.globalService.getError('en', 'PROFILE_EXISTED'));
+      throw new BadRequestException(
+        // this.globalService.getError('en', 'PROFILE_EXISTED')
+        this.i18n.t(`errors.PROFILE_EXISTED`, { lang: I18nContext.current().lang }),
+      );
     }
     return false;
   }
@@ -175,7 +189,10 @@ export class PlayerProfileService {
 
     if (foundedSports.length < sportsArray.length) {
       // throw new NewBadRequestException('NOT_EXISTED_SPORT');
-      throw new NotFoundException(this.globalService.getError('en', 'NOT_EXISTED_SPORT'));
+      throw new NotFoundException(
+        // this.globalService.getError('en', 'NOT_EXISTED_SPORT')
+        this.i18n.t(`errors.NOT_EXISTED_SPORT`, { lang: I18nContext.current().lang }),
+      );
     }
     return true;
   }

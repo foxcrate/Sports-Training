@@ -12,6 +12,8 @@ import axios from 'axios';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthTokensDTO } from './dtos/auth-tokens.dto';
 import { GlobalService } from 'src/global/global.service';
+import { LanguageDto } from 'src/global/dtos/language.dto';
+import { I18nContext, I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +24,7 @@ export class AuthService {
     private config: ConfigService,
     private prisma: PrismaService,
     private globalService: GlobalService,
+    private readonly i18n: I18nService,
   ) {}
 
   async userSignup(signupData: SignupUserDto) {
@@ -31,11 +34,11 @@ export class AuthService {
     );
 
     if (!repeatedAccount) {
-      signupData.password = await PasswordUtility.hashPassword(signupData.password);
+      // signupData.password = await PasswordUtility.hashPassword(signupData.password);
+      signupData.password = await this.globalService.hashPassword(signupData.password);
 
       const newUser = await this.userService.create(signupData);
 
-      // return new ReturnUserSerializer().serialize(newUser);
       return newUser;
     }
   }
@@ -43,7 +46,12 @@ export class AuthService {
   async userSignin(signinData: SigninUserDto): Promise<AuthTokensDTO> {
     const user = await this.userService.findByMobile(signinData.mobileNumber);
 
-    const validPassword = await PasswordUtility.verifyPassword(
+    // const validPassword = await PasswordUtility.verifyPassword(
+    //   signinData.password,
+    //   user.password,
+    // );
+
+    const validPassword = await this.globalService.verifyPassword(
       signinData.password,
       user.password,
     );
@@ -51,7 +59,8 @@ export class AuthService {
     if (!validPassword) {
       // throw new NewBadRequestException('WRONG_CREDENTIALS');
       throw new UnauthorizedException(
-        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+        // this.globalService.getError(this.language, 'WRONG_CREDENTIALS'),
+        this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
     }
 
@@ -65,7 +74,12 @@ export class AuthService {
 
     // console.log({ child });
 
-    const validPassword = await PasswordUtility.verifyPassword(
+    // const validPassword = await PasswordUtility.verifyPassword(
+    //   signinData.password,
+    //   child.password,
+    // );
+
+    const validPassword = await this.globalService.verifyPassword(
       signinData.password,
       child.password,
     );
@@ -73,7 +87,8 @@ export class AuthService {
     if (!validPassword) {
       // throw new NewBadRequestException('WRONG_CREDENTIALS');
       throw new UnauthorizedException(
-        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+        // this.globalService.getError(language, 'WRONG_CREDENTIALS'),
+        this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
     }
 
@@ -85,12 +100,16 @@ export class AuthService {
     if (payload === false) {
       // throw new NewBadRequestException('JWT_ERROR');
       throw new UnauthorizedException(
-        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+        // this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+        this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
     }
     if (payload.tokenType !== 'refresh') {
       // throw new NewBadRequestException('JWT_ERROR');
-      throw new UnauthorizedException(this.globalService.getError('en', 'JWT_ERROR'));
+      throw new UnauthorizedException(
+        // this.globalService.getError('en', 'JWT_ERROR')
+        this.i18n.t(`errors.JWT_ERROR`, { lang: I18nContext.current().lang }),
+      );
     }
 
     let tokenPayload = {

@@ -14,6 +14,7 @@ import { ReturnUserDto } from './dtos/return.dto';
 import { NativeUserDto } from './dtos/native.dto';
 import { ReturnChildDto } from 'src/child/dtos/return.dto';
 import { GlobalService } from 'src/global/global.service';
+import { I18nContext, I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class UserService {
@@ -21,7 +22,14 @@ export class UserService {
     private prisma: PrismaService,
     private childService: ChildService,
     private globalService: GlobalService,
+    private readonly i18n: I18nService,
   ) {}
+
+  async test() {
+    // console.log('alo');
+
+    return this.i18n.t(`test.welcome`, { lang: I18nContext.current().lang });
+  }
 
   async create(signupData: SignupUserDto): Promise<any> {
     await this.prisma.$queryRaw`
@@ -185,7 +193,8 @@ export class UserService {
     if (!foundedAccount[0]) {
       // throw new NewBadRequestException('WRONG_CREDENTIALS');
       throw new UnauthorizedException(
-        this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+        // this.globalService.getError('en', 'WRONG_CREDENTIALS'),
+        this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
     }
     return foundedAccount[0];
@@ -206,13 +215,17 @@ export class UserService {
       if (repeatedUserProfile[0].email == email) {
         // throw new NewBadRequestException('REPEATED_EMAIL');
         throw new BadRequestException(
-          this.globalService.getError('en', 'REPEATED_EMAIL'),
+          // this.globalService.getError('en', 'REPEATED_EMAIL'),
+          this.i18n.t(`errors.REPEATED_EMAIL`, { lang: I18nContext.current().lang }),
         );
       }
       if (repeatedUserProfile[0].mobileNumber == mobileNumber) {
         // throw new NewBadRequestException('REPEATED_MOBILE_NUMBER');
         throw new BadRequestException(
-          this.globalService.getError('en', 'REPEATED_MOBILE_NUMBER'),
+          // this.globalService.getError('en', 'REPEATED_MOBILE_NUMBER'),
+          this.i18n.t(`errors.REPEATED_MOBILE_NUMBER`, {
+            lang: I18nContext.current().lang,
+          }),
         );
       }
     }
@@ -393,7 +406,10 @@ export class UserService {
     let child = await this.getChildById(childId);
     if (!child) {
       // throw new NewBadRequestException('RECORD_NOT_FOUND');
-      throw new NotFoundException(this.globalService.getError('en', 'RECORD_NOT_FOUND'));
+      throw new NotFoundException(
+        // this.globalService.getError('en', 'RECORD_NOT_FOUND')
+        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
     }
     // console.log({ child });
 
@@ -409,7 +425,10 @@ export class UserService {
     //check if the child is the current user's child
     if (!childsIds.includes(child.id)) {
       // throw new NewBadRequestException('UNAUTHORIZED');
-      throw new ForbiddenException(this.globalService.getError('en', 'UNAUTHORIZED'));
+      throw new ForbiddenException(
+        // this.globalService.getError('en', 'UNAUTHORIZED')
+        this.i18n.t(`errors.UNAUTHORIZED`, { lang: I18nContext.current().lang }),
+      );
     }
     return child;
   }

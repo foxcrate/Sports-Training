@@ -1,46 +1,80 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { I18nContext, I18nService } from 'nestjs-i18n';
+import { ConfigService } from '@nestjs/config';
+import * as bcrypt from 'bcrypt';
+import * as AWS from 'aws-sdk';
 
 @Injectable()
 export class GlobalService {
-  errors = new Map();
-  enErrors = new Map();
-  arErrors = new Map();
+  constructor(
+    private config: ConfigService,
+    private readonly i18n: I18nService,
+  ) {}
 
-  getError(language, errorCode) {
-    this.errors.set('en', this.enErrors);
-    this.errors.set('ar', this.arErrors);
+  async uploadFile(file) {
+    let s3 = new AWS.S3({
+      accessKeyId: this.config.get('AWS_ACCESS_KEY'),
+      secretAccessKey: this.config.get('AWS_SECRET_ACCESS_KEY'),
+      region: this.config.get('AWS_S3_REGION'),
+    });
 
-    this.enErrors
-      .set('REPEATED_EMAIL', 'Email already exist')
-      .set('REPEATED_MOBILE_NUMBER', 'Mobile number already exist')
-      .set('WRONG_CREDENTIALS', 'Wrong credentials')
-      .set('NO_BEARER_TOKEN', 'Authorization Bearer token should be provided')
-      .set('JWT_ERROR', 'Invalid bearer token')
-      .set('UNAUTHORIZED', 'You are not authorized')
-      .set('UPLOAD_IMAGE_ERROR', 'Error in uploading image')
-      .set('RECORD_NOT_FOUND', 'Record not found')
-      .set('ACCOUNT_ALREADY_ACTIVATED', 'Account already activated')
-      .set('PROFILE_EXISTED', 'Profile already exist')
-      .set('REPEATED_REGION', 'Region already exist')
-      .set('REPEATED_SPORT', 'Sport already exist')
-      .set('NOT_EXISTED_SPORT', 'Sport not exist')
-      .set('SERVER_ERROR', 'Server problem, it will be fixed soon');
+    // console.log({ file });
 
-    this.arErrors
-      .set('REPEATED_EMAIL', 'الإيميل مسجل مسبقا')
-      .set('REPEATED_MOBILE_NUMBER', 'رقم الموبيل مسجل مسبقا')
-      .set('WRONG_CREDENTIALS', 'معلومات الحساب غير صحيحة')
-      .set('NO_BEARER_TOKEN', 'Authorization Bearer token should be provided')
-      .set('JWT_ERROR', 'Invalid bearer token')
-      .set('UNAUTHORIZED', 'أنت لا تملك الصلاحيات الكافية')
-      .set('UPLOAD_IMAGE_ERROR', 'خطأ في رفع الصورة')
-      .set('ACCOUNT_ALREADY_ACTIVATED', 'الحساب مفعل بالفعل')
-      .set('PROFILE_EXISTED', 'الحساب موجود بالفعل')
-      .set('REPEATED_REGION', 'المنطقة مسجلة بالفعل')
-      .set('REPEATED_SPORT', 'الرياضة مسجلة بالفعل')
-      .set('NOT_EXISTED_SPORT', 'هذة الرياضة غير متوفرة')
-      .set('SERVER_ERROR', 'حدث مشكلة في السيرفر، سوف تحل قريبا');
+    return await this.s3_upload(
+      s3,
+      file.buffer,
+      this.config.get('AWS_S3_BUCKET'),
+      // originalname + Date.now() + extension,
+      this.getFileName(file.originalname),
+      file.mimetype,
+    );
+  }
 
-    return this.errors.get(language ? language : 'en').get(errorCode);
+  async s3_upload(s3, file, bucket, name, mimetype) {
+    const params = {
+      Bucket: bucket,
+      Key: String(name),
+      Body: file,
+      ACL: 'public-read',
+      ContentType: mimetype,
+      // ContentDisposition: 'inline',
+      // CreateBucketConfiguration: {
+      //   LocationConstraint: 'eu-west-3',
+      // },
+    };
+
+    try {
+      let s3Response = await s3.upload(params).promise();
+      return { 'image-url': s3Response.Location };
+    } catch (e) {
+      console.log('--error in uploading image');
+      console.log(e);
+      // throw new NewBadRequestException('UPLOAD_IMAGE_ERROR');
+      throw new InternalServerErrorException(
+        // this.globalService.getError('en', 'UPLOAD_IMAGE_ERROR'),
+        this.i18n.t(`errors.UPLOAD_IMAGE_ERROR`, { lang: I18nContext.current().lang }),
+      );
+    }
+  }
+
+  async verifyPassword(password, hash): Promise<boolean> {
+    const isMatch = await bcrypt.compare(password, hash);
+    return isMatch;
+  }
+
+  async hashPassword(password: string): Promise<string> {
+    const hash = await bcrypt.hash(password, 10);
+    return hash;
+  }
+
+  private getFileName(originalname) {
+    let splitReturn = originalname.split('.');
+
+    originalname = splitReturn[0];
+    let extension = '';
+    if (splitReturn[1]) {
+      extension = '.' + splitReturn[1];
+    }
+    return originalname + Date.now() + extension;
   }
 }

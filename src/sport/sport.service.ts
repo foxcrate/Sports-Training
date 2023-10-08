@@ -3,12 +3,14 @@ import { NewBadRequestException } from 'src/exceptions/new-bad-request.exception
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateSportDto } from './dtos/create.dto';
 import { GlobalService } from 'src/global/global.service';
+import { I18nContext, I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class SportService {
   constructor(
     private prisma: PrismaService,
     private globalService: GlobalService,
+    private readonly i18n: I18nService,
   ) {}
   async create(createData: CreateSportDto, userId): Promise<any> {
     await this.findRepeated(createData.enName, createData.arName);
@@ -44,13 +46,15 @@ export class SportService {
       if (repeatedRegion[0].enName == enName) {
         // throw new NewBadRequestException('REPEATED_SPORT');
         throw new BadRequestException(
-          this.globalService.getError('en', 'REPEATED_SPORT'),
+          // this.globalService.getError('en', 'REPEATED_SPORT'),
+          this.i18n.t(`errors.REPEATED_SPORT`, { lang: I18nContext.current().lang }),
         );
       }
       if (repeatedRegion[0].arName == arName) {
         // throw new NewBadRequestException('REPEATED_SPORT');
         throw new BadRequestException(
-          this.globalService.getError('en', 'REPEATED_SPORT'),
+          // this.globalService.getError('en', 'REPEATED_SPORT'),
+          this.i18n.t(`errors.REPEATED_SPORT`, { lang: I18nContext.current().lang }),
         );
       }
     }

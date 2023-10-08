@@ -14,8 +14,10 @@ import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { SignupValidation } from 'src/user/validations/signup.validation';
 import { UserSigninValidation } from 'src/user/validations/signin.validaiton';
 import { ChildSigninValidation } from 'src/child/validaitons/signin.validation';
+import { LanguageValidation } from 'src/global/validations/language.validation';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
 import { SigninUserDto } from 'src/user/dtos/signin.dto';
+import { LanguageDto } from 'src/global/dtos/language.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Request as ExpressRequest } from 'express';
 import { Roles } from 'src/decorators/roles.decorator';
@@ -30,23 +32,26 @@ export class AuthController {
 
   @Version('1')
   @Post('user/signup')
-  @UsePipes(new JoiValidation(SignupValidation))
-  async signup1(@Body() signupData: SignupUserDto) {
+  // @UsePipes(new JoiValidation(SignupValidation))
+  async signup1(@Body(new JoiValidation(SignupValidation)) signupData: SignupUserDto) {
     return this.authService.userSignup(signupData);
   }
 
   @Version('1')
   @Post('/user/signin')
-  @UsePipes(new JoiValidation(UserSigninValidation))
-  async userSignin1(@Body() signinData: SigninUserDto) {
-    // console.log('-- user signin route --');
+  // @UsePipes(new JoiValidation(UserSigninValidation))
+  async userSignin1(
+    @Body(new JoiValidation(UserSigninValidation)) signinData: SigninUserDto,
+  ) {
     return this.authService.userSignin(signinData);
   }
 
   @Version('1')
   @Post('/child/signin')
-  @UsePipes(new JoiValidation(ChildSigninValidation))
-  async childSignin(@Body() signinData: SigninChildDto) {
+  // @UsePipes(new JoiValidation(ChildSigninValidation))
+  async childSignin(
+    @Body(new JoiValidation(ChildSigninValidation)) signinData: SigninChildDto,
+  ) {
     return this.authService.childSignin(signinData);
   }
 
