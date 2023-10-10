@@ -25,6 +25,7 @@ import { UpdateUserValidation } from './validations/update-user.validation';
 import { ChildIdValidation } from 'src/child-profile/validations/child-id.validation';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { I18n, I18nContext } from 'nestjs-i18n';
+import { AvailableRoles } from 'src/auth/dtos/availableRoles.dto';
 
 @Controller('user')
 export class UserController {
@@ -43,7 +44,7 @@ export class UserController {
   }
 
   @Version('1')
-  @Roles('user')
+  @Roles(AvailableRoles.User)
   @UseGuards(AuthGuard, RoleGuard)
   @Get()
   async getOne(@Request() req: ExpressRequest) {

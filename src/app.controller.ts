@@ -5,11 +5,16 @@ import {
   ParseFilePipe,
   Post,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AppService } from './app.service';
 import { GlobalService } from './global/global.service';
+import { AuthGuard } from 'src/guards/auth.guard';
+import { RoleGuard } from './guards/role.guard';
+import { Roles } from './decorators/roles.decorator';
+import { AvailableRoles } from './auth/dtos/availableRoles.dto';
 
 @Controller()
 export class AppController {
@@ -23,14 +28,16 @@ export class AppController {
     return this.appService.getHello();
   }
 
-  @Post('v1/upload-image')
-  @UseInterceptors(FileInterceptor('imageFile'))
-  uploadFile(
-    @UploadedFile(new ParseFilePipe())
-    file: Express.Multer.File,
-  ) {
-    return this.globalService.uploadFile(file);
-  }
+  // @Roles(AvailableRoles.User)
+  // @UseGuards(AuthGuard)
+  // @Post('v1/upload-image')
+  // @UseInterceptors(FileInterceptor('imageFile'))
+  // uploadFile(
+  //   @UploadedFile(new ParseFilePipe())
+  //   file: Express.Multer.File,
+  // ) {
+  //   return this.globalService.uploadFile(file);
+  // }
 }
 
 //   {

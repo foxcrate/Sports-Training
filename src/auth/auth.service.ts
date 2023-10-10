@@ -13,6 +13,7 @@ import { AuthTokensDTO } from './dtos/auth-tokens.dto';
 import { GlobalService } from 'src/global/global.service';
 import { LanguageDto } from 'src/global/dtos/language.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
+import { AvailableRoles } from './dtos/availableRoles.dto';
 
 @Injectable()
 export class AuthService {
@@ -55,7 +56,7 @@ export class AuthService {
       );
     }
 
-    return this.generateNormalAndRefreshJWTToken('user', user.id);
+    return this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id);
   }
 
   async childSignin(signinData: SigninChildDto): Promise<AuthTokensDTO> {
@@ -72,7 +73,7 @@ export class AuthService {
       );
     }
 
-    return this.generateNormalAndRefreshJWTToken('child', child.id);
+    return this.generateNormalAndRefreshJWTToken(AvailableRoles.Child, child.id);
   }
 
   refreshToken(refreshToken: string, authType: string) {

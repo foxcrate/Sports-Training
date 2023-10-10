@@ -45,9 +45,13 @@ export class AuthGuard implements CanActivate {
     }
 
     request['authType'] = payload.authType;
+
     request['id'] = payload.id;
 
-    if (!(await this.userAvailable(request['id']))) {
+    if (
+      !(await this.userAvailable(request['id'])) &&
+      !(await this.childAvailable(request['id']))
+    ) {
       throw new UnauthorizedException(
         this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
@@ -66,6 +70,8 @@ export class AuthGuard implements CanActivate {
       const decoded = this.jwtService.verify(token, this.config.get('JWT_SECRET'));
       return decoded;
     } catch (error) {
+      console.log('error in auth guard:', error);
+
       return false;
     }
   }
@@ -75,6 +81,16 @@ export class AuthGuard implements CanActivate {
       SELECT *
       FROM User
       WHERE id = ${userId}
+      LIMIT 1
+    `;
+    return user[0];
+  }
+
+  private async childAvailable(childId) {
+    let user = await this.prisma.$queryRaw`
+      SELECT *
+      FROM child
+      WHERE id = ${childId}
       LIMIT 1
     `;
     return user[0];
