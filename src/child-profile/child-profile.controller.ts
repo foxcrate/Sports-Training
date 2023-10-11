@@ -28,10 +28,10 @@ import { ChildProfileIdValidation } from './validations/child-profile-id.validai
 export class ChildProfileController {
   constructor(private childProfileService: ChildProfileService) {}
 
+  @Post('/:childId')
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  @Post('/:childId')
   async create1(
     @Body(new JoiValidation(AddChildProfileValidation)) reqBody,
     @Param(new JoiValidation(ChildIdValidation)) params,
@@ -40,10 +40,10 @@ export class ChildProfileController {
     return this.childProfileService.create(reqBody, params.childId, req['id']);
   }
 
+  @Put('/:childProfileId')
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  @Put('/:childProfileId')
   // @UsePipes(new JoiValidation(UpdateChildProfileValidation))
   async update1(
     @Body(new JoiValidation(UpdateChildProfileValidation)) reqBody,
@@ -53,29 +53,29 @@ export class ChildProfileController {
     return this.childProfileService.update(reqBody, params.childProfileId, req['id']);
   }
 
+  @Delete('/:childProfileId')
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(DeleteChildProfileValidation))
-  @Delete('/:childProfileId')
   async delete1(@Param() params, @Request() req: ExpressRequest) {
     const childProfileId = params.childProfileId;
     return this.childProfileService.delete(req['id'], childProfileId);
   }
 
+  @Get()
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  @Get()
   async getAll1(@Request() req: ExpressRequest) {
     return this.childProfileService.getAll(req['id']);
   }
 
+  @Get('/:childProfileId')
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(GetOneChildProfileValidation))
-  @Get('/:childProfileId')
   async getOne1(@Param() params, @Request() req: ExpressRequest) {
     const childProfileId = params.childProfileId;
     // console.log("req['id']:", req['id']);

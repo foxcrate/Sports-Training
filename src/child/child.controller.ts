@@ -8,9 +8,9 @@ import { ChildActivateAccountValidation } from './validaitons/activate-account.v
 export class ChildController {
   constructor(private childService: ChildService) {}
 
+  @Post('activate-account')
   @Version('1')
   @UsePipes(new JoiValidation(ChildActivateAccountValidation))
-  @Post('activate-account')
   async activateAccount1(@Request() req: ExpressRequest) {
     return this.childService.activateAccount(req.body);
   }

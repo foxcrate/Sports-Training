@@ -12,6 +12,7 @@ import { AuthTokensDTO } from './dtos/auth-tokens.dto';
 import { GlobalService } from 'src/global/global.service';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { AvailableRoles } from './dtos/availableRoles.dto';
+import { IAuthToken } from './interfaces/auth-token.interface';
 
 @Injectable()
 export class AuthService {
@@ -74,8 +75,8 @@ export class AuthService {
   }
 
   refreshToken(refreshToken: string, authType: string) {
-    let payload = this.verifyToken(refreshToken);
-    if (payload === false) {
+    let payload: IAuthToken = this.verifyRefreshToken(refreshToken);
+    if (payload.id === null) {
       throw new UnauthorizedException(
         this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
@@ -86,13 +87,13 @@ export class AuthService {
       );
     }
 
-    let tokenPayload = {
+    let tokenPayload: IAuthToken = {
       authType: authType,
       id: payload.id,
       tokenType: 'normal',
     };
 
-    let refreshTokenPayload = {
+    let refreshTokenPayload: IAuthToken = {
       authType: authType,
       id: payload.id,
       tokenType: 'refresh',
@@ -131,12 +132,18 @@ export class AuthService {
     };
   }
 
-  verifyToken(token) {
+  verifyRefreshToken(token): IAuthToken {
     try {
       const decoded = this.jwtService.verify(token, this.config.get('JWT_SECRET'));
       return decoded;
     } catch (error) {
-      return false;
+      // console.log('error in auth guard:', error);
+
+      return {
+        id: null,
+        authType: null,
+        tokenType: null,
+      };
     }
   }
 

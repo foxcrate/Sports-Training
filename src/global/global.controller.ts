@@ -18,10 +18,10 @@ import { RoleGuard } from 'src/guards/role.guard';
 export class GlobalController {
   constructor(private globalService: GlobalService) {}
 
+  @Post('upload-image')
   @Roles(AvailableRoles.User)
   @UseGuards(AuthGuard, RoleGuard)
   @Version('1')
-  @Post('upload-image')
   @UseInterceptors(FileInterceptor('imageFile'))
   uploadFile(
     @UploadedFile(new ParseFilePipe())

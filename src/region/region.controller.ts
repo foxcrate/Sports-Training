@@ -19,10 +19,10 @@ import { RoleGuard } from 'src/guards/role.guard';
 export class RegionController {
   constructor(private regionService: RegionService) {}
 
+  @Post()
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  @Post()
   @UsePipes(new JoiValidation(AddRegionValidation))
   async create1(@Body() reqBody, @Request() req: ExpressRequest) {
     return this.regionService.create(reqBody, req['id']);

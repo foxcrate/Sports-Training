@@ -29,54 +29,54 @@ import { AvailableRoles } from 'src/auth/dtos/availableRoles.dto';
 export class UserController {
   constructor(private userService: UserService) {}
 
+  @Put()
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(UpdateUserValidation))
-  @Put()
   async update1(@Body() reqBody, @Request() req: ExpressRequest) {
     return this.userService.update(reqBody, req['id']);
   }
 
+  @Get()
   @Version('1')
   @Roles(AvailableRoles.User)
   @UseGuards(AuthGuard, RoleGuard)
-  @Get()
   async getOne(@Request() req: ExpressRequest) {
     return this.userService.getOne(req['id']);
   }
 
+  @Post()
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  @Post()
   @UsePipes(new JoiValidation(AddChildValidation))
   async createChild1(@Body() reqBody, @Request() req: ExpressRequest) {
     return this.userService.createChild(reqBody, req['id']);
   }
 
+  @Get('childs')
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  @Get('childs')
   async getChilds(@Request() req: ExpressRequest) {
     return this.userService.getChilds(req['id']);
   }
 
+  @Get('childs/:childId')
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(GetOneChildValidation))
-  @Get('childs/:childId')
   async getChild(@Param() params, @Request() req: ExpressRequest) {
     return this.userService.getChild(params.childId, req['id']);
   }
 
+  @Put('childs/:childId')
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   // @UsePipes(new JoiValidation(UpdateChildValidation))
-  @Put('childs/:childId')
   async updateChild(
     @Body(new JoiValidation(UpdateChildValidation)) reqBody,
     @Param(new JoiValidation(ChildIdValidation)) params,
@@ -85,17 +85,17 @@ export class UserController {
     return this.userService.updateChild(reqBody, params.childId, req['id']);
   }
 
+  @Delete('childs/:childId')
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(GetOneChildValidation))
-  @Delete('childs/:childId')
   async deleteChild(@Param() params, @Request() req: ExpressRequest) {
     return this.userService.deleteChild(params.childId, req['id']);
   }
 
-  @Version('1')
   @Get('test')
+  @Version('1')
   async test(@I18n() i18n: I18nContext) {
     return this.userService.test();
   }

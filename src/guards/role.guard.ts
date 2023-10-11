@@ -6,13 +6,11 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { GlobalService } from 'src/global/global.service';
 
 @Injectable()
 export class RoleGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private globalService: GlobalService,
     private readonly i18n: I18nService,
   ) {}
 

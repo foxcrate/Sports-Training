@@ -19,10 +19,10 @@ import { AddSportValidation } from './validations/create.validation';
 export class SportController {
   constructor(private sportService: SportService) {}
 
+  @Post()
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  @Post()
   @UsePipes(new JoiValidation(AddSportValidation))
   async create1(@Body() reqBody, @Request() req: ExpressRequest) {
     return this.sportService.create(reqBody, req['id']);

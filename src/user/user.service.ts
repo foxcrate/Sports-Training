@@ -52,7 +52,7 @@ export class UserService {
       ${new Date()}
     )`;
 
-    let newUser = await this.getLastCreated();
+    let newUser = await this.getUserByMobileNumber(signupData.mobileNumber);
 
     return newUser;
   }
@@ -74,7 +74,9 @@ export class UserService {
       id = ${user.id};
     `;
 
-    let updatedUser = this.getLastUpdated();
+    // let updatedUser = this.getLastUpdated();
+    let updatedUser = this.getUserById(user.id);
+
     return updatedUser;
   }
 
@@ -112,7 +114,8 @@ export class UserService {
       ${userId},
       ${new Date()})`;
 
-    let newChild = this.getLastCreatedChild();
+    // let newChild = this.getLastCreatedChild();
+    let newChild = this.getChildByMobileNumber(reqBody.mobileNumber);
 
     return newChild;
   }
@@ -146,7 +149,8 @@ export class UserService {
       id = ${child.id};
     `;
 
-    let updatedChild = this.getLastUpdatedChild();
+    // let updatedChild = this.getLastUpdatedChild();
+    let updatedChild = this.getChildById(child.id);
 
     return updatedChild;
   }
@@ -220,6 +224,24 @@ export class UserService {
     return theUser[0];
   }
 
+  private async getUserByMobileNumber(mobileNumber): Promise<ReturnUserDto> {
+    let theUser = await this.prisma.$queryRaw`
+      SELECT
+      id,
+        firstName,
+        lastName,
+        profileImage,
+        email,
+        mobileNumber,
+        gender,
+        birthday
+      FROM User
+      WHERE mobileNumber = ${mobileNumber}
+      LIMIT 1
+    `;
+    return theUser[0];
+  }
+
   private async getChildById(childId): Promise<ReturnChildDto> {
     let theChild = await this.prisma.$queryRaw`
       SELECT
@@ -234,6 +256,25 @@ export class UserService {
         userId
       FROM Child
       WHERE id = ${childId}
+      LIMIT 1
+    `;
+    return theChild[0];
+  }
+
+  private async getChildByMobileNumber(mobileNumber): Promise<ReturnChildDto> {
+    let theChild = await this.prisma.$queryRaw`
+      SELECT
+        id,
+        firstName,
+        lastName,
+        profileImage,
+        email,
+        mobileNumber,
+        gender,
+        birthday,
+        userId
+      FROM Child
+      WHERE mobileNumber = ${mobileNumber}
       LIMIT 1
     `;
     return theChild[0];

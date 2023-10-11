@@ -9,6 +9,7 @@ import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { I18nContext, I18nService } from 'nestjs-i18n';
+import { IAuthToken } from 'src/auth/interfaces/auth-token.interface';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -28,8 +29,9 @@ export class AuthGuard implements CanActivate {
       );
     }
 
-    let payload = this.verifyToken(token);
-    if (payload === false) {
+    let payload: IAuthToken = this.verifyToken(token);
+    // let payload: IAuthToken = this.authService.verifyToken(token);
+    if (payload.id === null) {
       throw new UnauthorizedException(
         this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
@@ -63,14 +65,18 @@ export class AuthGuard implements CanActivate {
     return type === 'Bearer' ? token : undefined;
   }
 
-  private verifyToken(token) {
+  private verifyToken(token): IAuthToken {
     try {
       const decoded = this.jwtService.verify(token, this.config.get('JWT_SECRET'));
       return decoded;
     } catch (error) {
       // console.log('error in auth guard:', error);
 
-      return false;
+      return {
+        id: null,
+        authType: null,
+        tokenType: null,
+      };
     }
   }
 

@@ -22,45 +22,45 @@ import { RoleGuard } from 'src/guards/role.guard';
 export class PlayerProfileController {
   constructor(private playerProfileService: PlayerProfileService) {}
 
+  @Get()
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  @Get()
   // @UsePipes(new JoiValidation(AddPlayerProfileValidation))
   async getOne1(@Body() reqBody, @Request() req: ExpressRequest) {
     return this.playerProfileService.getOne(req['id']);
   }
 
+  @Post()
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  @Post()
   @UsePipes(new JoiValidation(AddPlayerProfileValidation))
   async create1(@Body() reqBody, @Request() req: ExpressRequest) {
     return this.playerProfileService.create(reqBody, req['id']);
   }
 
+  @Put()
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  @Put()
   @UsePipes(new JoiValidation(AddPlayerProfileValidation))
   async update1(@Body() reqBody, @Request() req: ExpressRequest) {
     return this.playerProfileService.update(reqBody, req['id']);
   }
 
+  @Delete()
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  @Delete()
   async delete1(@Request() req: ExpressRequest) {
     return this.playerProfileService.delete(req['id']);
   }
 
+  @Get('testHesham')
   @Version('1')
   // @Roles('user')
   // @UseGuards(AuthGuard, RoleGuard)
-  @Get('testHesham')
   async testHesham(@Request() req: ExpressRequest) {
     // return this.playerProfileService.testHesham();
   }

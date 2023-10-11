@@ -28,15 +28,15 @@ import { FacebookReturnDataSerializer } from './serializers/facebook-return-data
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Version('1')
   @Post('user/signup')
+  @Version('1')
   // @UsePipes(new JoiValidation(SignupValidation))
   async signup1(@Body(new JoiValidation(SignupValidation)) signupData: SignupUserDto) {
     return this.authService.userSignup(signupData);
   }
 
-  @Version('1')
   @Post('/user/signin')
+  @Version('1')
   // @UsePipes(new JoiValidation(UserSigninValidation))
   async userSignin1(
     @Body(new JoiValidation(UserSigninValidation)) signinData: SigninUserDto,
@@ -44,8 +44,8 @@ export class AuthController {
     return this.authService.userSignin(signinData);
   }
 
-  @Version('1')
   @Post('/child/signin')
+  @Version('1')
   // @UsePipes(new JoiValidation(ChildSigninValidation))
   async childSignin(
     @Body(new JoiValidation(ChildSigninValidation)) signinData: SigninChildDto,
@@ -53,16 +53,16 @@ export class AuthController {
     return this.authService.childSignin(signinData);
   }
 
-  @Version('1')
   @Get('refresh-token')
+  @Version('1')
   refreshToken(@Body('refreshToken') refreshToken, @Request() req: ExpressRequest) {
     return this.authService.refreshToken(refreshToken, req['authType']);
   }
 
+  @Get('user/testJWT')
   @Version('1')
   @Roles('child')
   @UseGuards(AuthGuard, RoleGuard)
-  @Get('user/testJWT')
   test() {
     console.log('-- test jwt route --');
     return 'User Arrived';
