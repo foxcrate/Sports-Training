@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { AppService } from './app.service';
@@ -26,7 +26,16 @@ import { join } from 'path';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
-    JwtModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        return {
+          secret: configService.getOrThrow('JWT_SECRET'),
+        };
+      },
+      inject: [ConfigService],
+      global: true,
+    }),
     UserModule,
     AuthModule,
     ChildModule,
@@ -59,8 +68,8 @@ import { join } from 'path';
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor,
     },
-    AuthService,
-    ChildService,
+    // AuthService,
+    // ChildService,
   ],
 })
 export class AppModule {}

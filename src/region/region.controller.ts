@@ -6,7 +6,6 @@ import {
   Request,
   UsePipes,
   Body,
-  Get,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
 import { RegionService } from './region.service';

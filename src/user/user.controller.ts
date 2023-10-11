@@ -22,7 +22,6 @@ import { GetOneChildValidation } from './validations/get-one-child.validation';
 import { UpdateChildValidation } from './validations/update-child.validation';
 import { UpdateUserValidation } from './validations/update-user.validation';
 import { ChildIdValidation } from 'src/child-profile/validations/child-id.validation';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { I18n, I18nContext } from 'nestjs-i18n';
 import { AvailableRoles } from 'src/auth/dtos/availableRoles.dto';
 

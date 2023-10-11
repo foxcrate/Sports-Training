@@ -8,7 +8,6 @@ import { SigninChildDto } from 'src/child/dtos/signin.dto';
 import { ChildService } from 'src/child/child.service';
 
 import axios from 'axios';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthTokensDTO } from './dtos/auth-tokens.dto';
 import { GlobalService } from 'src/global/global.service';
 import { I18nContext, I18nService } from 'nestjs-i18n';
@@ -21,7 +20,6 @@ export class AuthService {
     private childService: ChildService,
     private jwtService: JwtService,
     private config: ConfigService,
-    private prisma: PrismaService,
     private globalService: GlobalService,
     private readonly i18n: I18nService,
   ) {}

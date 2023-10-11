@@ -1,7 +1,5 @@
 import {
   BadRequestException,
-  HttpException,
-  HttpStatus,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -29,7 +27,7 @@ export class ChildService {
 
     if (!foundedAccount[0] || foundedAccount[0].password == null) {
       throw new UnauthorizedException(
-        this.i18n.t(`errors.JWT_ERROR`, { lang: I18nContext.current().lang }),
+        this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
     }
     return foundedAccount[0];

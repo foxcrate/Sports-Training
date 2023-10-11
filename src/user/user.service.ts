@@ -11,7 +11,6 @@ import { ChildService } from 'src/child/child.service';
 import { ReturnUserDto } from './dtos/return.dto';
 import { NativeUserDto } from './dtos/native.dto';
 import { ReturnChildDto } from 'src/child/dtos/return.dto';
-import { GlobalService } from 'src/global/global.service';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 
 @Injectable()

@@ -1,14 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateSportDto } from './dtos/create.dto';
-import { GlobalService } from 'src/global/global.service';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class SportService {
   constructor(
     private prisma: PrismaService,
-    private globalService: GlobalService,
     private readonly i18n: I18nService,
   ) {}
   async create(createData: CreateSportDto, userId): Promise<any> {

@@ -9,9 +9,7 @@ import {
   Put,
   Delete,
   Get,
-  Query,
   Param,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
 import { ChildProfileService } from './child-profile.service';
