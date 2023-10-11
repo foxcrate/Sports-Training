@@ -1,28 +1,15 @@
-import {
-  BadRequestException,
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  InternalServerErrorException,
-  NotAcceptableException,
-  NotFoundException,
-  UnauthorizedException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PlayerProfileCreateDto } from 'src/player-profile/dtos/create.dto';
 import { Prisma } from '@prisma/client';
-import { ReturnPlayerProfileSerializer } from './serializers/return.serializer';
 import { ReturnPlayerProfileDto } from './dtos/return.dto';
 import { ReturnSportDto } from 'src/sport/dtos/return.dto';
-import { GlobalService } from 'src/global/global.service';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class PlayerProfileService {
   constructor(
     private prisma: PrismaService,
-    private globalService: GlobalService,
     private readonly i18n: I18nService,
   ) {}
 

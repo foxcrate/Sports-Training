@@ -18,7 +18,6 @@ import { AddChildValidation } from 'src/user/validations/add-child.validation';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/guards/role.guard';
-import * as Joi from 'joi';
 import { GetOneChildValidation } from './validations/get-one-child.validation';
 import { UpdateChildValidation } from './validations/update-child.validation';
 import { UpdateUserValidation } from './validations/update-user.validation';
@@ -29,10 +28,7 @@ import { AvailableRoles } from 'src/auth/dtos/availableRoles.dto';
 
 @Controller('user')
 export class UserController {
-  constructor(
-    private userService: UserService,
-    private prisma: PrismaService,
-  ) {}
+  constructor(private userService: UserService) {}
 
   @Version('1')
   @Roles('user')

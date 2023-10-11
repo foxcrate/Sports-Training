@@ -1,7 +1,7 @@
-import { DynamicModule, Global, Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { GlobalController } from './global.controller';
 import { GlobalService } from './global.service';
-import { ConfigModuleOptions, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from 'src/prisma/prisma.module';
 

@@ -8,7 +8,6 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { GlobalService } from 'src/global/global.service';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 
 @Injectable()
@@ -17,7 +16,6 @@ export class AuthGuard implements CanActivate {
     private jwtService: JwtService,
     private config: ConfigService,
     private prisma: PrismaService,
-    private globalService: GlobalService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -70,7 +68,7 @@ export class AuthGuard implements CanActivate {
       const decoded = this.jwtService.verify(token, this.config.get('JWT_SECRET'));
       return decoded;
     } catch (error) {
-      console.log('error in auth guard:', error);
+      // console.log('error in auth guard:', error);
 
       return false;
     }

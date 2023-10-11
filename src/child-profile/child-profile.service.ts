@@ -7,7 +7,6 @@ import {
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ChildProfileCreateDto } from './dtos/create.dto';
 import { Prisma } from '@prisma/client';
-import { ReturnChildProfileSerializer } from './serializers/return.serializer';
 import { ReturnChildProfileDto } from './dtos/return.dto';
 import { ReturnSportDto } from 'src/sport/dtos/return.dto';
 import { ReturnChildDto } from 'src/child/dtos/return.dto';

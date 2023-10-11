@@ -11,7 +11,6 @@ import axios from 'axios';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthTokensDTO } from './dtos/auth-tokens.dto';
 import { GlobalService } from 'src/global/global.service';
-import { LanguageDto } from 'src/global/dtos/language.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { AvailableRoles } from './dtos/availableRoles.dto';
 
