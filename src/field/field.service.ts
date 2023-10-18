@@ -55,16 +55,17 @@ export class FieldService {
     return allFields;
   }
 
-  async fieldDayAvailableHours(x): Promise<any> {
-    let dayDate = new Date(x);
+  async fieldDayAvailableHours(fieldId, dayDate1): Promise<any> {
+    let dayDate = new Date(dayDate1);
+    console.log({ fieldId });
+
     let theField = await this.prisma.$queryRaw`
     SELECT
       f.id AS id,
       f.name AS name,
       f.availableWeekDays AS availableWeekDays,
       f.availableDayHours AS availableDayHours,
-      f.createdAt AS createdAt,
-      CASE 
+      CASE
       WHEN COUNT(fbh.id ) = 0 THEN null
       ELSE
       JSON_ARRAYAGG( JSON_OBJECT(
@@ -72,28 +73,27 @@ export class FieldService {
         'fromDateTime', fbh.fromDateTime,
         'toDateTime', fbh.toDateTime,
         'userId',fbh.userId
-        )) 
+        ))
       END AS FieldBookedHours,
       GROUP_CONCAT(DISTINCT STR_TO_DATE(fnad.dayDate,'%Y-%m-%d') ) AS FieldNotAvailableDays
-      -- CASE 
-      -- WHEN COUNT(fnad.id ) = 0 THEN null
-      -- ELSE
-      -- JSON_ARRAYAGG(JSON_OBJECT(
-      --   'id',fnad.id,
-      --   'dayDate', fnad.dayDate,
-      --   'fieldId',fnad.fieldId
-      --   )) 
-      -- END AS FieldNotAvailableDays
       FROM Field AS f
-      JOIN FieldNotAvailableDays AS fnad ON f.id = fnad.fieldId
-      JOIN FieldsBookedHours AS fbh ON f.id = fbh.fieldId
-      WHERE f.id = 1
+      LEFT JOIN FieldsBookedHours AS fbh ON f.id = fbh.fieldId
+      LEFT JOIN FieldNotAvailableDays AS fnad ON f.id = fnad.fieldId
+      WHERE f.id = ${fieldId}
       GROUP BY f.id
     `;
 
-    let FieldNotAvailableDaysArray = theField[0].FieldNotAvailableDays.split(',');
+    console.log(theField);
 
-    let fieldBookedHours = theField[0].FieldBookedHours;
+    // return theField;
+
+    let FieldNotAvailableDaysArray = theField[0].FieldNotAvailableDays
+      ? theField[0].FieldNotAvailableDays.split(',')
+      : [];
+
+    let fieldBookedHours = theField[0].FieldBookedHours
+      ? theField[0].FieldBookedHours
+      : [];
 
     // console.log({ fieldBookedHours });
 
@@ -107,7 +107,7 @@ export class FieldService {
 
     console.log({ mappedFieldBookedHours });
 
-    let b = this.checkFieldAvailable(mappedFieldBookedHours, '2023-10-17 01:00');
+    // let b = this.checkFieldAvailable(mappedFieldBookedHours, '2023-10-17 01:00');
 
     // console.log({ b });
 
@@ -126,26 +126,6 @@ export class FieldService {
 
     console.log('--------');
 
-    // let availableHours = [];
-
-    // while (startTimeDate < endTimeDate) {
-    //   console.log(startTimeDate.toLocaleTimeString());
-    //   let timeSlotAvailable = this.checkFieldAvailable(
-    //     mappedFieldBookedHours,
-    //     startTimeDate,
-    //   );
-    //   let endOfSlot = new Date(startTimeDate);
-    //   endOfSlot.setHours(startTimeDate.getHours() + 1);
-    //   if (timeSlotAvailable) {
-    //     availableHours.push({
-    //       from: startTimeDate.toLocaleTimeString(),
-    //       to: endOfSlot.toLocaleTimeString(),
-    //     });
-    //   }
-    //   console.log({ timeSlotAvailable });
-    //   startTimeDate.setHours(startTimeDate.getHours() + 1);
-    // }
-
     let availableHours = this.getFreeSlots(
       mappedFieldBookedHours,
       startTimeDate,
@@ -155,7 +135,7 @@ export class FieldService {
     console.log('--------');
     console.log({ availableHours });
 
-    return theField;
+    return availableHours;
   }
 
   getFreeSlots(mappedFieldBookedHours, startTimeDate, endTimeDate) {
@@ -185,29 +165,6 @@ export class FieldService {
   }
 
   checkFieldAvailable(bookedHoursArray, desiredStartTime) {
-    // let bookedHoursArray = [
-    //   {
-    //     from: '09:00',
-    //     to: '10:00',
-    //   },
-    //   {
-    //     from: '12:00',
-    //     to: '12:30',
-    //   },
-    //   {
-    //     from: '01:00',
-    //     to: '02:00',
-    //   },
-    //   {
-    //     from: '02:00',
-    //     to: '04:00',
-    //   },
-    //   {
-    //     from: '06:00',
-    //     to: '08:00',
-    //   },
-    // ];
-
     let availableStatusArray = [];
 
     for (let i = 0; i < bookedHoursArray.length; i++) {
