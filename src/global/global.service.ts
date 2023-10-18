@@ -65,6 +65,25 @@ export class GlobalService {
     return hash;
   }
 
+  isTimeAvailable(startTime, endTime, targetTime) {
+    // Create Date objects for the start, end, and target times
+    let start = new Date(startTime);
+    start = new Date(`2000-01-01 ${start.toLocaleTimeString()}`);
+    // console.log(start.toLocaleTimeString());
+
+    let end = new Date(endTime);
+    end = new Date(`2000-01-01 ${end.toLocaleTimeString()}`);
+    // console.log(end.toLocaleTimeString());
+
+    let target = new Date(targetTime);
+
+    target = new Date(`2000-01-01 ${target.toLocaleTimeString()}`);
+    // console.log(target.toLocaleTimeString());
+
+    // Check if the target time is between the start and end times
+    return !(target >= start && target < end);
+  }
+
   private getFileName(originalname) {
     let splitReturn = originalname.split('.');
 

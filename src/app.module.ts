@@ -19,13 +19,12 @@ import { GlobalModule } from './global/global.module';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 
 import { join } from 'path';
+import { FieldModule } from './field/field.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    PrismaModule,
     JwtModule.registerAsync({
-      imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => {
         return {
           secret: configService.getOrThrow('JWT_SECRET'),
@@ -34,14 +33,6 @@ import { join } from 'path';
       inject: [ConfigService],
       global: true,
     }),
-    UserModule,
-    AuthModule,
-    ChildModule,
-    PlayerProfileModule,
-    RegionModule,
-    SportModule,
-    ChildProfileModule,
-    GlobalModule,
     I18nModule.forRoot({
       fallbackLanguage: 'en',
       loaderOptions: {
@@ -50,6 +41,16 @@ import { join } from 'path';
       },
       resolvers: [{ use: QueryResolver, options: ['lang'] }, AcceptLanguageResolver],
     }),
+    PrismaModule,
+    UserModule,
+    AuthModule,
+    ChildModule,
+    PlayerProfileModule,
+    RegionModule,
+    SportModule,
+    ChildProfileModule,
+    GlobalModule,
+    FieldModule,
   ],
   controllers: [AppController],
   providers: [
@@ -66,8 +67,6 @@ import { join } from 'path';
       provide: APP_INTERCEPTOR,
       useClass: TransformInterceptor,
     },
-    // AuthService,
-    // ChildService,
   ],
 })
 export class AppModule {}
