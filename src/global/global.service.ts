@@ -6,6 +6,16 @@ import * as AWS from 'aws-sdk';
 
 @Injectable()
 export class GlobalService {
+  weekDays = [
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ];
+
   constructor(
     private config: ConfigService,
     private readonly i18n: I18nService,
@@ -82,6 +92,10 @@ export class GlobalService {
 
     // Check if the target time is between the start and end times
     return !(target >= start && target < end);
+  }
+
+  getDayName(dayNumber: number): string {
+    return this.weekDays[dayNumber];
   }
 
   private getFileName(originalname) {

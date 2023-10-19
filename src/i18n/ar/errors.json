@@ -12,5 +12,7 @@
   "REPEATED_REGION": "المنطقة مسجلة بالفعل",
   "REPEATED_SPORT": "الرياضة مسجلة بالفعل",
   "NOT_EXISTED_SPORT": "هذة الرياضة غير متوفرة",
+  "DAY_NOT_AVAILABLE": "هذا اليوم غير متوفر",
+  "WEEK_DAY_NOT_AVAILABLE": "هذا اليوم في الأسبوع غير متوفر",
   "SERVER_ERROR": "حدث مشكلة في السيرفر، سوف تحل قريبا"
 }
