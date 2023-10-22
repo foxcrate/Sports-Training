@@ -16,33 +16,30 @@ export class FieldService {
 
   async fieldDayAvailableHours(fieldId: number, day: string): Promise<any> {
     let dayDate = new Date(day);
-
     let dateString = `${dayDate.getFullYear()}-${
       dayDate.getMonth() + 1
     }-${dayDate.getDate()}`;
-
     let dayName = this.globalSerice.getDayName(dayDate.getDay());
+    let theField = await this.fieldSQLService.fieldBookingDetailsForSpecificDate(
+      fieldId,
+      dateString,
+    );
 
-    let theField = await this.fieldSQLService.fieldBookingDetails(fieldId);
-
-    let fieldNotAvailableDaysArray = theField.fieldNotAvailableDays
-      ? theField.fieldNotAvailableDays.split(',')
-      : [];
-
-    //throw error if date not available
-    this.checkDateIsAvailable(fieldNotAvailableDaysArray, dateString);
+    // throw error if date not available
+    if (theField.fieldNotAvailableDays && theField.fieldNotAvailableDays.length > 0) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.DAY_NOT_AVAILABLE`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
 
     //throw error if week day not available
     this.checkWeekDayIsAvailable(theField.availableWeekDays, dayName);
 
     let fieldBookedHours = theField.fieldBookedHours ? theField.fieldBookedHours : [];
-    console.log({ fieldBookedHours });
-
     let mappedFieldBookedHours = fieldBookedHours.map((i) => {
-      return {
-        from: new Date(i.fromDateTime),
-        to: new Date(i.toDateTime),
-      };
+      return new Date(i.fromDateTime).toLocaleTimeString();
     });
 
     let fieldStartHour = theField.availableDayHours.from;
@@ -50,23 +47,70 @@ export class FieldService {
 
     let startTimeDate = new Date(`${dayDate.toLocaleDateString()} ${fieldStartHour}`);
     let endTimeDate = new Date(`${dayDate.toLocaleDateString()} ${fieldEndHour}`);
-
     let availableHours = this.getFreeSlots(
       mappedFieldBookedHours,
       startTimeDate,
       endTimeDate,
     );
-
     return availableHours;
   }
 
-  private checkDateIsAvailable(fieldNotAvailableDaysArray, dateString) {
-    if (fieldNotAvailableDaysArray.includes(dateString)) {
+  async reserveSlot(fieldId: number, userId: number, reqBody: any): Promise<any> {
+    let dayDate = new Date(reqBody.dayDate);
+    let dayTime: any;
+    let theTime = this.globalSerice.timeTo24(reqBody.dayTime);
+    dayTime = new Date(`2000-01-01T${theTime}`);
+
+    let localDayTime = this.globalSerice.getLocalTime(dayTime);
+
+    let dateString = this.globalSerice.getDate(dayDate);
+
+    let theField = await this.fieldSQLService.fieldBookingDetailsForSpecificDate(
+      fieldId,
+      dateString,
+    );
+
+    // throw error if date not available
+    if (theField.fieldNotAvailableDays && theField.fieldNotAvailableDays.length > 0) {
       throw new BadRequestException(
         this.i18n.t(`errors.DAY_NOT_AVAILABLE`, {
           lang: I18nContext.current().lang,
         }),
       );
+    }
+
+    // throw error if week day not available
+    this.checkWeekDayIsAvailable(
+      theField.availableWeekDays,
+      this.globalSerice.getDayName(dayDate.getDay()),
+    );
+
+    let fieldBookedHours = theField.fieldBookedHours ? theField.fieldBookedHours : [];
+
+    let mappedFieldBookedHours = fieldBookedHours.map((i) => {
+      return this.globalSerice.getLocalTime(new Date(i.fromDateTime));
+    });
+
+    if (mappedFieldBookedHours.includes(localDayTime)) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.BOOKED_SLOT`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
+    if (
+      this.slotExistance(
+        theField.availableDayHours.from,
+        theField.availableDayHours.to,
+        localDayTime,
+      )
+    ) {
+      let dateTime = `${dateString} ${localDayTime}`;
+      await this.fieldSQLService.insertFieldBookedHour(fieldId, userId, dateTime);
+      return 'done';
+    } else {
+      return 'not found';
     }
   }
 
@@ -80,6 +124,16 @@ export class FieldService {
     }
   }
 
+  private slotExistance(from, to, slotTime): boolean {
+    let allSlots = this.getAllSlots(from, to);
+
+    if (!allSlots.includes(slotTime)) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
   private getFreeSlots(mappedFieldBookedHours, startTimeDate, endTimeDate) {
     let availableHours = [];
 
@@ -87,150 +141,48 @@ export class FieldService {
     endTimeDate = new Date(endTimeDate);
 
     while (startTimeDate < endTimeDate) {
-      let timeSlotAvailable = this.checkFieldAvailable(
-        mappedFieldBookedHours,
-        startTimeDate,
-      );
       let endOfSlot = new Date(startTimeDate);
       endOfSlot.setHours(startTimeDate.getHours() + 1);
-      // if (timeSlotAvailable) {
+
+      let timeSlotAvailable = this.getSlotState(
+        mappedFieldBookedHours,
+        startTimeDate.toLocaleTimeString(),
+      );
       availableHours.push({
-        from: startTimeDate,
-        to: endOfSlot,
+        from: startTimeDate.toLocaleTimeString('en-US', { hour12: true }),
+        to: endOfSlot.toLocaleTimeString('en-US', { hour12: true }),
+        state: timeSlotAvailable,
       });
-      // }
       startTimeDate.setHours(startTimeDate.getHours() + 1);
     }
-    console.log({ availableHours });
-    console.log({ mappedFieldBookedHours });
-
-    // for (let i = 0; i < availableHours.length; i++) {
-    //   const element = availableHours[i];
-
-    // }
 
     return availableHours;
   }
 
-  private checkFieldAvailable(bookedHoursArray, desiredStartTime) {
-    let availableStatusArray = [];
-
-    for (let i = 0; i < bookedHoursArray.length; i++) {
-      let x = this.globalSerice.isTimeAvailable(
-        bookedHoursArray[i].from,
-        bookedHoursArray[i].to,
-        desiredStartTime,
-      );
-      availableStatusArray.push(x);
-    }
-
-    if (availableStatusArray.includes(false)) {
+  private getSlotState(bookedHoursArray, desiredStartTime) {
+    if (bookedHoursArray.includes(desiredStartTime)) {
       return false;
     } else {
       return true;
     }
   }
 
-  // async checkFieldAvailability(fieldId, fromTimeToCheck, toTimeToCheck): Promise<any> {
-  //   let theField = await this.prisma.$queryRaw`
-  //   SELECT
-  //     f.id AS id,
-  //     f.name AS name,
-  //     f.availableWeekDays AS availableWeekDays,
-  //     TIME_FORMAT(f.availableDayHours->>"$.from", '%H:%i') AS fromTime,
-  //     TIME_FORMAT(f.availableDayHours->>"$.to", '%H:%i') AS toTime,
-  //     f.createdAt AS createdAt,
-  //     CASE
-  //     WHEN COUNT(fbh.id ) = 0 THEN null
-  //     ELSE
-  //     JSON_ARRAYAGG(JSON_OBJECT(
-  //       'id',fbh.id,
-  //       'fromDateTime', fbh.fromDateTime,
-  //       'toDateTime', fbh.toDateTime,
-  //       'userId',fbh.userId
-  //       ))
-  //     END AS FieldBookedHours
-  //     FROM Field AS f
-  //     LEFT JOIN FieldsBookedHours AS fbh ON f.id = fbh.fieldId
-  //     -- WHERE f.id = fieldId
-  //     GROUP BY f.id
-  //   `;
+  private getAllSlots(startTimeDate, endTimeDate) {
+    let availableHours = [];
 
-  //   console.log(theField[0].availableWeekDays);
-  //   console.log(theField[0].fromTime);
-  //   console.log(theField[0].toTime);
-  //   console.log(theField[0].FieldBookedHours);
+    startTimeDate = new Date(`2000-01-01T${startTimeDate}`);
+    endTimeDate = new Date(`2000-01-01T${endTimeDate}`);
 
-  //   //check field booked hours
+    while (startTimeDate < endTimeDate) {
+      let endOfSlot = new Date(startTimeDate);
+      endOfSlot.setHours(startTimeDate.getHours() + 1);
 
-  //   let foundedBookedHours = await this.prisma.$queryRaw`
-  //     SELECT
-  //     *
-  //     FROM FieldsBookedHours AS fbh
-  //     WHERE
-  //     ${fromTimeToCheck} BETWEEN fbh.fromDateTime AND fbh.toDateTime
-  //     OR
-  //     ${toTimeToCheck} BETWEEN fbh.fromDateTime AND fbh.toDateTime
-  //   `;
+      availableHours.push(this.globalSerice.getLocalTime(startTimeDate));
 
-  //   // if (foundedBookedHours[0]) {
-  //   //   console.log(foundedBookedHours);
-
-  //   //   return false;
-  //   // } else {
-  //   //   console.log(foundedBookedHours[0]);
-  //   //   return true;
-  //   // }
-  //   //check working days
-
-  //   //check working hours
-
-  //   return theField;
-  // }
-
-  // async test(): Promise<any> {
-  //   let firstField = await this.prisma.$queryRaw`
-  //   SELECT
-  //   id,
-  //   name,
-  //   availableWeekDays,
-  //   availableDayHours,
-  //   TIME_FORMAT(availableDayHours->>"$.to", '%H:%i:%s') AS testTime,
-  //   createdAt,
-  //   updatedAt
-  //   FROM Field
-  //   GROUP BY id;
-  // `;
-
-  //   return firstField;
-  // }
-
-  // async test2(): Promise<any> {
-  //   let allFields = await this.prisma.$queryRaw`
-  //  SELECT
-  //   f.id AS id,
-  //   f.name AS name,
-  //   f.availableWeekDays AS availableWeekDays,
-  //   TIME_FORMAT(f.availableDayHours->>"$.from", '%H:%i') AS fromTime,
-  //   TIME_FORMAT(f.availableDayHours->>"$.to", '%H:%i') AS toTime,
-  //   f.createdAt AS createdAt,
-  //   CASE
-  //   WHEN COUNT(fbh.id ) = 0 THEN null
-  //   ELSE
-  //   JSON_ARRAYAGG(JSON_OBJECT(
-  //     'id',fbh.id,
-  //     'fromDateTime', fbh.fromDateTime,
-  //     'toDateTime', fbh.toDateTime,
-  //     'userId',fbh.userId
-  //     ))
-  //   END AS FieldBookedHours
-  //   FROM Field AS f
-  //   LEFT JOIN FieldsBookedHours AS fbh ON f.id = fbh.fieldId
-  //   GROUP BY f.id
-  // `;
-
-  //   return allFields;
-  // }
+      startTimeDate.setHours(startTimeDate.getHours() + 1);
+    }
+    return availableHours;
+  }
 }
 
 // new Date(dayDate).toLocaleDateString()
@@ -240,3 +192,5 @@ export class FieldService {
 
 // let dateNow = new Date();
 // dateNow.setHours(dateNow.getHours() + 1);
+// TIME_FORMAT(f.availableDayHours->>"$.to", '%H:%i') AS toTime,
+// ${fromTimeToCheck} BETWEEN fbh.fromDateTime AND fbh.toDateTime

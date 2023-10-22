@@ -79,16 +79,13 @@ export class GlobalService {
     // Create Date objects for the start, end, and target times
     let start = new Date(startTime);
     start = new Date(`2000-01-01 ${start.toLocaleTimeString()}`);
-    // console.log(start.toLocaleTimeString());
 
     let end = new Date(endTime);
     end = new Date(`2000-01-01 ${end.toLocaleTimeString()}`);
-    // console.log(end.toLocaleTimeString());
 
     let target = new Date(targetTime);
 
     target = new Date(`2000-01-01 ${target.toLocaleTimeString()}`);
-    // console.log(target.toLocaleTimeString());
 
     // Check if the target time is between the start and end times
     return !(target >= start && target < end);
@@ -96,6 +93,65 @@ export class GlobalService {
 
   getDayName(dayNumber: number): string {
     return this.weekDays[dayNumber];
+  }
+
+  timeFrom12To24(timeStr): string {
+    let [time, modifier] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':');
+    if (hours === '12') {
+      hours = '00';
+    }
+    if (modifier === 'PM') {
+      hours = parseInt(hours, 10) + 12;
+    }
+    return `${hours}:${minutes}`;
+  }
+
+  timeTo24(timeStr: string): string {
+    let theTime = timeStr;
+    if (timeStr.includes('AM') || timeStr.includes('PM')) {
+      theTime = this.timeFrom12To24(timeStr);
+      return theTime;
+    } else {
+      return theTime;
+    }
+  }
+
+  getLocalTime(dateTime: Date): string {
+    let hours = (dateTime.getHours() < 10 ? '0' : '') + dateTime.getHours();
+    let minutes = (dateTime.getMinutes() < 10 ? '0' : '') + dateTime.getMinutes();
+    return `${hours}:${minutes}`;
+  }
+
+  getGlobalTime(dateTime: Date): string {
+    let hoursNumber = dateTime.getHours() - Number(this.config.get('GMT'));
+    let hours = (hoursNumber < 10 ? '0' : '') + hoursNumber;
+    let minutes = (dateTime.getMinutes() < 10 ? '0' : '') + dateTime.getMinutes();
+    return `${hours}:${minutes}`;
+  }
+
+  getLocalDateTime(dateTime: Date): string {
+    let dateObj = new Date(dateTime);
+    let dateString = `${dateObj.getFullYear()}-${
+      dateObj.getMonth() + 1
+    }-${dateObj.getDate()}`;
+
+    let hours = (dateObj.getHours() < 10 ? '0' : '') + dateObj.getHours();
+    let minutes = (dateObj.getMinutes() < 10 ? '0' : '') + dateObj.getMinutes();
+    let seconds = (dateObj.getSeconds() < 10 ? '0' : '') + dateObj.getSeconds();
+    let milliSeconds =
+      (dateObj.getMilliseconds() < 10 ? '0' : '') + dateObj.getMilliseconds();
+
+    return `${dateString} ${hours}:${minutes}:${seconds}.${milliSeconds}`;
+  }
+
+  getDate(dateTime: Date): string {
+    let dateObj = new Date(dateTime);
+    let dateString = `${dateObj.getFullYear()}-${
+      dateObj.getMonth() + 1
+    }-${dateObj.getDate()}`;
+
+    return `${dateString}`;
   }
 
   private getFileName(originalname) {

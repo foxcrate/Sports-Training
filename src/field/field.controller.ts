@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Query,
+  Post,
 } from '@nestjs/common';
 import { FieldService } from './field.service';
 import { Roles } from 'src/decorators/roles.decorator';
@@ -32,5 +33,13 @@ export class FieldController {
     @Request() req: ExpressRequest,
   ) {
     return this.fieldService.fieldDayAvailableHours(params.id, params.date);
+  }
+
+  @Post('/:id/reserve-slot')
+  @Version('1')
+  // @Roles('user')
+  // @UseGuards(AuthGuard, RoleGuard)
+  async reserveSlot1(@Body() reqBody, @Param() params, @Request() req: ExpressRequest) {
+    return this.fieldService.reserveSlot(params.id, 1, reqBody);
   }
 }

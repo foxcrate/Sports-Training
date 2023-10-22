@@ -14,5 +14,6 @@
   "NOT_EXISTED_SPORT": "Sport not exist",
   "DAY_NOT_AVAILABLE": "Day is not available",
   "WEEK_DAY_NOT_AVAILABLE": "Week day is not available",
+  "BOOKED_SLOT": "This slot is already booked",
   "SERVER_ERROR": "Server problem, it will be fixed soon"
 }
