@@ -166,10 +166,24 @@ model ChildProfileSports{
 model Field{
   id                  Int                    @id @default(autoincrement())
   name                String
+  description         String?
+  cost                Int?
+  rating              Int?
+  slotDuration        Int?
+  address             String?
+  longitude           Decimal?
+  latitude            Decimal?
+  profileImage        String?
 
   availableWeekDays   Json?
 
-  availableDayHours   Json?                  
+  availableDayHours   Json?        
+  
+  sport               Sport? @relation(fields: [sportId], references: [id])
+  sportId             Int?
+
+  region               Region? @relation(fields: [regionId], references: [id])
+  regionId             Int?
 
   users               FieldsBookedHours[]
   notAvailableDays    FieldNotAvailableDays[]
@@ -213,8 +227,9 @@ model Sport{
   arName              String
 
   playerProfiles      PlayerProfileSports[]
-  trainerProfiles      TrainerProfileSports[]
-  childProfiles      ChildProfileSports[]
+  trainerProfiles     TrainerProfileSports[]
+  childProfiles       ChildProfileSports[]
+  fields              Field[]
 
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
@@ -228,6 +243,7 @@ model Region{
 
   playerProfile         PlayerProfile[]
   childProfile         ChildProfile[]
+  fields              Field[]
 
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt

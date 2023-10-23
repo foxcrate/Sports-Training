@@ -1,9 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { GlobalService } from 'src/global/global.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FieldSQLService } from './field-sql.service';
 import { FieldBookingDetailsDTO } from './dtos/fieldBookingDetails.dto';
+import { FieldCreateDto } from './dtos/create';
 
 @Injectable()
 export class FieldService {
@@ -13,6 +14,38 @@ export class FieldService {
     private readonly i18n: I18nService,
     private globalSerice: GlobalService,
   ) {}
+
+  async getAll(): Promise<any> {
+    return this.fieldSQLService.allFields();
+  }
+
+  async getOne(id: number): Promise<any> {
+    return this.fieldSQLService.getByID(id);
+  }
+
+  async create(reqBody: FieldCreateDto): Promise<any> {
+    // check for repeated name;
+    let repeatedField = await this.fieldSQLService.getByName(reqBody.name);
+
+    if (repeatedField) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.REPEATED_FIELD`, { lang: I18nContext.current().lang }),
+      );
+    }
+
+    reqBody.availableWeekDays = JSON.stringify(reqBody.availableWeekDays);
+
+    await this.fieldSQLService.create(reqBody);
+    return 'Done';
+  }
+
+  async update(id: number): Promise<any> {}
+
+  async delete(id: number): Promise<any> {
+    let deletedField = await this.fieldSQLService.getByID(id);
+    this.fieldSQLService.deleteByID(id);
+    return deletedField;
+  }
 
   async fieldDayAvailableHours(fieldId: number, day: string): Promise<any> {
     let dayDate = new Date(day);
@@ -194,3 +227,4 @@ export class FieldService {
 // dateNow.setHours(dateNow.getHours() + 1);
 // TIME_FORMAT(f.availableDayHours->>"$.to", '%H:%i') AS toTime,
 // ${fromTimeToCheck} BETWEEN fbh.fromDateTime AND fbh.toDateTime
+// TIME_FORMAT(availableDayHours->>"$.to", '%H:%i:%s') AS testTime,

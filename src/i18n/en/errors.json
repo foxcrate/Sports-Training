@@ -11,6 +11,7 @@
   "PROFILE_EXISTED": "Profile already exist",
   "REPEATED_REGION": "Region already exist",
   "REPEATED_SPORT": "Sport already exist",
+  "REPEATED_FIELD": "Field already exist",
   "NOT_EXISTED_SPORT": "Sport not exist",
   "DAY_NOT_AVAILABLE": "Day is not available",
   "WEEK_DAY_NOT_AVAILABLE": "Week day is not available",
