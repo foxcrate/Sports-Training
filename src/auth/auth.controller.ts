@@ -23,6 +23,7 @@ import { RoleGuard } from 'src/guards/role.guard';
 import { SigninChildDto } from 'src/child/dtos/signin.dto';
 import { GoogleReturnDataSerializer } from './serializers/google-return-data.serializer';
 import { FacebookReturnDataSerializer } from './serializers/facebook-return-data.serializer';
+import { SignupByMobileValidation } from 'src/user/validations/signup-mobile.validation';
 
 @Controller('auth')
 export class AuthController {
@@ -33,6 +34,15 @@ export class AuthController {
   // @UsePipes(new JoiValidation(SignupValidation))
   async signup1(@Body(new JoiValidation(SignupValidation)) signupData: SignupUserDto) {
     return this.authService.userSignup(signupData);
+  }
+
+  @Post('user/signup-by-mobile')
+  @Version('1')
+  // @UsePipes(new JoiValidation(SignupValidation))
+  async signupByMobile(
+    @Body(new JoiValidation(SignupByMobileValidation)) signupByMobileData: SignupUserDto,
+  ) {
+    return this.authService.userSignupByMobile(signupByMobileData);
   }
 
   @Post('/user/signin')
