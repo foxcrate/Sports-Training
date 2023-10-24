@@ -12,6 +12,7 @@ import { ReturnUserDto } from './dtos/return.dto';
 import { NativeUserDto } from './dtos/native.dto';
 import { ReturnChildDto } from 'src/child/dtos/return.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
+import { SignupByMobileUserDto } from './dtos/signupByMobile.dto';
 
 @Injectable()
 export class UserService {
@@ -49,6 +50,26 @@ export class UserService {
       ${signupData.mobileNumber},
       ${signupData.gender},
       ${new Date(signupData.birthday)},
+      ${new Date()}
+    )`;
+
+    let newUser = await this.getUserByMobileNumber(signupData.mobileNumber);
+
+    return newUser;
+  }
+
+  async createByMobile(signupData: SignupByMobileUserDto): Promise<any> {
+    await this.prisma.$queryRaw`
+    INSERT INTO User
+    (
+      mobileNumber,
+      password,
+      updatedAt
+    )
+    VALUES
+    (
+      ${signupData.mobileNumber},
+      ${signupData.password},
       ${new Date()}
     )`;
 
@@ -195,6 +216,28 @@ export class UserService {
           this.i18n.t(`errors.REPEATED_EMAIL`, { lang: I18nContext.current().lang }),
         );
       }
+      if (repeatedUserProfile[0].mobileNumber == mobileNumber) {
+        throw new BadRequestException(
+          this.i18n.t(`errors.REPEATED_MOBILE_NUMBER`, {
+            lang: I18nContext.current().lang,
+          }),
+        );
+      }
+    }
+    return false;
+  }
+
+  async findRepeatedMobile(mobileNumber): Promise<Boolean> {
+    //Chick existed email or phone number
+    let repeatedUserProfile = await this.prisma.$queryRaw`
+    SELECT *
+    FROM User
+    WHERE
+    mobileNumber = ${mobileNumber}
+    LIMIT 1
+    `;
+
+    if (repeatedUserProfile[0]) {
       if (repeatedUserProfile[0].mobileNumber == mobileNumber) {
         throw new BadRequestException(
           this.i18n.t(`errors.REPEATED_MOBILE_NUMBER`, {

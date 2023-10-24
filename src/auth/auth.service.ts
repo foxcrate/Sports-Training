@@ -13,6 +13,7 @@ import { GlobalService } from 'src/global/global.service';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { AvailableRoles } from './dtos/availableRoles.dto';
 import { IAuthToken } from './interfaces/auth-token.interface';
+import { SignupByMobileUserDto } from 'src/user/dtos/signupByMobile.dto';
 
 @Injectable()
 export class AuthService {
@@ -35,6 +36,20 @@ export class AuthService {
       signupData.password = await this.globalService.hashPassword(signupData.password);
 
       const newUser = await this.userService.create(signupData);
+
+      return newUser;
+    }
+  }
+
+  async userSignupByMobile(signupData: SignupByMobileUserDto) {
+    let repeatedAccount = await this.userService.findRepeatedMobile(
+      signupData.mobileNumber,
+    );
+
+    if (!repeatedAccount) {
+      signupData.password = await this.globalService.hashPassword(signupData.password);
+
+      const newUser = await this.userService.createByMobile(signupData);
 
       return newUser;
     }
