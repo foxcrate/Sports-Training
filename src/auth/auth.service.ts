@@ -52,7 +52,7 @@ export class AuthService {
   }
 
   async createPassword(userId: string, password: string) {
-    let hashedPassword = this.globalService.hashPassword(password);
+    let hashedPassword = await this.globalService.hashPassword(password);
     let theUser = await this.userService.getUserById(userId);
 
     //update

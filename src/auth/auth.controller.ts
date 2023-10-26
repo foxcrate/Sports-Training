@@ -68,8 +68,6 @@ export class AuthController {
   async verifyOtp1(
     @Body(new JoiValidation(VerifyOtpValidation)) verifyOtpData: VerifyOtpDto,
   ) {
-    console.log({ verifyOtpData });
-
     return this.authService.verifyOTP(verifyOtpData);
   }
 
