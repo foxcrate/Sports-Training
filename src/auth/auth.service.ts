@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { SigninUserDto } from 'src/user/dtos/signin.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -14,11 +19,16 @@ import { I18nContext, I18nService } from 'nestjs-i18n';
 import { AvailableRoles } from './dtos/availableRoles.dto';
 import { IAuthToken } from './interfaces/auth-token.interface';
 import { SignupByMobileUserDto } from 'src/user/dtos/signupByMobile.dto';
+import { StringListInput } from 'aws-sdk/clients/sagemakergeospatial';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { VerifyOtpDto } from './dtos/verify-otp.dto';
+import { ReturnUserDto } from 'src/user/dtos/return.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
+    private prisma: PrismaService,
     private childService: ChildService,
     private jwtService: JwtService,
     private config: ConfigService,
@@ -41,18 +51,82 @@ export class AuthService {
     }
   }
 
-  async userSignupByMobile(signupData: SignupByMobileUserDto) {
-    let repeatedAccount = await this.userService.findRepeatedMobile(
-      signupData.mobileNumber,
-    );
+  async createPassword(userId: string, password: string) {
+    let hashedPassword = this.globalService.hashPassword(password);
+    let theUser = await this.userService.getUserById(userId);
 
-    if (!repeatedAccount) {
-      signupData.password = await this.globalService.hashPassword(signupData.password);
+    //update
+    await this.prisma.$queryRaw`
+        UPDATE User
+        SET
+        password = ${hashedPassword},
+        updatedAt = ${new Date()}
+        WHERE
+        id = ${theUser.id};
+      `;
 
-      const newUser = await this.userService.createByMobile(signupData);
+    // let updatedUser = this.getLastUpdated();
+    let updatedUser = await this.userService.getUserById(theUser.id);
 
-      return newUser;
+    return updatedUser;
+  }
+
+  async sendOtp(mobileNumber: string) {
+    await this.userService.findRepeatedMobile(mobileNumber);
+
+    this.saveOTP(mobileNumber, '1234');
+    //send otp
+    return 'OTP sent successfully';
+  }
+
+  async verifyOTP(data: VerifyOtpDto) {
+    //account already saved
+    await this.userService.findRepeatedMobile(data.mobileNumber);
+
+    //throw error if not passed
+    await this.checkSavedOTP(data.mobileNumber, data.otp);
+
+    //return token to user
+    return await this.signupUserAndReturnToken(data.mobileNumber);
+  }
+
+  private async saveOTP(mobileNumber: string, otp: string) {
+    await this.prisma.$queryRaw`
+    INSERT INTO OTP
+    (
+      mobileNumber,
+      OTP,
+      updatedAt
+    )
+    VALUES
+    (
+      ${mobileNumber},
+      ${otp},
+      ${new Date()}
+    )`;
+  }
+
+  private async checkSavedOTP(mobileNumber: string, otp: string): Promise<any> {
+    let obj = await this.prisma.$queryRaw`
+      SELECT
+      *
+      FROM OTP
+      WHERE
+      mobileNumber = ${mobileNumber}
+    `;
+
+    if (!obj[0] || obj[0].otp != otp) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.WRONG_OTP`, { lang: I18nContext.current().lang }),
+      );
     }
+
+    return true;
+  }
+
+  private async signupUserAndReturnToken(mobileNumber: string): Promise<any> {
+    let createdUser = await this.userService.createByMobile(mobileNumber);
+    return this.generateNormalAndRefreshJWTToken(AvailableRoles.User, createdUser.id);
   }
 
   async userSignin(signinData: SigninUserDto): Promise<AuthTokensDTO> {

@@ -24,6 +24,12 @@ import { SigninChildDto } from 'src/child/dtos/signin.dto';
 import { GoogleReturnDataSerializer } from './serializers/google-return-data.serializer';
 import { FacebookReturnDataSerializer } from './serializers/facebook-return-data.serializer';
 import { SignupByMobileValidation } from 'src/user/validations/signup-mobile.validation';
+import { SendOTPValidation } from './validations/send-otp.validation';
+import { VerifyOtpValidation } from './validations/verify-otp.validation';
+import { VerifyOtpDto } from './dtos/verify-otp.dto';
+import { CreatePasswordDto } from './dtos/create-password.dto';
+import { SendOTPDto } from './dtos/send-otp.validation';
+import { CreatePasswordValidation } from './validations/create-password.validaiton';
 
 @Controller('auth')
 export class AuthController {
@@ -36,13 +42,35 @@ export class AuthController {
     return this.authService.userSignup(signupData);
   }
 
-  @Post('user/signup-by-mobile')
+  @Post('user/send-signup-otp')
   @Version('1')
   // @UsePipes(new JoiValidation(SignupValidation))
-  async signupByMobile(
-    @Body(new JoiValidation(SignupByMobileValidation)) signupByMobileData: SignupUserDto,
+  async sendOtp1(@Body(new JoiValidation(SendOTPValidation)) sendOTPData: SendOTPDto) {
+    return this.authService.sendOtp(sendOTPData.mobileNumber);
+  }
+
+  @Post('user/create-password')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  // @UsePipes(new JoiValidation(SignupValidation))
+  async createPassword1(
+    @Body(new JoiValidation(CreatePasswordValidation))
+    createPasswordData: CreatePasswordDto,
+    @Request() req: ExpressRequest,
   ) {
-    return this.authService.userSignupByMobile(signupByMobileData);
+    return this.authService.createPassword(req['id'], createPasswordData.password);
+  }
+
+  @Get('user/verify-signup-otp')
+  @Version('1')
+  // @UsePipes(new JoiValidation(SignupValidation))
+  async verifyOtp1(
+    @Body(new JoiValidation(VerifyOtpValidation)) verifyOtpData: VerifyOtpDto,
+  ) {
+    console.log({ verifyOtpData });
+
+    return this.authService.verifyOTP(verifyOtpData);
   }
 
   @Post('/user/signin')

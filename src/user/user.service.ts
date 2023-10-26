@@ -58,24 +58,34 @@ export class UserService {
     return newUser;
   }
 
-  async createByMobile(signupData: SignupByMobileUserDto): Promise<any> {
+  async createByMobile(mobileNumber: string): Promise<ReturnUserDto> {
     await this.prisma.$queryRaw`
     INSERT INTO User
     (
       mobileNumber,
-      password,
       updatedAt
     )
     VALUES
     (
-      ${signupData.mobileNumber},
-      ${signupData.password},
+      ${mobileNumber},
       ${new Date()}
     )`;
-
-    let newUser = await this.getUserByMobileNumber(signupData.mobileNumber);
-
-    return newUser;
+    let createdUser = await this.prisma.$queryRaw`
+      SELECT
+      id,
+      firstName,
+      lastName,
+      profileImage,
+      email,
+      mobileNumber,
+      gender,
+      birthday
+      FROM
+      User
+      WHERE 
+      mobileNumber = ${mobileNumber}
+    `;
+    return createdUser[0];
   }
 
   async update(reqBody, userId) {
@@ -249,7 +259,7 @@ export class UserService {
     return false;
   }
 
-  private async getUserById(userId): Promise<ReturnUserDto> {
+  async getUserById(userId): Promise<ReturnUserDto> {
     let theUser = await this.prisma.$queryRaw`
       SELECT
       id,

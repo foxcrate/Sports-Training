@@ -12,5 +12,6 @@
   "REPEATED_REGION": "Region already exist",
   "REPEATED_SPORT": "Sport already exist",
   "NOT_EXISTED_SPORT": "Sport not exist",
+  "WRONG_OTP": "Wrong OTP",
   "SERVER_ERROR": "Server problem, it will be fixed soon"
 }
