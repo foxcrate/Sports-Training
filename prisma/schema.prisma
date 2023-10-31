@@ -15,10 +15,16 @@ enum Gender {
   male
 }
 
+enum AcceptanceStatus{
+  accepted
+  pending
+  declined
+}
+
 enum UserType {
-  player
-  trainer
-  both
+  admin
+  user
+  child
 }
 
 enum Provider {
@@ -55,6 +61,7 @@ model User {
   trainerProfile      TrainerProfile?
   childs              Child[]
   fields              FieldsBookedHours[]
+  addedFields         Field[]
 }
 
 model PlayerProfile{
@@ -174,10 +181,13 @@ model Field{
   longitude           Decimal?
   latitude            Decimal?
   profileImage        String?
-
+  acceptanceStatus    AcceptanceStatus        @default(pending)
   availableWeekDays   Json?
 
   availableDayHours   Json?        
+
+  addedByUserId       Int?
+  addedByUser         User?                @relation(fields: [addedByUserId], references: [id],onDelete: Cascade)
   
   sport               Sport? @relation(fields: [sportId], references: [id])
   sportId             Int?
@@ -207,7 +217,6 @@ model FieldsBookedHours{
   id                  Int                    @id @default(autoincrement())
 
   fromDateTime                DateTime
-  toDateTime                DateTime
   gmt                 Int                   @default(0)
   
   user               User @relation(fields: [userId], references: [id])

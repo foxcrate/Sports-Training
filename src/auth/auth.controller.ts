@@ -5,7 +5,6 @@ import {
   Post,
   UseGuards,
   Request,
-  UsePipes,
   Version,
   Query,
 } from '@nestjs/common';
@@ -23,7 +22,8 @@ import { RoleGuard } from 'src/guards/role.guard';
 import { SigninChildDto } from 'src/child/dtos/signin.dto';
 import { GoogleReturnDataSerializer } from './serializers/google-return-data.serializer';
 import { FacebookReturnDataSerializer } from './serializers/facebook-return-data.serializer';
-import { SignupByMobileValidation } from 'src/user/validations/signup-mobile.validation';
+import { SendOTPValidation } from './validations/send-otp.validation';
+import { CompleteSignupValidation } from 'src/user/validations/complete-signup.validation';
 
 @Controller('auth')
 export class AuthController {
@@ -36,13 +36,31 @@ export class AuthController {
     return this.authService.userSignup(signupData);
   }
 
-  @Post('user/signup-by-mobile')
+  // @Post('user/signup-by-mobile')
+  // @Version('1')
+  // // @UsePipes(new JoiValidation(SignupValidation))
+  // async signupByMobile(
+  //   @Body(new JoiValidation(SignupByMobileValidation)) signupByMobileData: SignupUserDto,
+  // ) {
+  //   return this.authService.userSignupByMobile(signupByMobileData);
+  // }
+
+  @Post('user/complete-signup')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async completeSignup1(
+    @Body(new JoiValidation(CompleteSignupValidation)) completeSignupData: SignupUserDto,
+    @Request() req: ExpressRequest,
+  ) {
+    return this.authService.userCompleteSignup(req['id'], completeSignupData);
+  }
+
+  @Post('user/send-otp')
   @Version('1')
   // @UsePipes(new JoiValidation(SignupValidation))
-  async signupByMobile(
-    @Body(new JoiValidation(SignupByMobileValidation)) signupByMobileData: SignupUserDto,
-  ) {
-    return this.authService.userSignupByMobile(signupByMobileData);
+  async sendOtp1(@Body(new JoiValidation(SendOTPValidation)) sendOTPData: SignupUserDto) {
+    return this.authService.sendOtp(sendOTPData.mobileNumber);
   }
 
   @Post('/user/signin')

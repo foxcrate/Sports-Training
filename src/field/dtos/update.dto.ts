@@ -1,4 +1,4 @@
-export class FieldCreateDto {
+export class FieldUpdateDto {
   name: string;
   description: string;
   cost: number;
@@ -9,7 +9,7 @@ export class FieldCreateDto {
   profileImage: string;
   sportId: number;
   regionId: number;
-  availableWeekDays: any;
+  availableWeekDays: string;
   startTime: string;
   endTime: string;
 }

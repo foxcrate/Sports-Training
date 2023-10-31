@@ -1,15 +1,16 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { GlobalService } from 'src/global/global.service';
 import { FieldModel } from './field.model';
 import { FieldCreateDto } from './dtos/create.dto';
 import { FieldUpdateDto } from './dtos/update.dto';
+import { FieldAcceptanceStatusDto } from './dtos/field-acceptance-status.dto';
 import { FieldBookingDetailsDTO } from './dtos/fieldBookingDetails.dto';
 import { FieldReturnDto } from './dtos/return.dto';
 import { FreeSlots } from './dtos/free-slots.dto';
 
 @Injectable()
-export class FieldService {
+export class AdminFieldService {
   constructor(
     private fieldModel: FieldModel,
     private readonly i18n: I18nService,
@@ -17,14 +18,14 @@ export class FieldService {
   ) {}
 
   async getAll(): Promise<FieldBookingDetailsDTO[]> {
-    return this.fieldModel.allFields();
+    return await this.fieldModel.allFields();
   }
 
   async getOne(id: number): Promise<FieldBookingDetailsDTO> {
-    return this.fieldModel.getByID(id);
+    return await this.fieldModel.getByID(id);
   }
 
-  async create(userId: number, reqBody: FieldCreateDto): Promise<FieldReturnDto> {
+  async create(reqBody: FieldCreateDto): Promise<FieldReturnDto> {
     // check for repeated name;
     let repeatedField = await this.fieldModel.getByName(reqBody.name);
 
@@ -36,7 +37,7 @@ export class FieldService {
 
     reqBody.availableWeekDays = JSON.stringify(reqBody.availableWeekDays);
 
-    return await this.fieldModel.createByUser(userId, reqBody);
+    return await this.fieldModel.create(reqBody);
   }
 
   async update(id: number, reqBody: FieldUpdateDto): Promise<FieldReturnDto> {
@@ -59,9 +60,33 @@ export class FieldService {
     return deletedField;
   }
 
+  async getPendingFields(): Promise<FieldBookingDetailsDTO[]> {
+    let pendingField = await this.fieldModel.selectPendingFields();
+    return pendingField;
+  }
+
+  async changeFieldAcceptanceStatue(
+    fieldId: number,
+    newStatus: FieldAcceptanceStatusDto,
+  ): Promise<Boolean> {
+    let theField = await this.fieldModel.getByID(fieldId);
+    if (theField.acceptanceStatus != FieldAcceptanceStatusDto.Pending) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.FIELD_NOT_PENDING`, { lang: I18nContext.current().lang }),
+      );
+    }
+    return await this.fieldModel.setFieldAcceptanceStatue(fieldId, newStatus);
+  }
+
+  async addNotAvailableDays(fieldId: number, datesArray: string[]) {
+    return await this.fieldModel.insertNotAvailableDays(fieldId, datesArray);
+  }
+
   async fieldDayAvailableHours(fieldId: number, day: string): Promise<FreeSlots[]> {
     let dayDate = new Date(day);
-    let dateString = this.globalSerice.getDate(dayDate);
+    let dateString = `${dayDate.getFullYear()}-${
+      dayDate.getMonth() + 1
+    }-${dayDate.getDate()}`;
     let dayName = this.globalSerice.getDayName(dayDate.getDay());
     let theField = await this.fieldModel.fieldBookingDetailsForSpecificDate(
       fieldId,
@@ -82,13 +107,15 @@ export class FieldService {
 
     let fieldBookedHours = theField.fieldBookedHours ? theField.fieldBookedHours : [];
     let mappedFieldBookedHours = fieldBookedHours.map((i) => {
-      return new Date(i.fromDateTime).toLocaleTimeString('en-US', { hour12: true });
+      return new Date(i.fromDateTime).toLocaleTimeString();
     });
 
-    let startTimeDate = new Date(`${dateString} ${theField.availableDayHours.from}`);
-    let endTimeDate = new Date(`${dateString} ${theField.availableDayHours.to}`);
+    let fieldStartHour = theField.availableDayHours.from;
+    let fieldEndHour = theField.availableDayHours.to;
 
-    let availableHours = this.getFreeSlots(
+    let startTimeDate = new Date(`${dayDate.toLocaleDateString()} ${fieldStartHour}`);
+    let endTimeDate = new Date(`${dayDate.toLocaleDateString()} ${fieldEndHour}`);
+    let availableHours: FreeSlots[] = this.getFreeSlots(
       mappedFieldBookedHours,
       startTimeDate,
       endTimeDate,
@@ -98,14 +125,10 @@ export class FieldService {
 
   async reserveSlot(fieldId: number, userId: number, reqBody): Promise<string> {
     let dayDate = new Date(reqBody.dayDate);
-    let dayTimesArray = reqBody.dayTimes;
+    let theTime = this.globalSerice.timeTo24(reqBody.dayTime);
+    let dayTime = new Date(`2000-01-01T${theTime}`);
 
-    let localDayTimes = dayTimesArray.map((i) =>
-      new Date(`2000-01-01T${this.globalSerice.timeTo24(i)}`).toLocaleTimeString(
-        'en-US',
-        { hour12: false },
-      ),
-    );
+    let localDayTime = this.globalSerice.getLocalTime(dayTime);
 
     let dateString = this.globalSerice.getDate(dayDate);
 
@@ -132,35 +155,30 @@ export class FieldService {
     let fieldBookedHours = theField.fieldBookedHours ? theField.fieldBookedHours : [];
 
     let mappedFieldBookedHours = fieldBookedHours.map((i) => {
-      return new Date(i.fromDateTime).toLocaleTimeString('en-US', { hour12: false });
+      return this.globalSerice.getLocalTime(new Date(i.fromDateTime));
     });
 
-    for (let i = 0; i < localDayTimes.length; i++) {
-      if (mappedFieldBookedHours.includes(localDayTimes[i])) {
-        throw new BadRequestException(
-          this.i18n.t(`errors.BOOKED_SLOT`, {
-            lang: I18nContext.current().lang,
-          }),
-        );
-      }
-      if (
-        !this.slotExistance(
-          theField.availableDayHours.from,
-          theField.availableDayHours.to,
-          localDayTimes[i],
-        )
-      ) {
-        throw new BadRequestException(
-          this.i18n.t(`errors.NOT_EXISTED_SLOT`, {
-            lang: I18nContext.current().lang,
-          }),
-        );
-      }
-      let dateTime = `${dateString} ${localDayTimes[i]}`;
-      await this.fieldModel.insertFieldBookedHour(fieldId, userId, dateTime);
+    if (mappedFieldBookedHours.includes(localDayTime)) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.BOOKED_SLOT`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
     }
 
-    return 'done';
+    if (
+      this.slotExistance(
+        theField.availableDayHours.from,
+        theField.availableDayHours.to,
+        localDayTime,
+      )
+    ) {
+      let dateTime = `${dateString} ${localDayTime}`;
+      await this.fieldModel.insertFieldBookedHour(fieldId, userId, dateTime);
+      return 'done';
+    } else {
+      return 'not found';
+    }
   }
 
   private checkWeekDayIsAvailable(fieldAvailableWeekDays, dayName) {
@@ -183,8 +201,8 @@ export class FieldService {
     }
   }
 
-  private getFreeSlots(mappedFieldBookedHours, startTimeDate, endTimeDate) {
-    let availableHours = [];
+  private getFreeSlots(mappedFieldBookedHours, startTimeDate, endTimeDate): FreeSlots[] {
+    let availableHours: FreeSlots[] = [];
 
     startTimeDate = new Date(startTimeDate);
     endTimeDate = new Date(endTimeDate);
@@ -195,7 +213,7 @@ export class FieldService {
 
       let timeSlotAvailable = this.getSlotState(
         mappedFieldBookedHours,
-        startTimeDate.toLocaleTimeString('en-US', { hour12: true }),
+        startTimeDate.toLocaleTimeString(),
       );
       availableHours.push({
         from: startTimeDate.toLocaleTimeString('en-US', { hour12: true }),
@@ -208,7 +226,7 @@ export class FieldService {
     return availableHours;
   }
 
-  private getSlotState(bookedHoursArray, desiredStartTime) {
+  private getSlotState(bookedHoursArray, desiredStartTime): boolean {
     if (bookedHoursArray.includes(desiredStartTime)) {
       return false;
     } else {
@@ -216,8 +234,8 @@ export class FieldService {
     }
   }
 
-  private getAllSlots(startTimeDate, endTimeDate) {
-    let availableHours = [];
+  private getAllSlots(startTimeDate, endTimeDate): string[] {
+    let availableHours: string[] = [];
 
     startTimeDate = new Date(`2000-01-01T${startTimeDate}`);
     endTimeDate = new Date(`2000-01-01T${endTimeDate}`);
@@ -226,8 +244,7 @@ export class FieldService {
       let endOfSlot = new Date(startTimeDate);
       endOfSlot.setHours(startTimeDate.getHours() + 1);
 
-      // availableHours.push(this.globalSerice.getLocalTime(startTimeDate));
-      availableHours.push(startTimeDate.toLocaleTimeString('en-US', { hour12: false }));
+      availableHours.push(this.globalSerice.getLocalTime(startTimeDate));
 
       startTimeDate.setHours(startTimeDate.getHours() + 1);
     }

@@ -13,6 +13,7 @@ export class JoiValidation implements PipeTransform {
   transform(value: any, metadata: ArgumentMetadata) {
     const { error } = this.schema.validate(value, {
       abortEarly: false,
+      // messages: translate,
     });
 
     if (error) {

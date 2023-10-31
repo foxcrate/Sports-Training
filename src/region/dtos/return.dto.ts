@@ -1,4 +1,4 @@
-export class ReturnSportDto {
+export class RegionReturnDto {
   id: number;
   enName: String;
   arName: String;

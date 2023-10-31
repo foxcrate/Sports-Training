@@ -78,14 +78,18 @@ export class GlobalService {
   isTimeAvailable(startTime, endTime, targetTime) {
     // Create Date objects for the start, end, and target times
     let start = new Date(startTime);
-    start = new Date(`2000-01-01 ${start.toLocaleTimeString()}`);
+    start = new Date(
+      `2000-01-01 ${start.toLocaleTimeString('en-US', { hour12: false })}`,
+    );
 
     let end = new Date(endTime);
-    end = new Date(`2000-01-01 ${end.toLocaleTimeString()}`);
+    end = new Date(`2000-01-01 ${end.toLocaleTimeString('en-US', { hour12: false })}`);
 
     let target = new Date(targetTime);
 
-    target = new Date(`2000-01-01 ${target.toLocaleTimeString()}`);
+    target = new Date(
+      `2000-01-01 ${target.toLocaleTimeString('en-US', { hour12: false })}`,
+    );
 
     // Check if the target time is between the start and end times
     return !(target >= start && target < end);
@@ -93,6 +97,16 @@ export class GlobalService {
 
   getDayName(dayNumber: number): string {
     return this.weekDays[dayNumber];
+  }
+
+  timeTo24(timeStr: string): string {
+    let theTime = timeStr;
+    if (timeStr.includes('AM') || timeStr.includes('PM')) {
+      theTime = this.timeFrom12To24(timeStr);
+      return theTime;
+    } else {
+      return theTime;
+    }
   }
 
   timeFrom12To24(timeStr): string {
@@ -105,16 +119,6 @@ export class GlobalService {
       hours = parseInt(hours, 10) + 12;
     }
     return `${hours}:${minutes}`;
-  }
-
-  timeTo24(timeStr: string): string {
-    let theTime = timeStr;
-    if (timeStr.includes('AM') || timeStr.includes('PM')) {
-      theTime = this.timeFrom12To24(timeStr);
-      return theTime;
-    } else {
-      return theTime;
-    }
   }
 
   getLocalTime(dateTime: Date): string {
@@ -146,12 +150,13 @@ export class GlobalService {
   }
 
   getDate(dateTime: Date): string {
-    let dateObj = new Date(dateTime);
-    let dateString = `${dateObj.getFullYear()}-${
-      dateObj.getMonth() + 1
-    }-${dateObj.getDate()}`;
+    let dateObj = dateTime;
 
-    return `${dateString}`;
+    let year = (dateObj.getFullYear() < 10 ? '0' : '') + dateObj.getFullYear();
+    let month = (dateObj.getMonth() + 1 < 10 ? '0' : '') + (dateObj.getMonth() + 1);
+    let day = (dateObj.getDate() < 10 ? '0' : '') + dateObj.getDate();
+
+    return `${year}-${month}-${day}`;
   }
 
   private getFileName(originalname) {

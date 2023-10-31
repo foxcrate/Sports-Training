@@ -11,15 +11,22 @@ import { ReturnChildProfileDto } from './dtos/return.dto';
 import { ReturnSportDto } from 'src/sport/dtos/return.dto';
 import { ReturnChildDto } from 'src/child/dtos/return.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
+import { GlobalService } from 'src/global/global.service';
+import { ReturnChildProfileWithChildAndSportsDto } from './dtos/return-with-child-and-sports.dto';
 
 @Injectable()
 export class ChildProfileService {
   constructor(
     private prisma: PrismaService,
+    private globalService: GlobalService,
     private readonly i18n: I18nService,
   ) {}
 
-  async create(createData: ChildProfileCreateDto, childId, userId): Promise<any> {
+  async create(
+    createData: ChildProfileCreateDto,
+    childId,
+    userId,
+  ): Promise<ReturnChildProfileWithChildAndSportsDto> {
     //throw an error if child not exist
     let child = await this.getChildById(childId);
     if (child.userId != userId) {
@@ -41,7 +48,7 @@ export class ChildProfileService {
     (${createData.level},
     ${createData.regionId},
     ${childId},
-    ${new Date()})`;
+    ${this.globalService.getLocalDateTime(new Date())})`;
 
     let newChildProfile: ReturnChildProfileDto =
       await this.getChildProfileByChildId(childId);
@@ -57,7 +64,11 @@ export class ChildProfileService {
     return newChildProfileWithSports;
   }
 
-  async update(createData: ChildProfileCreateDto, childProfileId, userId): Promise<any> {
+  async update(
+    createData: ChildProfileCreateDto,
+    childProfileId,
+    userId,
+  ): Promise<ReturnChildProfileWithChildAndSportsDto> {
     //check profile existance
     let childProfile = await this.authorizeResource(userId, childProfileId);
 
@@ -73,7 +84,7 @@ export class ChildProfileService {
       SET
       level = ${createData.level},
       regionId = ${createData.regionId},
-      updatedAt = ${new Date()}
+      updatedAt = ${this.globalService.getLocalDateTime(new Date())}
       WHERE
       id = ${childProfileId};
     `;
@@ -94,7 +105,7 @@ export class ChildProfileService {
     return newChildProfileWithSports;
   }
 
-  async delete(userId, childProfileId): Promise<any> {
+  async delete(userId, childProfileId): Promise<ReturnChildProfileDto> {
     // return the childProfile or throw unauthorized error
     let childProfile = await this.authorizeResource(userId, childProfileId);
 
@@ -115,7 +126,7 @@ export class ChildProfileService {
     return deletedChildProfile;
   }
 
-  async getAll(userId): Promise<any> {
+  async getAll(userId): Promise<ReturnChildProfileWithChildAndSportsDto[]> {
     //get all user's childs
     let childsIds = await this.getUserChildsIds(userId);
 
@@ -130,7 +141,7 @@ export class ChildProfileService {
     return childsProfilesWithSports;
   }
 
-  async getOne(userId, childProfileId): Promise<any> {
+  async getOne(userId, childProfileId): Promise<ReturnChildProfileWithChildAndSportsDto> {
     // return the childProfile or throw unauthorized error
     let childProfile = await this.authorizeResource(userId, childProfileId);
 
@@ -169,6 +180,7 @@ export class ChildProfileService {
       profilesAndSports.push({
         childProfileId: newChildProfileId,
         sportId: sportsIds[i],
+        // updatedAt: this.globalService.getLocalDateTime(new Date()),
         updatedAt: new Date(),
       });
     }
@@ -194,24 +206,6 @@ export class ChildProfileService {
     return true;
   }
 
-  private async getLastCreated(): Promise<ReturnChildProfileDto> {
-    let childProfile = await this.prisma.$queryRaw`
-    SELECT *
-    FROM ChildProfile
-    ORDER BY createdAt DESC
-    LIMIT 1`;
-    return childProfile[0];
-  }
-
-  private async getLastUpdated(): Promise<ReturnChildProfileDto> {
-    let childProfile = await this.prisma.$queryRaw`
-    SELECT *
-    FROM ChildProfile
-    ORDER BY updatedAt DESC
-    LIMIT 1`;
-    return childProfile[0];
-  }
-
   private async getChildById(childId): Promise<ReturnChildDto> {
     let theChild = await this.prisma.$queryRaw`
       SELECT *
@@ -228,7 +222,7 @@ export class ChildProfileService {
     return theChild[0];
   }
 
-  private async getById(childProfileId): Promise<any> {
+  private async getById(childProfileId): Promise<ReturnChildProfileDto> {
     let childProfile = await this.prisma.$queryRaw`
       SELECT *
       FROM ChildProfile
@@ -240,8 +234,8 @@ export class ChildProfileService {
 
   private async getChildProfileWithSportsByChildId(
     childId: number,
-  ): Promise<ReturnChildProfileDto> {
-    let childProfileWithSports: any = await this.prisma.$queryRaw`
+  ): Promise<ReturnChildProfileWithChildAndSportsDto> {
+    let childProfileWithSports = await this.prisma.$queryRaw`
     SELECT
     cp.id AS id,
     cp.level AS level,
@@ -270,10 +264,11 @@ export class ChildProfileService {
 
   private async getChildsProfilesWithSportsByChildIds(
     childsIds: number[],
-  ): Promise<ReturnChildProfileDto> {
+  ): Promise<ReturnChildProfileWithChildAndSportsDto[]> {
     // console.log({ childsIds });
 
-    let childProfileWithSports: any = await this.prisma.$queryRaw`
+    let childProfileWithSports: ReturnChildProfileWithChildAndSportsDto[] = await this
+      .prisma.$queryRaw`
     SELECT
     cp.id AS id,
     cp.level AS level,
@@ -300,7 +295,7 @@ export class ChildProfileService {
     return childProfileWithSports;
   }
 
-  private async getChildProfileByChildId(childId): Promise<any> {
+  private async getChildProfileByChildId(childId): Promise<ReturnChildProfileDto> {
     let childProfile = await this.prisma.$queryRaw`
       SELECT *
       FROM ChildProfile
@@ -310,7 +305,7 @@ export class ChildProfileService {
     return childProfile[0];
   }
 
-  private async deletePastChildSports(childProfileId: number): Promise<any> {
+  private async deletePastChildSports(childProfileId: number) {
     await this.prisma.$queryRaw`
       DELETE
       FROM ChildProfileSports
@@ -319,7 +314,7 @@ export class ChildProfileService {
   }
 
   private async getUserChildsIds(userId: number): Promise<number[]> {
-    let idsObject: any = await this.prisma.$queryRaw`
+    let idsObject: any[] = await this.prisma.$queryRaw`
       SELECT id
       FROM Child
       WHERE userId = ${userId}
@@ -352,7 +347,7 @@ export class ChildProfileService {
     let childsIds = await this.getUserChildsIds(userId);
     // console.log({ childsIds });
 
-    childId = parseInt(childId);
+    childId = childId;
 
     // check if the child is the current user's child
     if (!childsIds.includes(childId)) {

@@ -1,0 +1,8 @@
+import DateExtension from '@joi/date';
+import * as JoiImport from 'joi';
+const Joi = JoiImport.extend(DateExtension);
+
+export const FieldAvailableHoursValidation = Joi.object({
+  id: Joi.number().required(),
+  date: Joi.date().format('YYYY-MM-DD').required(),
+});

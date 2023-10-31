@@ -9,5 +9,6 @@ export class ReturnPlayerProfileDto {
   level: Level;
   userId: number;
   regionId: number;
+  createdAt: number;
   sports: [];
 }

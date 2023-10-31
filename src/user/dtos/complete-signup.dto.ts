@@ -3,14 +3,11 @@ enum Gender {
   Male = 'male',
 }
 
-export class ReturnUserDto {
-  id: number;
+export class CompleteSignupUserDto {
   firstName: string;
   lastName: string;
   profileImage: string;
   email: string;
-  mobileNumber: string;
   gender: Gender;
   birthday: Date;
-  createdAt: Date;
 }

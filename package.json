@@ -31,6 +31,7 @@
     "axios": "^1.5.0",
     "bcrypt": "^5.1.1",
     "joi": "^17.10.1",
+    "moment-timezone": "^0.5.43",
     "nestjs-i18n": "^10.3.6",
     "object-inspect": "^1.12.3",
     "reflect-metadata": "^0.1.13",
