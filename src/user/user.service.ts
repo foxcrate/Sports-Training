@@ -99,9 +99,10 @@ export class UserService {
         SET
         firstName = ${completeSignupUserDto.firstName},
         lastName = ${completeSignupUserDto.lastName},
+        email = ${completeSignupUserDto.email},
         profileImage = ${completeSignupUserDto.profileImage},
         gender = ${completeSignupUserDto.gender},
-        birthday = ${completeSignupUserDto.birthday},
+        birthday = ${new Date(completeSignupUserDto.birthday)},
         updatedAt = ${this.globalService.getLocalDateTime(new Date())}
         WHERE
         id = ${theUser.id};

@@ -76,6 +76,7 @@ export class AuthService {
 
     if (!repeatedAccount) {
       const newUser = await this.userService.completeSignup(userId, completeSignupData);
+      return newUser;
     }
   }
 
