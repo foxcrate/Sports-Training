@@ -306,7 +306,7 @@ export class UserService {
     return false;
   }
 
-  private async getUserById(userId): Promise<ReturnUserDto> {
+  async getUserById(userId): Promise<ReturnUserDto> {
     let theUser = await this.prisma.$queryRaw`
       SELECT
       id,
