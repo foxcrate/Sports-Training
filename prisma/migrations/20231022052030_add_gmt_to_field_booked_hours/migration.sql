@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `FieldsBookedHours` ADD COLUMN `gmt` INTEGER NOT NULL DEFAULT 0;

@@ -11,7 +11,13 @@
   "PROFILE_EXISTED": "الحساب موجود بالفعل",
   "REPEATED_REGION": "المنطقة مسجلة بالفعل",
   "REPEATED_SPORT": "الرياضة مسجلة بالفعل",
+  "REPEATED_FIELD": "الملعب مسجل بالفعل",
+  "FIELD_NOT_PENDING": "الملعب ليس تحت انتظار التأكيد",
   "NOT_EXISTED_SPORT": "هذة الرياضة غير متوفرة",
   "WRONG_OTP": "رمز خاطئ",
+  "DAY_NOT_AVAILABLE": "هذا اليوم غير متوفر",
+  "WEEK_DAY_NOT_AVAILABLE": "هذا اليوم في الأسبوع غير متوفر",
+  "BOOKED_SLOT": "هذا المعاد محجوز بالفعل",
+  "NOT_EXISTED_SLOT": "هذا المعاد غير موجود",
   "SERVER_ERROR": "حدث مشكلة في السيرفر، سوف تحل قريبا"
 }

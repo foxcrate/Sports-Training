@@ -7,7 +7,8 @@ enum Level {
 export class ReturnChildProfileDto {
   id: number;
   level: Level;
-  childId: number;
   regionId: number;
+  childId: number;
   sports: [];
+  createdAt: Date;
 }

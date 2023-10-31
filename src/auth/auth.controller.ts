@@ -5,7 +5,6 @@ import {
   Post,
   UseGuards,
   Request,
-  UsePipes,
   Version,
   Query,
 } from '@nestjs/common';
@@ -23,13 +22,13 @@ import { RoleGuard } from 'src/guards/role.guard';
 import { SigninChildDto } from 'src/child/dtos/signin.dto';
 import { GoogleReturnDataSerializer } from './serializers/google-return-data.serializer';
 import { FacebookReturnDataSerializer } from './serializers/facebook-return-data.serializer';
-import { SignupByMobileValidation } from 'src/user/validations/signup-mobile.validation';
 import { SendOTPValidation } from './validations/send-otp.validation';
 import { VerifyOtpValidation } from './validations/verify-otp.validation';
 import { VerifyOtpDto } from './dtos/verify-otp.dto';
 import { CreatePasswordDto } from './dtos/create-password.dto';
 import { SendOTPDto } from './dtos/send-otp.validation';
 import { CreatePasswordValidation } from './validations/create-password.validaiton';
+import { CompleteSignupValidation } from 'src/user/validations/complete-signup.validation';
 
 @Controller('auth')
 export class AuthController {
@@ -69,6 +68,16 @@ export class AuthController {
     @Body(new JoiValidation(VerifyOtpValidation)) verifyOtpData: VerifyOtpDto,
   ) {
     return this.authService.verifyOTP(verifyOtpData);
+  }
+  @Post('user/complete-signup')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async completeSignup1(
+    @Body(new JoiValidation(CompleteSignupValidation)) completeSignupData: SignupUserDto,
+    @Request() req: ExpressRequest,
+  ) {
+    return this.authService.userCompleteSignup(req['id'], completeSignupData);
   }
 
   @Post('/user/signin')

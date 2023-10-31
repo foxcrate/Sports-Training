@@ -2,14 +2,17 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateSportDto } from './dtos/create.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
+import { GlobalService } from 'src/global/global.service';
+import { ReturnSportDto } from './dtos/return.dto';
 
 @Injectable()
 export class SportService {
   constructor(
     private prisma: PrismaService,
+    private globalService: GlobalService,
     private readonly i18n: I18nService,
   ) {}
-  async create(createData: CreateSportDto, userId): Promise<any> {
+  async create(createData: CreateSportDto, userId): Promise<ReturnSportDto> {
     await this.findRepeated(createData.enName, createData.arName);
 
     await this.prisma.$queryRaw`
@@ -20,14 +23,14 @@ export class SportService {
         VALUES
       (${createData.enName},
       ${createData.arName},
-      ${new Date()})`;
+      ${this.globalService.getLocalDateTime(new Date())})`;
 
     let newRegion = await this.prisma.$queryRaw`
       SELECT *
       FROM Sport
       ORDER BY createdAt DESC
       LIMIT 1`;
-    return newRegion;
+    return newRegion[0];
   }
 
   async findRepeated(enName, arName): Promise<Boolean> {

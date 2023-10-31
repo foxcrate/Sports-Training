@@ -12,4 +12,5 @@ export class ReturnUserDto {
   mobileNumber: string;
   gender: Gender;
   birthday: Date;
+  createdAt: Date;
 }

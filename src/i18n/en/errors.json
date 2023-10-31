@@ -11,7 +11,13 @@
   "PROFILE_EXISTED": "Profile already exist",
   "REPEATED_REGION": "Region already exist",
   "REPEATED_SPORT": "Sport already exist",
+  "REPEATED_FIELD": "Field already exist",
+  "FIELD_NOT_PENDING": "The field is not in pending",
   "NOT_EXISTED_SPORT": "Sport not exist",
   "WRONG_OTP": "Wrong OTP",
+  "DAY_NOT_AVAILABLE": "Day is not available",
+  "WEEK_DAY_NOT_AVAILABLE": "Week day is not available",
+  "BOOKED_SLOT": "This slot is already booked",
+  "NOT_EXISTED_SLOT": "This slot is not exist",
   "SERVER_ERROR": "Server problem, it will be fixed soon"
 }

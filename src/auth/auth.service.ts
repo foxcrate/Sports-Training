@@ -18,11 +18,9 @@ import { GlobalService } from 'src/global/global.service';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { AvailableRoles } from './dtos/availableRoles.dto';
 import { IAuthToken } from './interfaces/auth-token.interface';
-import { SignupByMobileUserDto } from 'src/user/dtos/signupByMobile.dto';
-import { StringListInput } from 'aws-sdk/clients/sagemakergeospatial';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { VerifyOtpDto } from './dtos/verify-otp.dto';
-import { ReturnUserDto } from 'src/user/dtos/return.dto';
+import { CompleteSignupUserDto } from 'src/user/dtos/complete-signup.dto';
 
 @Injectable()
 export class AuthService {
@@ -69,6 +67,16 @@ export class AuthService {
     let updatedUser = await this.userService.getUserById(theUser.id);
 
     return updatedUser;
+  }
+
+  async userCompleteSignup(userId: string, completeSignupData: CompleteSignupUserDto) {
+    let repeatedAccount = await this.userService.findRepeatedEmail(
+      completeSignupData.email,
+    );
+
+    if (!repeatedAccount) {
+      const newUser = await this.userService.completeSignup(userId, completeSignupData);
+    }
   }
 
   async sendOtp(mobileNumber: string) {

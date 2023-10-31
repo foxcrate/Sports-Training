@@ -1,0 +1,17 @@
+-- AlterTable
+ALTER TABLE `Field` ADD COLUMN `address` VARCHAR(191) NULL,
+    ADD COLUMN `cost` INTEGER NULL,
+    ADD COLUMN `description` VARCHAR(191) NULL,
+    ADD COLUMN `latitude` DECIMAL(65, 30) NULL,
+    ADD COLUMN `longitude` DECIMAL(65, 30) NULL,
+    ADD COLUMN `profileImage` VARCHAR(191) NULL,
+    ADD COLUMN `rating` INTEGER NULL,
+    ADD COLUMN `regionId` INTEGER NULL,
+    ADD COLUMN `slotDuration` INTEGER NULL,
+    ADD COLUMN `sportId` INTEGER NULL;
+
+-- AddForeignKey
+ALTER TABLE `Field` ADD CONSTRAINT `Field_sportId_fkey` FOREIGN KEY (`sportId`) REFERENCES `Sport`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Field` ADD CONSTRAINT `Field_regionId_fkey` FOREIGN KEY (`regionId`) REFERENCES `Region`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

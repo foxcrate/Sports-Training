@@ -10,6 +10,36 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Gender {
+  female
+  male
+}
+
+enum AcceptanceStatus{
+  accepted
+  pending
+  declined
+}
+
+enum UserType {
+  admin
+  user
+  child
+}
+
+enum Provider {
+  facebook
+  google
+  apple
+  native
+}
+
+enum Level {
+  beginner
+  intermediate
+  advanced
+}
+
 
 model User {
   id                  Int                   @id @default(autoincrement())
@@ -28,8 +58,10 @@ model User {
   updatedAt           DateTime              @updatedAt
   
   playerProfile       PlayerProfile?
-  trainerProfile     TrainerProfile?
+  trainerProfile      TrainerProfile?
   childs              Child[]
+  fields              FieldsBookedHours[]
+  addedFields         Field[]
 }
 
 model OTP{
@@ -41,46 +73,17 @@ model OTP{
 }
 
 model PlayerProfile{
-id                    Int                   @id @default(autoincrement())
+  id                    Int                   @id @default(autoincrement())
 
-level                 Level?
+  level                 Level?
 
-regionId              Int?          
-region                Region?               @relation(fields: [regionId], references: [id])
+  regionId              Int?          
+  region                Region?               @relation(fields: [regionId], references: [id])
 
-sports                PlayerProfileSports[]
+  sports                PlayerProfileSports[]
 
-userId                Int                   @unique
-user                  User                  @relation(fields: [userId], references: [id],onDelete: Cascade)
-
-createdAt           DateTime              @default(now())
-updatedAt           DateTime              @updatedAt
-}
-
-model TrainerProfile{
-id                  Int         @id @default(autoincrement())
-
-level             Level       @default(beginner)
-
-
-sports                TrainerProfileSports[]
-
-userId              Int         @unique
-user                User        @relation(fields: [userId], references: [id],onDelete: Cascade)
-
-createdAt           DateTime              @default(now())
-updatedAt           DateTime              @updatedAt
-}
-
-model Sport{
-  id                  Int                   @id @default(autoincrement())
-
-  enName              String
-  arName              String
-
-  playerProfiles      PlayerProfileSports[]
-  trainerProfiles      TrainerProfileSports[]
-  childProfiles      ChildProfileSports[]
+  userId                Int                   @unique
+  user                  User                  @relation(fields: [userId], references: [id],onDelete: Cascade)
 
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
@@ -98,6 +101,21 @@ model PlayerProfileSports{
   updatedAt           DateTime              @updatedAt
 }
 
+model TrainerProfile{
+  id                  Int         @id @default(autoincrement())
+
+  level             Level       @default(beginner)
+
+
+  sports                TrainerProfileSports[]
+
+  userId              Int         @unique
+  user                User        @relation(fields: [userId], references: [id],onDelete: Cascade)
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+}
+
 model TrainerProfileSports{
   trainerProfile       TrainerProfile     @relation(fields: [trainerProfileId], references: [id])
   trainerProfileId     Int
@@ -109,31 +127,6 @@ model TrainerProfileSports{
 
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
-}
-
-model ChildProfileSports{
-  childProfile       ChildProfile     @relation(fields: [childProfileId], references: [id])
-  childProfileId     Int
-  sport               Sport @relation(fields: [sportId], references: [id])
-  sportId             Int
-
-  @@id([childProfileId, sportId])
-
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-}
-
-model Region{
-id                    Int                 @id @default(autoincrement())
-
-enName                String
-arName                String
-
-playerProfile         PlayerProfile[]
-childProfile         ChildProfile[]
-
-createdAt           DateTime              @default(now())
-updatedAt           DateTime              @updatedAt
 }
 
 model Child {
@@ -157,43 +150,118 @@ model Child {
 }
 
 model ChildProfile{
-id                    Int                   @id @default(autoincrement())
+  id                    Int                   @id @default(autoincrement())
 
-level                 Level?
+  level                 Level?
 
-regionId              Int?          
-region                Region?               @relation(fields: [regionId], references: [id])
+  regionId              Int?          
+  region                Region?               @relation(fields: [regionId], references: [id])
 
-sports                ChildProfileSports[]
+  sports                ChildProfileSports[]
 
-childId                Int                   @unique
-child                  Child                  @relation(fields: [childId], references: [id],onDelete: Cascade)
+  childId                Int                   @unique
+  child                  Child                  @relation(fields: [childId], references: [id],onDelete: Cascade)
 
-createdAt           DateTime              @default(now())
-updatedAt           DateTime              @updatedAt
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
+model ChildProfileSports{
+  childProfile       ChildProfile     @relation(fields: [childProfileId], references: [id])
+  childProfileId     Int
+  sport               Sport @relation(fields: [sportId], references: [id])
+  sportId             Int
 
-enum Gender {
-  female
-  male
+  @@id([childProfileId, sportId])
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-enum UserType {
-  player
-  trainer
-  both
+model Field{
+  id                  Int                    @id @default(autoincrement())
+  name                String
+  description         String?
+  cost                Int?
+  rating              Int?
+  slotDuration        Int?
+  address             String?
+  longitude           Decimal?
+  latitude            Decimal?
+  profileImage        String?
+  acceptanceStatus    AcceptanceStatus        @default(pending)
+  availableWeekDays   Json?
+
+  availableDayHours   Json?        
+
+  addedByUserId       Int?
+  addedByUser         User?                @relation(fields: [addedByUserId], references: [id],onDelete: Cascade)
+  
+  sport               Sport? @relation(fields: [sportId], references: [id])
+  sportId             Int?
+
+  region               Region? @relation(fields: [regionId], references: [id])
+  regionId             Int?
+
+  users               FieldsBookedHours[]
+  notAvailableDays    FieldNotAvailableDays[]
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-enum Provider {
-  facebook
-  google
-  apple
-  native
+model FieldNotAvailableDays{
+  id                  Int                    @id @default(autoincrement())
+  dayDate             DateTime
+
+  field               Field @relation(fields: [fieldId], references: [id])
+  fieldId             Int
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-enum Level {
-  beginner
-  intermediate
-  advanced
+model FieldsBookedHours{
+  id                  Int                    @id @default(autoincrement())
+
+  fromDateTime                DateTime
+  gmt                 Int                   @default(0)
+  
+  user               User @relation(fields: [userId], references: [id])
+  userId             Int
+
+  field               Field @relation(fields: [fieldId], references: [id])
+  fieldId             Int
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+}
+
+model Sport{
+  id                  Int                   @id @default(autoincrement())
+
+  enName              String
+  arName              String
+
+  playerProfiles      PlayerProfileSports[]
+  trainerProfiles     TrainerProfileSports[]
+  childProfiles       ChildProfileSports[]
+  fields              Field[]
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+}
+
+model Region{
+  id                    Int                 @id @default(autoincrement())
+
+  enName                String
+  arName                String
+
+  playerProfile         PlayerProfile[]
+  childProfile         ChildProfile[]
+  fields              Field[]
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }

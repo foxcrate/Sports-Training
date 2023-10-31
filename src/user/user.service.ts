@@ -12,13 +12,15 @@ import { ReturnUserDto } from './dtos/return.dto';
 import { NativeUserDto } from './dtos/native.dto';
 import { ReturnChildDto } from 'src/child/dtos/return.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { SignupByMobileUserDto } from './dtos/signupByMobile.dto';
+import { GlobalService } from 'src/global/global.service';
+import { CompleteSignupUserDto } from './dtos/complete-signup.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     private prisma: PrismaService,
     private childService: ChildService,
+    private globalService: GlobalService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -26,7 +28,7 @@ export class UserService {
     return this.i18n.t(`test.welcome`, { lang: I18nContext.current().lang });
   }
 
-  async create(signupData: SignupUserDto): Promise<any> {
+  async create(signupData: SignupUserDto): Promise<ReturnUserDto> {
     await this.prisma.$queryRaw`
     INSERT INTO User
     (
@@ -50,7 +52,7 @@ export class UserService {
       ${signupData.mobileNumber},
       ${signupData.gender},
       ${new Date(signupData.birthday)},
-      ${new Date()}
+      ${this.globalService.getLocalDateTime(new Date())}
     )`;
 
     let newUser = await this.getUserByMobileNumber(signupData.mobileNumber);
@@ -88,6 +90,29 @@ export class UserService {
     return createdUser[0];
   }
 
+  async completeSignup(userId: string, completeSignupUserDto: CompleteSignupUserDto) {
+    let theUser = await this.getUserById(userId);
+
+    //complete profile
+    await this.prisma.$queryRaw`
+        UPDATE User
+        SET
+        firstName = ${completeSignupUserDto.firstName},
+        lastName = ${completeSignupUserDto.lastName},
+        profileImage = ${completeSignupUserDto.profileImage},
+        gender = ${completeSignupUserDto.gender},
+        birthday = ${completeSignupUserDto.birthday},
+        updatedAt = ${this.globalService.getLocalDateTime(new Date())}
+        WHERE
+        id = ${theUser.id};
+      `;
+
+    // let updatedUser = this.getLastUpdated();
+    let updatedUser = this.getUserById(theUser.id);
+
+    return updatedUser;
+  }
+
   async update(reqBody, userId) {
     let user = await this.getUserById(userId);
 
@@ -100,7 +125,7 @@ export class UserService {
       profileImage = ${reqBody.profileImage},
       gender = ${reqBody.gender},
       birthday = ${reqBody.birthday},
-      updatedAt = ${new Date()}
+      updatedAt = ${this.globalService.getLocalDateTime(new Date())}
       WHERE
       id = ${user.id};
     `;
@@ -111,7 +136,7 @@ export class UserService {
     return updatedUser;
   }
 
-  async getOne(userId): Promise<any> {
+  async getOne(userId): Promise<ReturnUserDto> {
     let user = await this.getUserById(userId);
 
     return user;
@@ -143,7 +168,7 @@ export class UserService {
       ${reqBody.gender},
       ${reqBody.birthday},
       ${userId},
-      ${new Date()})`;
+      ${this.globalService.getLocalDateTime(new Date())})`;
 
     // let newChild = this.getLastCreatedChild();
     let newChild = this.getChildByMobileNumber(reqBody.mobileNumber);
@@ -151,13 +176,13 @@ export class UserService {
     return newChild;
   }
 
-  async getChilds(userId): Promise<any> {
+  async getChilds(userId): Promise<ReturnChildDto[]> {
     let userChilds = await this.getUserChilds(userId);
 
     return userChilds;
   }
 
-  async getChild(childId, userId): Promise<any> {
+  async getChild(childId, userId): Promise<ReturnChildDto> {
     let child = await this.authorizeResource(userId, childId);
 
     return child;
@@ -175,7 +200,7 @@ export class UserService {
       profileImage = ${reqBody.profileImage},
       gender = ${reqBody.gender},
       birthday = ${reqBody.birthday},
-      updatedAt = ${new Date()}
+      updatedAt = ${this.globalService.getLocalDateTime(new Date())}
       WHERE
       id = ${child.id};
     `;
@@ -186,7 +211,7 @@ export class UserService {
     return updatedChild;
   }
 
-  async deleteChild(childId, userId): Promise<any> {
+  async deleteChild(childId, userId): Promise<ReturnChildDto> {
     let child = await this.authorizeResource(userId, childId);
     await this.deleteChildProfileByChildId(childId);
     await this.deleteChildById(childId);
@@ -238,8 +263,8 @@ export class UserService {
   }
 
   async findRepeatedMobile(mobileNumber): Promise<Boolean> {
-    //Chick existed email or phone number
-    let repeatedUserProfile = await this.prisma.$queryRaw`
+    //Chick existed  phone number
+    let repeatedMobile = await this.prisma.$queryRaw`
     SELECT *
     FROM User
     WHERE
@@ -247,8 +272,8 @@ export class UserService {
     LIMIT 1
     `;
 
-    if (repeatedUserProfile[0]) {
-      if (repeatedUserProfile[0].mobileNumber == mobileNumber) {
+    if (repeatedMobile[0]) {
+      if (repeatedMobile[0].mobileNumber == mobileNumber) {
         throw new BadRequestException(
           this.i18n.t(`errors.REPEATED_MOBILE_NUMBER`, {
             lang: I18nContext.current().lang,
@@ -259,7 +284,29 @@ export class UserService {
     return false;
   }
 
-  async getUserById(userId): Promise<ReturnUserDto> {
+  async findRepeatedEmail(email): Promise<Boolean> {
+    //Chick existed email or phone number
+    let repeatedEmail = await this.prisma.$queryRaw`
+    SELECT *
+    FROM User
+    WHERE
+    email = ${email}
+    LIMIT 1
+    `;
+
+    if (repeatedEmail[0]) {
+      if (repeatedEmail[0].email == email) {
+        throw new BadRequestException(
+          this.i18n.t(`errors.REPEATED_EMAIL`, {
+            lang: I18nContext.current().lang,
+          }),
+        );
+      }
+    }
+    return false;
+  }
+
+  private async getUserById(userId): Promise<ReturnUserDto> {
     let theUser = await this.prisma.$queryRaw`
       SELECT
       id,
@@ -368,8 +415,8 @@ export class UserService {
       childProfileId = ${childProfileId};`;
   }
 
-  private async getUserChilds(userId): Promise<any> {
-    let userChilds = await this.prisma.$queryRaw`
+  private async getUserChilds(userId): Promise<ReturnChildDto[]> {
+    let userChilds: ReturnChildDto[] = await this.prisma.$queryRaw`
       SELECT
       id,
       firstName,
@@ -384,77 +431,6 @@ export class UserService {
       WHERE userId = ${userId}
     `;
     return userChilds;
-  }
-
-  private async getLastCreated(): Promise<ReturnUserDto> {
-    let lastCreated = await this.prisma.$queryRaw`
-    SELECT
-    id,
-      firstName,
-      lastName,
-      profileImage,
-      email,
-      mobileNumber,
-      gender,
-      birthday
-    FROM User
-    ORDER BY createdAt DESC
-    LIMIT 1`;
-    return lastCreated[0];
-  }
-
-  private async getLastUpdated(): Promise<ReturnUserDto> {
-    let lastUpdated = await this.prisma.$queryRaw`
-    SELECT
-    id,
-      firstName,
-      lastName,
-      profileImage,
-      email,
-      mobileNumber,
-      gender,
-      birthday
-    FROM User
-    ORDER BY updatedAt DESC
-    LIMIT 1`;
-    return lastUpdated[0];
-  }
-
-  private async getLastCreatedChild(): Promise<ReturnChildDto> {
-    let createdChild = await this.prisma.$queryRaw`
-    SELECT
-    id,
-      firstName,
-      lastName,
-      profileImage,
-      email,
-      mobileNumber,
-      gender,
-      birthday,
-      userId
-    FROM Child
-    ORDER BY createdAt DESC
-    LIMIT 1`;
-    return createdChild[0];
-  }
-
-  private async getLastUpdatedChild(): Promise<ReturnChildDto> {
-    let updatedChild = await this.prisma.$queryRaw`
-      SELECT
-      id,
-        firstName,
-        lastName,
-        profileImage,
-        email,
-        mobileNumber,
-        gender,
-        birthday,
-        userId
-      FROM Child
-      ORDER BY updatedAt DESC
-      LIMIT 1`;
-
-    return updatedChild[0];
   }
 
   private async authorizeResource(
