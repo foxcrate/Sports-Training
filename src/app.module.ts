@@ -20,6 +20,7 @@ import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 
 import { join } from 'path';
 import { FieldModule } from './field/field.module';
+import { DoctorClinicModule } from './doctor-clinic/doctor-clinic.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { FieldModule } from './field/field.module';
     ChildProfileModule,
     GlobalModule,
     FieldModule,
+    DoctorClinicModule,
   ],
   controllers: [AppController],
   providers: [
