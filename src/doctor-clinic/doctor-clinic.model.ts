@@ -462,12 +462,12 @@ export class DoctorClinicModel {
         DoctorClinicsBookedHours AS dcbh
         ON
         dc.id = dcbh.doctorClinicId
+        AND
+        DATE_FORMAT(dcbh.fromDateTime,'%Y-%m-%d') = ${specificDate}
         LEFT JOIN
         Rate AS r
         ON
         dc.id = r.doctorClinicId
-        AND
-        DATE_FORMAT(dcbh.fromDateTime,'%Y-%m-%d') = ${specificDate}
         WHERE
         dc.id = ${doctorClinicId}
         GROUP BY dc.id

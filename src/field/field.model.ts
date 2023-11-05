@@ -451,12 +451,12 @@ export class FieldModel {
       FieldsBookedHours AS fbh
       ON
       f.id = fbh.fieldId
+      AND
+      DATE_FORMAT(fbh.fromDateTime,'%Y-%m-%d') = ${specificDate}
       LEFT JOIN
       Rate AS r
       ON
       f.id = r.fieldId
-      AND
-      DATE_FORMAT(fbh.fromDateTime,'%Y-%m-%d') = ${specificDate}
       WHERE
       f.id = ${fieldId}
       GROUP BY f.id
