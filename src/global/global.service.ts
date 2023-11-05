@@ -125,6 +125,10 @@ export class GlobalService {
     return this.weekDays[dayNumber];
   }
 
+  getDayName2(dayDate: moment.Moment): string {
+    return dayDate.format('dddd');
+  }
+
   timeTo24(timeStr: string): string {
     let theTime = timeStr;
     if (timeStr.includes('AM') || timeStr.includes('PM')) {
@@ -151,6 +155,14 @@ export class GlobalService {
     let hours = (dateTime.getHours() < 10 ? '0' : '') + dateTime.getHours();
     let minutes = (dateTime.getMinutes() < 10 ? '0' : '') + dateTime.getMinutes();
     return `${hours}:${minutes}`;
+  }
+
+  getLocalTime12(dateTime: moment.Moment): string {
+    return dateTime.format('hh:mm:ss A');
+  }
+
+  getLocalTime24(dateTime: moment.Moment): string {
+    return dateTime.format('hh:mm:ss');
   }
 
   getGlobalTime(dateTime: Date): string {
@@ -184,6 +196,15 @@ export class GlobalService {
 
     // return dateTime.locale(I18nContext.current().lang).format('YYYY-MM-DD');
     return `${year}-${month}-${day}`;
+  }
+
+  getDate2(dateTime: moment.Moment): string {
+    // let dateObj = dateTime;
+    // let year = (dateObj.getFullYear() < 10 ? '0' : '') + dateObj.getFullYear();
+    // let month = (dateObj.getMonth() + 1 < 10 ? '0' : '') + (dateObj.getMonth() + 1);
+    // let day = (dateObj.getDate() < 10 ? '0' : '') + dateObj.getDate();
+    // return `${year}-${month}-${day}`;
+    return dateTime.locale(I18nContext.current().lang).format('YYYY-MM-DD');
   }
 
   private getFileName(originalname) {

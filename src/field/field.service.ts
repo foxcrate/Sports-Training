@@ -61,12 +61,15 @@ export class FieldService {
   }
 
   async fieldDayAvailableHours(fieldId: number, day: string): Promise<FreeSlots[]> {
-    let dayDate = new Date(day);
-    // let dayDate = moment(day);
+    // let dayDate = new Date(day);
+    let dayDate = moment(day);
 
-    let dateString = this.globalSerice.getDate(dayDate);
+    let dateString = this.globalSerice.getDate2(dayDate);
 
-    let dayName = this.globalSerice.getDayName(dayDate.getDay());
+    // let dayName = this.globalSerice.getDayName(dayDate.getDay());
+    let dayName = this.globalSerice.getDayName2(dayDate);
+    // console.log({ dayName });
+
     let theField = await this.fieldModel.fieldBookingDetailsForSpecificDate(
       fieldId,
       dateString,
@@ -85,9 +88,15 @@ export class FieldService {
     this.checkWeekDayIsAvailable(theField.availableWeekDays, dayName);
 
     let fieldBookedHours = theField.fieldBookedHours ? theField.fieldBookedHours : [];
+
+    console.log({ fieldBookedHours });
+
     let mappedFieldBookedHours = fieldBookedHours.map((i) => {
       return new Date(i.fromDateTime).toLocaleTimeString('en-US', { hour12: true });
+      // return this.globalSerice.getLocalTime12(moment(i.fromDateTime));
     });
+
+    console.log({ mappedFieldBookedHours });
 
     let startTimeDate = new Date(`${dateString} ${theField.availableDayHours.from}`);
     let endTimeDate = new Date(`${dateString} ${theField.availableDayHours.to}`);
@@ -187,6 +196,31 @@ export class FieldService {
     }
   }
 
+  private getFreeSlots2(mappedFieldBookedHours, startTimeDate, endTimeDate) {
+    let availableHours = [];
+    startTimeDate = moment(startTimeDate);
+    endTimeDate = moment(endTimeDate);
+
+    while (startTimeDate < endTimeDate) {
+      let endOfSlot = moment(startTimeDate);
+      endOfSlot.add(1, 'hours');
+
+      let timeSlotAvailable = this.getSlotState(
+        mappedFieldBookedHours,
+        this.globalSerice.getLocalTime12(startTimeDate),
+      );
+      availableHours.push({
+        from: this.globalSerice.getLocalTime12(startTimeDate),
+        to: this.globalSerice.getLocalTime12(endOfSlot),
+        state: timeSlotAvailable,
+      });
+
+      startTimeDate.add(1, 'hours');
+    }
+
+    return availableHours;
+  }
+
   private getFreeSlots(mappedFieldBookedHours, startTimeDate, endTimeDate) {
     let availableHours = [];
 
@@ -206,6 +240,7 @@ export class FieldService {
         to: endOfSlot.toLocaleTimeString('en-US', { hour12: true }),
         state: timeSlotAvailable,
       });
+
       startTimeDate.setHours(startTimeDate.getHours() + 1);
     }
 
