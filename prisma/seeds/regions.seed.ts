@@ -1,4 +1,1 @@
-export const regionsSeeds = [
-  { enName: 'el-haram', arName: 'الهرم' },
-  { enName: 'october', arName: 'اكتوبر' },
-];
+export const regionsSeeds = [{ name: 'el-haram' }, { name: 'october' }];

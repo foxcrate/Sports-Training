@@ -1,4 +1,1 @@
-export const sportsSeeds = [
-  { enName: 'football', arName: 'كرة قدم' },
-  { enName: 'basketball', arName: 'كرة سلة' },
-];
+export const sportsSeeds = [{ name: 'football' }, { name: 'basketball' }];

@@ -13,16 +13,14 @@ export class SportService {
     private readonly i18n: I18nService,
   ) {}
   async create(createData: CreateSportDto, userId): Promise<ReturnSportDto> {
-    await this.findRepeated(createData.enName, createData.arName);
+    await this.findRepeated(createData.name);
 
     await this.prisma.$queryRaw`
       INSERT INTO Sport
-        (enName,
-        arName,
+        (name,
         updatedAt)
         VALUES
-      (${createData.enName},
-      ${createData.arName},
+      (${createData.name},
       ${this.globalService.getLocalDateTime(new Date())})`;
 
     let newRegion = await this.prisma.$queryRaw`
@@ -33,22 +31,17 @@ export class SportService {
     return newRegion[0];
   }
 
-  async findRepeated(enName, arName): Promise<Boolean> {
+  async findRepeated(name): Promise<Boolean> {
     //Chick existed email or phone number
     let repeatedRegion = await this.prisma.$queryRaw`
     SELECT *
       FROM Sport
-      WHERE enName = ${enName} OR arName = ${arName}
+      WHERE name = ${name}
       LIMIT 1
       `;
 
     if (repeatedRegion[0]) {
-      if (repeatedRegion[0].enName == enName) {
-        throw new BadRequestException(
-          this.i18n.t(`errors.REPEATED_SPORT`, { lang: I18nContext.current().lang }),
-        );
-      }
-      if (repeatedRegion[0].arName == arName) {
+      if (repeatedRegion[0].name == name) {
         throw new BadRequestException(
           this.i18n.t(`errors.REPEATED_SPORT`, { lang: I18nContext.current().lang }),
         );

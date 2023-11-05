@@ -1,6 +1,5 @@
 export class RegionReturnDto {
   id: number;
-  enName: String;
-  arName: String;
+  name: String;
   createdAt: Date;
 }

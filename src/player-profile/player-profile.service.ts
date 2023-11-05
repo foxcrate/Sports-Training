@@ -181,8 +181,7 @@ export class PlayerProfileService {
       pp.userId AS userId,
       JSON_ARRAYAGG(json_object(
         'id',s.id,
-        'enName', s.enName,
-        'arName', s.arName))
+        'name', s.name))
     AS sports
     FROM PlayerProfile AS pp
     JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
@@ -229,8 +228,7 @@ export class PlayerProfileService {
     ELSE
     JSON_ARRAYAGG(JSON_OBJECT(
       'id',s.id,
-      'enName', s.enName,
-      'arName', s.arName)) 
+      'name', s.name)) 
     END AS sports
     FROM PlayerProfile AS pp
     LEFT JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId

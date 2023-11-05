@@ -2,7 +2,9 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import * as moment from 'moment-timezone';
 import * as AWS from 'aws-sdk';
+import * as admin from 'firebase-admin';
 
 @Injectable()
 export class GlobalService {
@@ -73,6 +75,30 @@ export class GlobalService {
   async hashPassword(password: string): Promise<string> {
     const hash = await bcrypt.hash(password, 10);
     return hash;
+  }
+
+  async sendNotification(token: string, title: string, body: string): Promise<string> {
+    const message = {
+      token,
+      notification: {
+        title,
+        body,
+      },
+    };
+
+    try {
+      const response = await admin.messaging().send(message);
+      return response;
+    } catch (error) {
+      console.log(`error in sending notification: ${error}`);
+
+      // throw new Error(`Failed to send notification`);
+      throw new InternalServerErrorException(
+        this.i18n.t(`errors.SENDING_NOTIFICATION_ERROR`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
   }
 
   isTimeAvailable(startTime, endTime, targetTime) {
@@ -156,6 +182,7 @@ export class GlobalService {
     let month = (dateObj.getMonth() + 1 < 10 ? '0' : '') + (dateObj.getMonth() + 1);
     let day = (dateObj.getDate() < 10 ? '0' : '') + dateObj.getDate();
 
+    // return dateTime.locale(I18nContext.current().lang).format('YYYY-MM-DD');
     return `${year}-${month}-${day}`;
   }
 

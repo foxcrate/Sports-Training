@@ -75,6 +75,19 @@ export class AdminFieldService {
         this.i18n.t(`errors.FIELD_NOT_PENDING`, { lang: I18nContext.current().lang }),
       );
     }
+    // if (newStatus == FieldAcceptanceStatusDto.Accepted) {
+    //   this.globalSerice.sendNotification(
+    //     'fwrgrgr',
+    //     'Added Field State',
+    //     'The field you added has been accepted',
+    //   );
+    // } else if (newStatus == FieldAcceptanceStatusDto.Declined) {
+    //   this.globalSerice.sendNotification(
+    //     'efewfrrfr',
+    //     'Added Field State',
+    //     'The field you added has been rejected',
+    //   );
+    // }
     return await this.fieldModel.setFieldAcceptanceStatue(fieldId, newStatus);
   }
 

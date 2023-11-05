@@ -21,6 +21,12 @@ enum AcceptanceStatus{
   declined
 }
 
+enum RateableType {
+  trainer
+  field
+  doctorClinic
+}
+
 enum UserType {
   admin
   user
@@ -46,6 +52,7 @@ model User {
   firstName           String?
   lastName            String?
   profileImage        String?
+  fcm_token           String?
   password            String?
   email               String?                @unique
   mobileNumber        String                @unique
@@ -61,7 +68,10 @@ model User {
   trainerProfile      TrainerProfile?
   childs              Child[]
   fields              FieldsBookedHours[]
+  doctorClinics       DoctorClinicsBookedHours[]
   addedFields         Field[]
+  addedDoctorClinics  DoctorClinic[]
+  rates               Rate[]
 }
 
 model OTP{
@@ -183,7 +193,7 @@ model Field{
   name                String
   description         String?
   cost                Int?
-  rating              Int?
+
   slotDuration        Int?
   address             String?
   longitude           Decimal?
@@ -192,7 +202,8 @@ model Field{
   acceptanceStatus    AcceptanceStatus        @default(pending)
   availableWeekDays   Json?
 
-  availableDayHours   Json?        
+  availableDayHours   Json?      
+  rates                 Rate[]
 
   addedByUserId       Int?
   addedByUser         User?                @relation(fields: [addedByUserId], references: [id],onDelete: Cascade)
@@ -210,12 +221,87 @@ model Field{
   updatedAt           DateTime              @updatedAt
 }
 
+
+model Rate{
+  id                    Int                 @id @default(autoincrement())
+
+  ratingNumber          Int?
+
+  feedback              String?
+
+  rateableType          RateableType
+
+  user                  User @relation(fields: [userId], references: [id],onDelete: Cascade)
+  userId                Int  
+  
+  field                 Field? @relation(fields: [fieldId], references: [id],onDelete: Cascade)
+  fieldId               Int?  
+
+  doctorClinic          DoctorClinic? @relation(fields: [doctorClinicId], references: [id], onDelete: Cascade)
+  doctorClinicId        Int?  
+}
+
+model DoctorClinic{
+  id                  Int                    @id @default(autoincrement())
+  name                String
+  description         String?
+  cost                Int?
+  slotDuration        Int?
+  address             String?
+  longitude           Decimal?
+  latitude            Decimal?
+  profileImage        String?
+  acceptanceStatus    AcceptanceStatus        @default(pending)
+  availableWeekDays   Json?
+
+  availableDayHours   Json?   
+
+  rates        Rate[]
+
+  addedByUserId             Int?
+  addedByUser               User?                @relation(fields: [addedByUserId], references: [id],onDelete: Cascade)
+
+  region                    Region? @relation(fields: [regionId], references: [id])
+  regionId                  Int?
+
+  doctorClinicSpecialization      DoctorClinicSpecialization? @relation(fields: [doctorClinicSpecializationId], references: [id])
+  doctorClinicSpecializationId    Int?
+
+  users               DoctorClinicsBookedHours[]
+  notAvailableDays    DoctorClinicNotAvailableDays[]
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+}
+
+model DoctorClinicSpecialization{
+  id                    Int                 @id @default(autoincrement())
+
+  name                String
+
+  doctorClinc           DoctorClinic[]
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+}
+
 model FieldNotAvailableDays{
   id                  Int                    @id @default(autoincrement())
   dayDate             DateTime
 
   field               Field @relation(fields: [fieldId], references: [id])
   fieldId             Int
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+}
+
+model DoctorClinicNotAvailableDays{
+  id                  Int                    @id @default(autoincrement())
+  dayDate             DateTime
+
+  doctorClinic        DoctorClinic @relation(fields: [doctorClinicId], references: [id])
+  doctorClinicId      Int
 
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
@@ -237,11 +323,26 @@ model FieldsBookedHours{
   updatedAt           DateTime              @updatedAt
 }
 
+model DoctorClinicsBookedHours{
+  id                  Int                    @id @default(autoincrement())
+
+  fromDateTime                DateTime
+  gmt                 Int                   @default(0)
+  
+  user                User @relation(fields: [userId], references: [id])
+  userId              Int
+
+  doctorClinic        DoctorClinic @relation(fields: [doctorClinicId], references: [id])
+  doctorClinicId      Int
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+}
+
 model Sport{
   id                  Int                   @id @default(autoincrement())
 
-  enName              String
-  arName              String
+  name                String?
 
   playerProfiles      PlayerProfileSports[]
   trainerProfiles     TrainerProfileSports[]
@@ -254,14 +355,26 @@ model Sport{
 
 model Region{
   id                    Int                 @id @default(autoincrement())
-
-  enName                String
-  arName                String
+  
+  name                  String?
 
   playerProfile         PlayerProfile[]
-  childProfile         ChildProfile[]
-  fields              Field[]
+  childProfile          ChildProfile[]
+  fields                Field[]
+  doctorClinc           DoctorClinic[]
 
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
 }
+
+// model Internationalization{
+//   id                    Int                 @id @default(autoincrement())
+
+//   tableName             String
+//   rowName               String
+//   en                    String
+//   ar                    String
+
+//   createdAt             DateTime              @default(now())
+//   updatedAt             DateTime              @updatedAt
+// }
