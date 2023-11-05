@@ -7,6 +7,7 @@ import { FieldUpdateDto } from './dtos/update.dto';
 import { FieldBookingDetailsDTO } from './dtos/fieldBookingDetails.dto';
 import { FieldReturnDto } from './dtos/return.dto';
 import { FreeSlots } from './dtos/free-slots.dto';
+import * as moment from 'moment-timezone';
 
 @Injectable()
 export class FieldService {
@@ -61,7 +62,10 @@ export class FieldService {
 
   async fieldDayAvailableHours(fieldId: number, day: string): Promise<FreeSlots[]> {
     let dayDate = new Date(day);
+    // let dayDate = moment(day);
+
     let dateString = this.globalSerice.getDate(dayDate);
+
     let dayName = this.globalSerice.getDayName(dayDate.getDay());
     let theField = await this.fieldModel.fieldBookingDetailsForSpecificDate(
       fieldId,

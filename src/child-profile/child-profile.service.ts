@@ -249,8 +249,7 @@ export class ChildProfileService {
     ELSE
     JSON_ARRAYAGG(JSON_OBJECT(
       'id',s.id,
-      'enName', s.enName,
-      'arName', s.arName)) 
+      'name', s.name)) 
     END AS sports
     FROM ChildProfile AS cp
     LEFT JOIN Child AS c ON cp.childId = c.id
@@ -282,8 +281,7 @@ export class ChildProfileService {
     ELSE
     JSON_ARRAYAGG(JSON_OBJECT(
       'id',s.id,
-      'enName', s.enName,
-      'arName', s.arName)) 
+      'name', s.name)) 
     END AS sports
     FROM ChildProfile AS cp
     LEFT JOIN Child AS c ON cp.childId = c.id

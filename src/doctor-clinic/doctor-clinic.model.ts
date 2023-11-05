@@ -21,11 +21,13 @@ export class DoctorClinicModel {
 
   async allDoctorClinics(): Promise<DoctorClinicBookingDetailsDTO[]> {
     let allDoctorFields: DoctorClinicBookingDetailsDTO[] = await this.prisma.$queryRaw`
-      WITH Query AS (
+      WITH DoctorClinicDetailsWithBookedHours AS (
         SELECT
           dc.id,
           dc.name,
           dc.acceptanceStatus,
+          AVG(r.ratingNumber) AS rate,
+          JSON_ARRAYAGG(r.feedback) AS feedbacks,
           dc.availableWeekDays AS availableWeekDays,
           dc.availableDayHours AS availableDayHours,
           CASE
@@ -42,17 +44,23 @@ export class DoctorClinicModel {
         DoctorClinicsBookedHours AS dcbh
         ON
         dc.id = dcbh.doctorClinicId
+        LEFT JOIN
+        Rate AS r
+        ON
+        dc.id = r.doctorClinicId
         WHERE
         dc.acceptanceStatus = 'accepted'
         GROUP BY dc.id
       )
       SELECT
-        q.id,
-        q.name,
-        q.acceptanceStatus,
-        q.availableWeekDays AS availableWeekDays,
-        q.availableDayHours AS availableDayHours,
-        q.doctorClinicBookedHours AS doctorClinicBookedHours,
+        dcdwbh.id,
+        dcdwbh.name,
+        dcdwbh.acceptanceStatus,
+        dcdwbh.rate,
+        dcdwbh.feedbacks,
+        dcdwbh.availableWeekDays AS availableWeekDays,
+        dcdwbh.availableDayHours AS availableDayHours,
+        dcdwbh.doctorClinicBookedHours AS doctorClinicBookedHours,
         CASE
         WHEN COUNT(dcnad.id ) = 0 THEN null
         ELSE
@@ -61,12 +69,12 @@ export class DoctorClinicModel {
           'dayDate', dcnad.dayDate
           ))
         END AS doctorClinicNotAvailableDays
-      FROM Query AS q
+      FROM DoctorClinicDetailsWithBookedHours AS dcdwbh
       LEFT JOIN
       DoctorClinicNotAvailableDays AS dcnad
       ON
-      q.id = dcnad.doctorClinicId
-      GROUP BY  q.id
+      dcdwbh.id = dcnad.doctorClinicId
+      GROUP BY  dcdwbh.id
       `;
 
     return allDoctorFields;
@@ -74,11 +82,13 @@ export class DoctorClinicModel {
 
   async getByID(id: number): Promise<DoctorClinicBookingDetailsDTO> {
     let DoctorClinic = await this.prisma.$queryRaw`
-      WITH Query AS (
+      WITH DoctorClinicDetailsWithBookedHours AS (
         SELECT
           dc.id,
           dc.name,
           dc.acceptanceStatus,
+          AVG(r.ratingNumber) AS rate,
+          JSON_ARRAYAGG(r.feedback) AS feedbacks,
           dc.availableWeekDays AS availableWeekDays,
           dc.availableDayHours AS availableDayHours,
           CASE
@@ -95,17 +105,23 @@ export class DoctorClinicModel {
         DoctorClinicsBookedHours AS dcbh
         ON
         dc.id = dcbh.doctorClinicId
+        LEFT JOIN
+        Rate AS r
+        ON
+        dc.id = r.doctorClinicId
         WHERE
         dc.id = ${id}
         GROUP BY dc.id
       )
       SELECT
-        q.id,
-        q.name,
-        q.acceptanceStatus,
-        q.availableWeekDays AS availableWeekDays,
-        q.availableDayHours AS availableDayHours,
-        q.doctorClinicBookedHours AS doctorClinicBookedHours,
+        dcdwbh.id,
+        dcdwbh.name,
+        dcdwbh.acceptanceStatus,
+        dcdwbh.rate,
+        dcdwbh.feedbacks,
+        dcdwbh.availableWeekDays AS availableWeekDays,
+        dcdwbh.availableDayHours AS availableDayHours,
+        dcdwbh.doctorClinicBookedHours AS doctorClinicBookedHours,
         CASE
         WHEN COUNT(dcnad.id ) = 0 THEN null
         ELSE
@@ -114,12 +130,12 @@ export class DoctorClinicModel {
           'dayDate', dcnad.dayDate
           ))
         END AS doctorClinicNotAvailableDays
-      FROM Query AS q
+      FROM DoctorClinicDetailsWithBookedHours AS dcdwbh
       LEFT JOIN
       DoctorClinicNotAvailableDays AS dcnad
       ON
-      q.id = dcnad.doctorClinicId
-      GROUP BY  q.id
+      dcdwbh.id = dcnad.doctorClinicId
+      GROUP BY  dcdwbh.id
       `;
 
     if (!DoctorClinic[0]) {
@@ -133,11 +149,13 @@ export class DoctorClinicModel {
 
   async getByName(name: string): Promise<DoctorClinicBookingDetailsDTO> {
     let theDoctorClinic = await this.prisma.$queryRaw`
-      WITH Query AS (
+      WITH DoctorClinicDetailsWithBookedHours AS (
         SELECT
           dc.id,
           dc.name,
           dc.acceptanceStatus,
+          AVG(r.ratingNumber) AS rate,
+          JSON_ARRAYAGG(r.feedback) AS feedbacks,
           dc.availableWeekDays AS availableWeekDays,
           dc.availableDayHours AS availableDayHours,
           CASE
@@ -154,17 +172,23 @@ export class DoctorClinicModel {
         DoctorClinicsBookedHours AS dcbh
         ON
         dc.id = dcbh.doctorClinicId
+        LEFT JOIN
+        Rate AS r
+        ON
+        dc.id = r.doctorClinicId
         WHERE
         dc.name = ${name}
         GROUP BY dc.id
       )
       SELECT
-        q.id,
-        q.name,
-        q.acceptanceStatus,
-        q.availableWeekDays AS availableWeekDays,
-        q.availableDayHours AS availableDayHours,
-        q.doctorClinicBookedHours AS doctorClinicBookedHours,
+        dcdwbh.id,
+        dcdwbh.name,
+        dcdwbh.acceptanceStatus,
+        dcdwbh.rate,
+        dcdwbh.feedbacks,
+        dcdwbh.availableWeekDays AS availableWeekDays,
+        dcdwbh.availableDayHours AS availableDayHours,
+        dcdwbh.doctorClinicBookedHours AS doctorClinicBookedHours,
         CASE
         WHEN COUNT(dcnad.id ) = 0 THEN null
         ELSE
@@ -173,12 +197,12 @@ export class DoctorClinicModel {
           'dayDate', dcnad.dayDate
           ))
         END AS doctorClinicNotAvailableDays
-      FROM Query AS q
+      FROM DoctorClinicDetailsWithBookedHours AS dcdwbh
       LEFT JOIN
       DoctorClinicNotAvailableDays AS dcnad
       ON
-      q.id = dcnad.doctorClinicId
-      GROUP BY  q.id
+      dcdwbh.id = dcnad.doctorClinicId
+      GROUP BY  dcdwbh.id
       `;
 
     return theDoctorClinic[0];
@@ -338,11 +362,12 @@ export class DoctorClinicModel {
 
   async selectPendingDoctorClinics(): Promise<DoctorClinicBookingDetailsDTO[]> {
     let theDoctorClinic: DoctorClinicBookingDetailsDTO[] = await this.prisma.$queryRaw`
-      WITH Query AS (
+      WITH DoctorClinicDetailsWithBookedHours AS (
         SELECT
           dc.id,
           dc.name,
           dc.acceptanceStatus,
+          AVG(r.ratingNumber) AS rate,
           dc.availableWeekDays AS availableWeekDays,
           dc.availableDayHours AS availableDayHours,
           CASE
@@ -359,17 +384,22 @@ export class DoctorClinicModel {
         DoctorClinicsBookedHours AS dcbh
         ON
         dc.id = dcbh.doctorClinicId
+        LEFT JOIN
+        Rate AS r
+        ON
+        dc.id = r.doctorClinicId
         WHERE
         dc.acceptanceStatus = 'pending'
         GROUP BY dc.id
       )
       SELECT
-        q.id,
-        q.name,
-        q.acceptanceStatus,
-        q.availableWeekDays AS availableWeekDays,
-        q.availableDayHours AS availableDayHours,
-        q.doctorClinicBookedHours AS doctorClinicBookedHours,
+        dcdwbh.id,
+        dcdwbh.name,
+        dcdwbh.acceptanceStatus,
+        dcdwbh.rate,
+        dcdwbh.availableWeekDays AS availableWeekDays,
+        dcdwbh.availableDayHours AS availableDayHours,
+        dcdwbh.doctorClinicBookedHours AS doctorClinicBookedHours,
         CASE
         WHEN COUNT(dcnad.id ) = 0 THEN null
         ELSE
@@ -378,12 +408,12 @@ export class DoctorClinicModel {
           'dayDate', dcnad.dayDate
           ))
         END AS doctorClinicNotAvailableDays
-      FROM Query AS q
+      FROM DoctorClinicDetailsWithBookedHours AS dcdwbh
       LEFT JOIN
       DoctorClinicNotAvailableDays AS dcnad
       ON
-      q.id = dcnad.doctorClinicId
-      GROUP BY  q.id
+      dcdwbh.id = dcnad.doctorClinicId
+      GROUP BY  dcdwbh.id
       `;
 
     return theDoctorClinic;
@@ -409,11 +439,13 @@ export class DoctorClinicModel {
     specificDate: string,
   ): Promise<DoctorClinicBookingDetailsDTO> {
     let theDoctorClinic = await this.prisma.$queryRaw`
-      WITH Query AS (
+      WITH DoctorClinicDetailsWithBookedHours AS (
         SELECT
           dc.id,
           dc.name,
           dc.acceptanceStatus,
+          AVG(r.ratingNumber) AS rate,
+          JSON_ARRAYAGG(r.feedback) AS feedbacks,
           dc.availableWeekDays AS availableWeekDays,
           dc.availableDayHours AS availableDayHours,
           CASE
@@ -430,6 +462,10 @@ export class DoctorClinicModel {
         DoctorClinicsBookedHours AS dcbh
         ON
         dc.id = dcbh.doctorClinicId
+        LEFT JOIN
+        Rate AS r
+        ON
+        dc.id = r.doctorClinicId
         AND
         DATE_FORMAT(dcbh.fromDateTime,'%Y-%m-%d') = ${specificDate}
         WHERE
@@ -437,12 +473,14 @@ export class DoctorClinicModel {
         GROUP BY dc.id
       )
       SELECT
-        q.id,
-        q.name,
-        q.acceptanceStatus,
-        q.availableWeekDays AS availableWeekDays,
-        q.availableDayHours AS availableDayHours,
-        q.doctorClinicBookedHours AS doctorClinicBookedHours,
+        dcdwbh.id,
+        dcdwbh.name,
+        dcdwbh.acceptanceStatus,
+        dcdwbh.rate,
+        dcdwbh.feedbacks,
+        dcdwbh.availableWeekDays AS availableWeekDays,
+        dcdwbh.availableDayHours AS availableDayHours,
+        dcdwbh.doctorClinicBookedHours AS doctorClinicBookedHours,
         CASE
         WHEN COUNT(dcnad.id ) = 0 THEN null
         ELSE
@@ -451,14 +489,14 @@ export class DoctorClinicModel {
           'dayDate', dcnad.dayDate
           ))
         END AS doctorClinicNotAvailableDays
-      FROM Query AS q
+      FROM DoctorClinicDetailsWithBookedHours AS dcdwbh
       LEFT JOIN
       DoctorClinicNotAvailableDays AS dcnad
       ON
-      q.id = dcnad.doctorClinicId
+      dcdwbh.id = dcnad.doctorClinicId
       AND
       DATE_FORMAT(dcnad.dayDate,'%Y-%m-%d') = ${specificDate}
-      GROUP BY  q.id
+      GROUP BY  dcdwbh.id
       `;
 
     return theDoctorClinic[0];
@@ -469,10 +507,13 @@ export class DoctorClinicModel {
     dayDate: string,
   ): Promise<DoctorClinicBookingDetailsDTO> {
     let theDoctorClinic = await this.prisma.$queryRaw`
-      WITH Query AS (
+      WITH DoctorClinicDetailsWithBookedHours AS (
         SELECT
           dc.id,
           dc.name,
+          dc.acceptanceStatus,
+          AVG(r.ratingNumber) AS rate,
+          JSON_ARRAYAGG(r.feedback) AS feedbacks,
           dc.availableWeekDays AS availableWeekDays,
           dc.availableDayHours AS availableDayHours,
           CASE
@@ -489,16 +530,23 @@ export class DoctorClinicModel {
         DoctorClinicBookedHours AS dcbh
         ON
         dc.id = dcbh.doctorClinicId
+        LEFT JOIN
+        Rate AS r
+        ON
+        dc.id = r.doctorClinicId
         WHERE
         dc.id = ${doctorClinicId}
         GROUP BY dc.id
       )
       SELECT
-        q.id,
-        q.name,
-        q.availableWeekDays AS availableWeekDays,
-        q.availableDayHours AS availableDayHours,
-        q.doctorClinicBookedHours AS doctorClinicBookedHours,
+        dcdwbh.id,
+        dcdwbh.name,
+        dcdwbh.acceptanceStatus,
+        dcdwbh.rate,
+        dcdwbh.feedbacks,
+        dcdwbh.availableWeekDays AS availableWeekDays,
+        dcdwbh.availableDayHours AS availableDayHours,
+        dcdwbh.doctorClinicBookedHours AS doctorClinicBookedHours,
         CASE
         WHEN COUNT(dcnad.id ) = 0 THEN null
         ELSE
@@ -507,14 +555,14 @@ export class DoctorClinicModel {
           'dayDate', dcnad.dayDate
           ))
         END AS doctorClinicNotAvailableDays
-      FROM Query AS q
+      FROM DoctorClinicDetailsWithBookedHours AS dcdwbh
       LEFT JOIN
       DoctorClinicNotAvailableDays AS dcnad
       ON
-      q.id = dcnad.doctorClinicId
+      dcdwbh.id = dcnad.doctorClinicId
       AND
       DATE_FORMAT(dcnad.dayDate,'%Y-%m-%d') = ${dayDate}
-      GROUP BY  q.id
+      GROUP BY  dcdwbh.id
       `;
 
     if (!theDoctorClinic[0]) {

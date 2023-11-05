@@ -21,11 +21,12 @@ export class FieldModel {
 
   async allFields(): Promise<FieldBookingDetailsDTO[]> {
     let allFields: FieldBookingDetailsDTO[] = await this.prisma.$queryRaw`
-    WITH Query AS (
+    WITH FieldDetailsWithBookedHours AS (
       SELECT
         f.id,
         f.name,
         f.acceptanceStatus,
+        AVG(r.ratingNumber) AS rate,
         f.availableWeekDays AS availableWeekDays,
         f.availableDayHours AS availableDayHours,
         CASE
@@ -42,17 +43,22 @@ export class FieldModel {
       FieldsBookedHours AS fbh
       ON
       f.id = fbh.fieldId
+      LEFT JOIN
+      Rate AS r
+      ON
+      f.id = r.fieldId
       WHERE
       f.acceptanceStatus = 'accepted'
       GROUP BY f.id
     )
     SELECT 
-      q.id,
-      q.name,
-      q.acceptanceStatus,
-      q.availableWeekDays AS availableWeekDays,
-      q.availableDayHours AS availableDayHours,
-      q.fieldBookedHours AS fieldBookedHours,
+      fdwbh.id,
+      fdwbh.name,
+      fdwbh.acceptanceStatus,
+      fdwbh.rate,
+      fdwbh.availableWeekDays AS availableWeekDays,
+      fdwbh.availableDayHours AS availableDayHours,
+      fdwbh.fieldBookedHours AS fieldBookedHours,
       CASE
       WHEN COUNT(fnad.id ) = 0 THEN null
       ELSE
@@ -61,12 +67,12 @@ export class FieldModel {
         'dayDate', fnad.dayDate
         ))
       END AS fieldNotAvailableDays
-    FROM Query AS q
+    FROM FieldDetailsWithBookedHours AS fdwbh
     LEFT JOIN
     FieldNotAvailableDays AS fnad
     ON
-    q.id = fnad.fieldId
-    GROUP BY  q.id
+    fdwbh.id = fnad.fieldId
+    GROUP BY  fdwbh.id
     `;
 
     return allFields;
@@ -74,11 +80,12 @@ export class FieldModel {
 
   async getByID(id: number): Promise<FieldBookingDetailsDTO> {
     let theField = await this.prisma.$queryRaw`
-    WITH Query AS (
+    WITH FieldDetailsWithBookedHours AS (
       SELECT
         f.id,
         f.name,
         f.acceptanceStatus,
+        AVG(r.ratingNumber) AS rate,
         f.availableWeekDays AS availableWeekDays,
         f.availableDayHours AS availableDayHours,
         CASE
@@ -95,17 +102,22 @@ export class FieldModel {
       FieldsBookedHours AS fbh
       ON
       f.id = fbh.fieldId
+      LEFT JOIN
+      Rate AS r
+      ON
+      f.id = r.fieldId
       WHERE
       f.id = ${id}
       GROUP BY f.id
     )
     SELECT 
-      q.id,
-      q.name,
-      q.acceptanceStatus,
-      q.availableWeekDays AS availableWeekDays,
-      q.availableDayHours AS availableDayHours,
-      q.fieldBookedHours AS fieldBookedHours,
+      fdwbh.id,
+      fdwbh.name,
+      fdwbh.acceptanceStatus,
+      fdwbh.rate,
+      fdwbh.availableWeekDays AS availableWeekDays,
+      fdwbh.availableDayHours AS availableDayHours,
+      fdwbh.fieldBookedHours AS fieldBookedHours,
       CASE
       WHEN COUNT(fnad.id ) = 0 THEN null
       ELSE
@@ -114,12 +126,12 @@ export class FieldModel {
         'dayDate', fnad.dayDate
         ))
       END AS fieldNotAvailableDays
-    FROM Query AS q
+    FROM FieldDetailsWithBookedHours AS fdwbh
     LEFT JOIN
     FieldNotAvailableDays AS fnad
     ON
-    q.id = fnad.fieldId
-    GROUP BY  q.id
+    fdwbh.id = fnad.fieldId
+    GROUP BY  fdwbh.id
     `;
 
     if (!theField[0]) {
@@ -133,11 +145,12 @@ export class FieldModel {
 
   async getByName(name: string): Promise<FieldBookingDetailsDTO> {
     let theField = await this.prisma.$queryRaw`
-    WITH Query AS (
+    WITH FieldDetailsWithBookedHours AS (
       SELECT
         f.id,
         f.name,
         f.acceptanceStatus,
+        AVG(r.ratingNumber) AS rate,
         f.availableWeekDays AS availableWeekDays,
         f.availableDayHours AS availableDayHours,
         CASE
@@ -154,17 +167,22 @@ export class FieldModel {
       FieldsBookedHours AS fbh
       ON
       f.id = fbh.fieldId
+      LEFT JOIN
+      Rate AS r
+      ON
+      f.id = r.fieldId
       WHERE
       f.name = ${name}
       GROUP BY f.id
     )
     SELECT 
-      q.id,
-      q.name,
-      q.acceptanceStatus,
-      q.availableWeekDays AS availableWeekDays,
-      q.availableDayHours AS availableDayHours,
-      q.fieldBookedHours AS fieldBookedHours,
+      fdwbh.id,
+      fdwbh.name,
+      fdwbh.acceptanceStatus,
+      fdwbh.rate,
+      fdwbh.availableWeekDays AS availableWeekDays,
+      fdwbh.availableDayHours AS availableDayHours,
+      fdwbh.fieldBookedHours AS fieldBookedHours,
       CASE
       WHEN COUNT(fnad.id ) = 0 THEN null
       ELSE
@@ -173,12 +191,12 @@ export class FieldModel {
         'dayDate', fnad.dayDate
         ))
       END AS fieldNotAvailableDays
-    FROM Query AS q
+    FROM FieldDetailsWithBookedHours AS fdwbh
     LEFT JOIN
     FieldNotAvailableDays AS fnad
     ON
-    q.id = fnad.fieldId
-    GROUP BY  q.id
+    fdwbh.id = fnad.fieldId
+    GROUP BY  fdwbh.id
     `;
 
     return theField[0];
@@ -338,11 +356,12 @@ export class FieldModel {
   async selectPendingFields(): Promise<FieldBookingDetailsDTO[]> {
     // return 'alo';
     let theFields: FieldBookingDetailsDTO[] = await this.prisma.$queryRaw`
-    WITH Query AS (
+    WITH FieldDetailsWithBookedHours AS (
       SELECT
         f.id,
         f.name,
         f.acceptanceStatus,
+        AVG(r.ratingNumber) AS rate,
         f.availableWeekDays AS availableWeekDays,
         f.availableDayHours AS availableDayHours,
         CASE
@@ -364,12 +383,13 @@ export class FieldModel {
       GROUP BY f.id
     )
     SELECT 
-      q.id,
-      q.name,
-      q.acceptanceStatus,
-      q.availableWeekDays AS availableWeekDays,
-      q.availableDayHours AS availableDayHours,
-      q.fieldBookedHours AS fieldBookedHours,
+      fdwbh.id,
+      fdwbh.name,
+      fdwbh.acceptanceStatus,
+      fdwbh.rate,
+      fdwbh.availableWeekDays AS availableWeekDays,
+      fdwbh.availableDayHours AS availableDayHours,
+      fdwbh.fieldBookedHours AS fieldBookedHours,
       CASE
       WHEN COUNT(fnad.id ) = 0 THEN null
       ELSE
@@ -378,12 +398,12 @@ export class FieldModel {
         'dayDate', fnad.dayDate
         ))
       END AS fieldNotAvailableDays
-    FROM Query AS q
+    FROM FieldDetailsWithBookedHours AS fdwbh
     LEFT JOIN
     FieldNotAvailableDays AS fnad
     ON
-    q.id = fnad.fieldId
-    GROUP BY  q.id
+    fdwbh.id = fnad.fieldId
+    GROUP BY  fdwbh.id
     `;
 
     return theFields;
@@ -409,11 +429,12 @@ export class FieldModel {
     specificDate: string,
   ): Promise<FieldBookingDetailsDTO> {
     let theField = await this.prisma.$queryRaw`
-    WITH Query AS (
+    WITH FieldDetailsWithBookedHours AS (
       SELECT
         f.id,
         f.name,
         f.acceptanceStatus,
+        AVG(r.ratingNumber) AS rate,
         f.availableWeekDays AS availableWeekDays,
         f.availableDayHours AS availableDayHours,
         CASE
@@ -430,6 +451,10 @@ export class FieldModel {
       FieldsBookedHours AS fbh
       ON
       f.id = fbh.fieldId
+      LEFT JOIN
+      Rate AS r
+      ON
+      f.id = r.fieldId
       AND
       DATE_FORMAT(fbh.fromDateTime,'%Y-%m-%d') = ${specificDate}
       WHERE
@@ -437,12 +462,13 @@ export class FieldModel {
       GROUP BY f.id
     )
     SELECT 
-      q.id,
-      q.name,
-      q.acceptanceStatus,
-      q.availableWeekDays AS availableWeekDays,
-      q.availableDayHours AS availableDayHours,
-      q.fieldBookedHours AS fieldBookedHours,
+      fdwbh.id,
+      fdwbh.name,
+      fdwbh.acceptanceStatus,
+      fdwbh.rate,
+      fdwbh.availableWeekDays AS availableWeekDays,
+      fdwbh.availableDayHours AS availableDayHours,
+      fdwbh.fieldBookedHours AS fieldBookedHours,
       CASE
       WHEN COUNT(fnad.id ) = 0 THEN null
       ELSE
@@ -451,14 +477,14 @@ export class FieldModel {
         'dayDate', fnad.dayDate
         ))
       END AS fieldNotAvailableDays
-    FROM Query AS q
+    FROM FieldDetailsWithBookedHours AS fdwbh
     LEFT JOIN
     FieldNotAvailableDays AS fnad
     ON
-    q.id = fnad.fieldId
+    fdwbh.id = fnad.fieldId
     AND
     DATE_FORMAT(fnad.dayDate,'%Y-%m-%d') = ${specificDate}
-    GROUP BY  q.id
+    GROUP BY  fdwbh.id
     `;
 
     return theField[0];
@@ -469,10 +495,12 @@ export class FieldModel {
     dayDate: string,
   ): Promise<FieldBookingDetailsDTO> {
     let theField = await this.prisma.$queryRaw`
-    WITH Query AS (
+    WITH FieldDetailsWithBookedHours AS (
       SELECT
         f.id,
         f.name,
+        f.acceptanceStatus,
+        AVG(r.ratingNumber) AS rate,
         f.availableWeekDays AS availableWeekDays,
         f.availableDayHours AS availableDayHours,
         CASE
@@ -489,16 +517,22 @@ export class FieldModel {
       FieldsBookedHours AS fbh
       ON
       f.id = fbh.fieldId
+      LEFT JOIN
+      Rate AS r
+      ON
+      f.id = r.fieldId
       WHERE
       f.id = ${fieldId}
       GROUP BY f.id
     )
     SELECT 
-      q.id,
-      q.name,
-      q.availableWeekDays AS availableWeekDays,
-      q.availableDayHours AS availableDayHours,
-      q.fieldBookedHours AS fieldBookedHours,
+      fdwbh.id,
+      fdwbh.name,
+      fdwbh.acceptanceStatus,
+      fdwbh.rate,
+      fdwbh.availableWeekDays AS availableWeekDays,
+      fdwbh.availableDayHours AS availableDayHours,
+      fdwbh.fieldBookedHours AS fieldBookedHours,
       CASE
       WHEN COUNT(fnad.id ) = 0 THEN null
       ELSE
@@ -507,14 +541,14 @@ export class FieldModel {
         'dayDate', fnad.dayDate
         ))
       END AS fieldNotAvailableDays
-    FROM Query AS q
+    FROM FieldDetailsWithBookedHours AS fdwbh
     LEFT JOIN
     FieldNotAvailableDays AS fnad
     ON
-    q.id = fnad.fieldId
+    fdwbh.id = fnad.fieldId
     AND
     DATE_FORMAT(fnad.dayDate,'%Y-%m-%d') = ${dayDate}
-    GROUP BY  q.id
+    GROUP BY  fdwbh.id
     `;
 
     if (!theField[0]) {

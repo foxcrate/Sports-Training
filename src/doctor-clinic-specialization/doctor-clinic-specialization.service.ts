@@ -1,22 +1,25 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateSportDto } from './dtos/create.dto';
+import { CreateDoctorClinicSpecializationDto } from './dtos/create.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { GlobalService } from 'src/global/global.service';
-import { ReturnSportDto } from './dtos/return.dto';
+import { ReturnDoctorClinicSpecializationDto } from './dtos/retrun.dto';
 
 @Injectable()
-export class SportService {
+export class DoctorClinicSpecializationService {
   constructor(
     private prisma: PrismaService,
     private globalService: GlobalService,
     private readonly i18n: I18nService,
   ) {}
-  async create(createData: CreateSportDto, userId): Promise<ReturnSportDto> {
+  async create(
+    createData: CreateDoctorClinicSpecializationDto,
+    userId,
+  ): Promise<ReturnDoctorClinicSpecializationDto> {
     await this.findRepeated(createData.name);
 
     await this.prisma.$queryRaw`
-      INSERT INTO Sport
+      INSERT INTO DoctorClinicSpecialization
         (name,
         updatedAt)
         VALUES
@@ -25,7 +28,7 @@ export class SportService {
 
     let newRegion = await this.prisma.$queryRaw`
       SELECT *
-      FROM Sport
+      FROM DoctorClinicSpecialization
       ORDER BY createdAt DESC
       LIMIT 1`;
     return newRegion[0];
@@ -33,17 +36,19 @@ export class SportService {
 
   async findRepeated(name): Promise<Boolean> {
     //Chick existed email or phone number
-    let repeatedRegion = await this.prisma.$queryRaw`
+    let repeatedDoctorClinicSpecialization = await this.prisma.$queryRaw`
     SELECT *
-      FROM Sport
+      FROM DoctorClinicSpecialization
       WHERE name = ${name}
       LIMIT 1
       `;
 
-    if (repeatedRegion[0]) {
-      if (repeatedRegion[0].name == name) {
+    if (repeatedDoctorClinicSpecialization[0]) {
+      if (repeatedDoctorClinicSpecialization[0].name == name) {
         throw new BadRequestException(
-          this.i18n.t(`errors.REPEATED_SPORT`, { lang: I18nContext.current().lang }),
+          this.i18n.t(`errors.REPEATED_DOCTOR_CLINIC_SPECIALIZATION`, {
+            lang: I18nContext.current().lang,
+          }),
         );
       }
     }
