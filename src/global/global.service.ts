@@ -121,8 +121,8 @@ export class GlobalService {
     return !(target >= start && target < end);
   }
 
-  getDayName(dayNumber: number): string {
-    return this.weekDays[dayNumber];
+  getDayName(dayDate: moment.Moment): string {
+    return dayDate.format('dddd');
   }
 
   timeTo24(timeStr: string): string {
@@ -147,43 +147,20 @@ export class GlobalService {
     return `${hours}:${minutes}`;
   }
 
-  getLocalTime(dateTime: Date): string {
-    let hours = (dateTime.getHours() < 10 ? '0' : '') + dateTime.getHours();
-    let minutes = (dateTime.getMinutes() < 10 ? '0' : '') + dateTime.getMinutes();
-    return `${hours}:${minutes}`;
+  getLocalTime12(dateTime: moment.Moment): string {
+    return dateTime.format('hh:mm:ss A');
   }
 
-  getGlobalTime(dateTime: Date): string {
-    let hoursNumber = dateTime.getHours() - Number(this.config.get('GMT'));
-    let hours = (hoursNumber < 10 ? '0' : '') + hoursNumber;
-    let minutes = (dateTime.getMinutes() < 10 ? '0' : '') + dateTime.getMinutes();
-    return `${hours}:${minutes}`;
+  getLocalTime24(dateTime: moment.Moment): string {
+    return dateTime.format('hh:mm:ss');
   }
 
   getLocalDateTime(dateTime: Date): string {
-    let dateObj = new Date(dateTime);
-    let dateString = `${dateObj.getFullYear()}-${
-      dateObj.getMonth() + 1
-    }-${dateObj.getDate()}`;
-
-    let hours = (dateObj.getHours() < 10 ? '0' : '') + dateObj.getHours();
-    let minutes = (dateObj.getMinutes() < 10 ? '0' : '') + dateObj.getMinutes();
-    let seconds = (dateObj.getSeconds() < 10 ? '0' : '') + dateObj.getSeconds();
-    let milliSeconds =
-      (dateObj.getMilliseconds() < 10 ? '0' : '') + dateObj.getMilliseconds();
-
-    return `${dateString} ${hours}:${minutes}:${seconds}.${milliSeconds}`;
+    return moment(dateTime).format('YYYY-MM-DD HH:mm:ss');
   }
 
-  getDate(dateTime: Date): string {
-    let dateObj = dateTime;
-
-    let year = (dateObj.getFullYear() < 10 ? '0' : '') + dateObj.getFullYear();
-    let month = (dateObj.getMonth() + 1 < 10 ? '0' : '') + (dateObj.getMonth() + 1);
-    let day = (dateObj.getDate() < 10 ? '0' : '') + dateObj.getDate();
-
-    // return dateTime.locale(I18nContext.current().lang).format('YYYY-MM-DD');
-    return `${year}-${month}-${day}`;
+  getDate(dateTime: moment.Moment): string {
+    return dateTime.locale(I18nContext.current().lang).format('YYYY-MM-DD');
   }
 
   private getFileName(originalname) {
