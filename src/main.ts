@@ -14,7 +14,7 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
 
-  var serviceAccount = require('/home/fawzy/Desktop/Projects/Nest/instaplay_backend/darabny-63c36-firebase-adminsdk-svdxh-d0aafcfa2d.json');
+  var serviceAccount = require(process.env.FIREBASE_AUTH_FILE);
 
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
