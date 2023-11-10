@@ -115,29 +115,6 @@ export class AdminDoctorClinicController {
     );
   }
 
-  @Post('/:id/reserve-slot')
-  @Version('1')
-  @Roles('admin')
-  @UseGuards(AuthGuard, RoleGuard)
-  async reserveSlot1(@Body() reqBody, @Param() params, @Request() req: ExpressRequest) {
-    return this.adminDoctorClinicService.reserveSlot(params.id, 1, reqBody);
-  }
-
-  @Get('/:id/doctorClinic-DayAvailableHours/:date')
-  @Version('1')
-  @Roles('admin')
-  @UseGuards(AuthGuard, RoleGuard)
-  async doctorClinicDayAvailableHours1(
-    @Body() reqBody,
-    @Param() params,
-    @Request() req: ExpressRequest,
-  ) {
-    return this.adminDoctorClinicService.doctorClinicDayAvailableHours(
-      params.id,
-      params.date,
-    );
-  }
-
   @Get('/:id')
   @Version('1')
   @Roles('admin')

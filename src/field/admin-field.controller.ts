@@ -111,26 +111,6 @@ export class AdminFieldController {
     );
   }
 
-  @Post('/:id/reserve-slot')
-  @Version('1')
-  @Roles('admin')
-  @UseGuards(AuthGuard, RoleGuard)
-  async reserveSlot1(@Body() reqBody, @Param() params, @Request() req: ExpressRequest) {
-    return this.adminFieldService.reserveSlot(params.id, 1, reqBody);
-  }
-
-  @Get('/:id/fieldDayAvailableHours/:date')
-  @Version('1')
-  @Roles('admin')
-  @UseGuards(AuthGuard, RoleGuard)
-  async fieldDayAvailableHours1(
-    @Body() reqBody,
-    @Param() params,
-    @Request() req: ExpressRequest,
-  ) {
-    return this.adminFieldService.fieldDayAvailableHours(params.id, params.date);
-  }
-
   @Get('/:id')
   @Version('1')
   @Roles('admin')

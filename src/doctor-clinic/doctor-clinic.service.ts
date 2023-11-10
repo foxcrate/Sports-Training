@@ -7,6 +7,7 @@ import { DoctorClinicBookingDetailsDTO } from './dtos/doctorClinicBookingDetails
 import { DoctorClinicCreateDto } from './dtos/create.dto';
 import { DoctorClinicReturnDto } from './dtos/return.dto';
 import { DoctorClinicUpdateDto } from './dtos/update.dto';
+import * as moment from 'moment-timezone';
 
 @Injectable()
 export class DoctorClinicService {
@@ -73,9 +74,11 @@ export class DoctorClinicService {
     doctorClinicId: number,
     day: string,
   ): Promise<FreeSlots[]> {
-    let dayDate = new Date(day);
+    let dayDate = moment(day);
+
     let dateString = this.globalSerice.getDate(dayDate);
-    let dayName = this.globalSerice.getDayName(dayDate.getDay());
+    let dayName = this.globalSerice.getDayName(dayDate);
+
     let theDoctorClinic =
       await this.doctorClinicModel.doctorClinicBookingDetailsForSpecificDate(
         doctorClinicId,
@@ -101,13 +104,11 @@ export class DoctorClinicService {
       ? theDoctorClinic.doctorClinicBookedHours
       : [];
     let mappedDoctorClinicBookedHours = doctorClinicBookedHours.map((i) => {
-      return new Date(i.fromDateTime).toLocaleTimeString('en-US', { hour12: true });
+      return this.globalSerice.getLocalTime12(moment(i.fromDateTime));
     });
 
-    let startTimeDate = new Date(
-      `${dateString} ${theDoctorClinic.availableDayHours.from}`,
-    );
-    let endTimeDate = new Date(`${dateString} ${theDoctorClinic.availableDayHours.to}`);
+    let startTimeDate = `${dateString} ${theDoctorClinic.availableDayHours.from}`;
+    let endTimeDate = `${dateString} ${theDoctorClinic.availableDayHours.to}`;
 
     let availableHours = this.getFreeSlots(
       mappedDoctorClinicBookedHours,
@@ -118,14 +119,12 @@ export class DoctorClinicService {
   }
 
   async reserveSlot(doctorClinicId: number, userId: number, reqBody): Promise<string> {
-    let dayDate = new Date(reqBody.dayDate);
+    let dayDate = moment(reqBody.dayDate);
+    let dateOnly = this.globalSerice.getDate(dayDate);
     let dayTimesArray = reqBody.dayTimes;
 
     let localDayTimes = dayTimesArray.map((i) =>
-      new Date(`2000-01-01T${this.globalSerice.timeTo24(i)}`).toLocaleTimeString(
-        'en-US',
-        { hour12: false },
-      ),
+      moment(`${dateOnly}T${this.globalSerice.timeTo24(i)}`).format('HH:mm:ss'),
     );
 
     let dateString = this.globalSerice.getDate(dayDate);
@@ -151,7 +150,7 @@ export class DoctorClinicService {
     // throw error if week day not available
     this.checkWeekDayIsAvailable(
       theDoctorClinic.availableWeekDays,
-      this.globalSerice.getDayName(dayDate.getDay()),
+      this.globalSerice.getDayName(dayDate),
     );
 
     let doctorClinicBookedHours = theDoctorClinic.doctorClinicBookedHours
@@ -159,7 +158,7 @@ export class DoctorClinicService {
       : [];
 
     let mappedDoctorClinicBookedHours = doctorClinicBookedHours.map((i) => {
-      return new Date(i.fromDateTime).toLocaleTimeString('en-US', { hour12: false });
+      return moment(i.fromDateTime).format('HH:mm:ss');
     });
 
     for (let i = 0; i < localDayTimes.length; i++) {
@@ -214,26 +213,26 @@ export class DoctorClinicService {
     }
   }
 
-  private getFreeSlots(mappedDoctorClinicBookedHours, startTimeDate, endTimeDate) {
+  private getFreeSlots(mappedFieldBookedHours, startTimeDate, endTimeDate) {
     let availableHours = [];
-
-    startTimeDate = new Date(startTimeDate);
-    endTimeDate = new Date(endTimeDate);
+    startTimeDate = moment(startTimeDate);
+    endTimeDate = moment(endTimeDate);
 
     while (startTimeDate < endTimeDate) {
-      let endOfSlot = new Date(startTimeDate);
-      endOfSlot.setHours(startTimeDate.getHours() + 1);
+      let endOfSlot = moment(startTimeDate);
+      endOfSlot.add(1, 'hours');
 
       let timeSlotAvailable = this.getSlotState(
-        mappedDoctorClinicBookedHours,
-        startTimeDate.toLocaleTimeString('en-US', { hour12: true }),
+        mappedFieldBookedHours,
+        this.globalSerice.getLocalTime12(startTimeDate),
       );
       availableHours.push({
-        from: startTimeDate.toLocaleTimeString('en-US', { hour12: true }),
-        to: endOfSlot.toLocaleTimeString('en-US', { hour12: true }),
+        from: this.globalSerice.getLocalTime12(startTimeDate),
+        to: this.globalSerice.getLocalTime12(endOfSlot),
         state: timeSlotAvailable,
       });
-      startTimeDate.setHours(startTimeDate.getHours() + 1);
+
+      startTimeDate.add(1, 'hours');
     }
 
     return availableHours;
@@ -250,17 +249,16 @@ export class DoctorClinicService {
   private getAllSlots(startTimeDate, endTimeDate) {
     let availableHours = [];
 
-    startTimeDate = new Date(`2000-01-01T${startTimeDate}`);
-    endTimeDate = new Date(`2000-01-01T${endTimeDate}`);
+    startTimeDate = moment(`2000-01-01T${startTimeDate}`);
+    endTimeDate = moment(`2000-01-01T${endTimeDate}`);
 
     while (startTimeDate < endTimeDate) {
-      let endOfSlot = new Date(startTimeDate);
-      endOfSlot.setHours(startTimeDate.getHours() + 1);
+      let endOfSlot = moment(startTimeDate);
+      endOfSlot.add(1, 'hours');
 
-      // availableHours.push(this.globalSerice.getLocalTime(startTimeDate));
-      availableHours.push(startTimeDate.toLocaleTimeString('en-US', { hour12: false }));
+      availableHours.push(startTimeDate.format('HH:mm:ss'));
 
-      startTimeDate.setHours(startTimeDate.getHours() + 1);
+      startTimeDate.add(1, 'hours');
     }
     return availableHours;
   }
