@@ -273,12 +273,6 @@ export class DoctorClinicModel {
     GROUP BY cwbhafaa.id,nad.doctorClinicId
     `;
 
-    if (!DoctorClinic[0]) {
-      throw new NotFoundException(
-        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
-      );
-    }
-
     return DoctorClinic[0];
   }
 
