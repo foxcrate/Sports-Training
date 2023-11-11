@@ -61,6 +61,7 @@ export class FieldService {
   }
 
   async fieldDayAvailableHours(fieldId: number, day: string): Promise<FreeSlots[]> {
+    let fieldExist = await this.fieldModel.getByID(fieldId);
     let dayDate = moment(day);
 
     let dateString = this.globalSerice.getDate(dayDate);
@@ -101,6 +102,7 @@ export class FieldService {
   }
 
   async reserveSlot(fieldId: number, userId: number, reqBody): Promise<string> {
+    let fieldExist = await this.fieldModel.getByID(fieldId);
     let dayDate = moment(reqBody.dayDate);
     let dateOnly = this.globalSerice.getDate(dayDate);
     let dayTimesArray = reqBody.dayTimes;

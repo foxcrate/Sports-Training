@@ -91,6 +91,7 @@ export class AdminDoctorClinicService {
   }
 
   async addNotAvailableDays(doctorClinicId: number, datesArray: string[]) {
+    let theDoctorClinic = await this.doctorClinicModel.getByID(doctorClinicId);
     return await this.doctorClinicModel.insertNotAvailableDays(
       doctorClinicId,
       datesArray,

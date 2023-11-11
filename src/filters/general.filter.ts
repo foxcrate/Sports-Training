@@ -1,10 +1,31 @@
 import { Catch, ArgumentsHost, HttpException, ExceptionFilter } from '@nestjs/common';
 
-@Catch(HttpException)
+@Catch()
 export class GeneralFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
+
+    // check if exception is HttpException
+    try {
+      const status = exception.getStatus();
+    } catch (err) {
+      console.log('-- first condition in general filer --');
+
+      console.log(exception);
+
+      response.status(500).json({
+        success: false,
+        statusCode: 500,
+        data: null,
+        error: {
+          type: 'Server2 Error',
+          message: 'That is a server error, will be fixed soon',
+        },
+      });
+      return;
+    }
+
     const status = exception.getStatus();
     const message = exception.message;
     const exceptionBody: any = exception.getResponse();

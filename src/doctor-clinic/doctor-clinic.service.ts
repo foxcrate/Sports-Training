@@ -74,6 +74,7 @@ export class DoctorClinicService {
     doctorClinicId: number,
     day: string,
   ): Promise<FreeSlots[]> {
+    let doctorClinicExist = await this.doctorClinicModel.getByID(doctorClinicId);
     let dayDate = moment(day);
 
     let dateString = this.globalSerice.getDate(dayDate);
@@ -119,6 +120,7 @@ export class DoctorClinicService {
   }
 
   async reserveSlot(doctorClinicId: number, userId: number, reqBody): Promise<string> {
+    let doctorClinicExist = await this.doctorClinicModel.getByID(doctorClinicId);
     let dayDate = moment(reqBody.dayDate);
     let dateOnly = this.globalSerice.getDate(dayDate);
     let dayTimesArray = reqBody.dayTimes;

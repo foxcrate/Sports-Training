@@ -79,6 +79,7 @@ export class AdminFieldService {
   }
 
   async addNotAvailableDays(fieldId: number, datesArray: string[]) {
+    let theField = await this.fieldModel.getByID(fieldId);
     return await this.fieldModel.insertNotAvailableDays(fieldId, datesArray);
   }
 }
