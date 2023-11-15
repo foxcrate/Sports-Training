@@ -61,7 +61,7 @@ export class AuthController {
     return this.authService.createPassword(req['id'], createPasswordData.password);
   }
 
-  @Get('user/verify-signup-otp')
+  @Post('user/verify-signup-otp')
   @Version('1')
   // @UsePipes(new JoiValidation(SignupValidation))
   async verifyOtp1(
@@ -69,6 +69,7 @@ export class AuthController {
   ) {
     return this.authService.verifyOTP(verifyOtpData);
   }
+
   @Post('user/complete-signup')
   @Version('1')
   @Roles('user')
