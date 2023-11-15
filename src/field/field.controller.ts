@@ -35,6 +35,7 @@ export class FieldController {
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
+  //NOTE: the use of joi validation has caused you to have duplicated code, either use zod so u can infer the type from the schema or use class validator and transformer which is better with nest since it using decorators. it will help with consistent style of code
   async fieldDayAvailableHours1(
     @Param(new JoiValidation(FieldAvailableHoursValidation)) params,
   ) {

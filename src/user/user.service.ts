@@ -170,6 +170,7 @@ export class UserService {
       ${reqBody.birthday},
       ${userId},
       ${this.globalService.getLocalDateTime(new Date())})`;
+    //NOTE: updatedAt field in schema should have a default value of now() as well as updatedAt directive as well this will fix the case where you need to add the updatedAt field by yourself and will help with consistent timezone behaviour
 
     // let newChild = this.getLastCreatedChild();
     let newChild = this.getChildByMobileNumber(reqBody.mobileNumber);
@@ -451,7 +452,7 @@ export class UserService {
     let childsIds = childs.map((child) => {
       return child.id;
     });
-
+    //NOTE: why not get user children where they don't equal certail id instead of doing this step here in code
     //check if the child is the current user's child
     if (!childsIds.includes(child.id)) {
       throw new ForbiddenException(

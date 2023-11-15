@@ -48,6 +48,7 @@ export class PlayerProfileService {
 
     let newPlayerProfile = await this.getByUserId(userId);
 
+    //NOTE: you can just do it like this createData.sports?.length > 0
     if (createData.sports && createData.sports.length > 0) {
       await this.createProfileSports(createData.sports, newPlayerProfile.id);
     }
@@ -173,6 +174,7 @@ export class PlayerProfileService {
   }
 
   private async getLastCreated(): Promise<ReturnPlayerProfileDto> {
+    //NOTE: i know this is not used but be careful of using JOIN like that it will be translated to INNER JOIN not LEFT JOIN
     let playerProfileWithSports = await this.prisma.$queryRaw`
     SELECT
       pp.id AS id,
@@ -217,6 +219,7 @@ export class PlayerProfileService {
   private async getPlayerProfileWithSportsByUserId(
     userId,
   ): Promise<ReturnPlayerProfileDto> {
+    //NOTE: you can do this without the COUNT(s.id) = 0, you can just say WHEN s.id IS NULL..., the idea is to limit the sql function call to a minimum espically aggregate functions
     let playerProfileWithSports = await this.prisma.$queryRaw`
     SELECT
     pp.id AS id,

@@ -17,6 +17,7 @@ export class ChildService {
     private readonly i18n: I18nService,
   ) {}
 
+  //NOTE: i still think there is no need for extra child and child profile tables, please let me know why you still have them
   async findByMobile(mobileNumber: string): Promise<NativeChildDto> {
     let foundedAccount = await this.prisma.$queryRaw`
     SELECT *
