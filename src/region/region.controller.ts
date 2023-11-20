@@ -6,6 +6,7 @@ import {
   Request,
   UsePipes,
   Body,
+  Get,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
 import { RegionService } from './region.service';
@@ -26,5 +27,13 @@ export class RegionController {
   @UsePipes(new JoiValidation(AddRegionValidation))
   async create1(@Body() reqBody, @Request() req: ExpressRequest) {
     return this.regionService.create(reqBody, req['id']);
+  }
+
+  @Get()
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async getAll() {
+    return await this.regionService.getAll();
   }
 }

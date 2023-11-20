@@ -95,7 +95,7 @@ export class AuthGuard implements CanActivate {
   private async childAvailable(childId) {
     let user = await this.prisma.$queryRaw`
       SELECT *
-      FROM child
+      FROM Child
       WHERE id = ${childId}
       LIMIT 1
     `;

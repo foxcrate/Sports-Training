@@ -31,6 +31,15 @@ export class SportService {
     return newRegion[0];
   }
 
+  async getAll(): Promise<ReturnSportDto[]> {
+    let allSports: ReturnSportDto[] = await this.prisma.$queryRaw`
+    SELECT *
+    FROM Sport
+      `;
+
+    return allSports;
+  }
+
   async findRepeated(name): Promise<Boolean> {
     //Chick existed email or phone number
     let repeatedRegion = await this.prisma.$queryRaw`

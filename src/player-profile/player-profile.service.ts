@@ -218,25 +218,53 @@ export class PlayerProfileService {
     userId,
   ): Promise<ReturnPlayerProfileDto> {
     let playerProfileWithSports = await this.prisma.$queryRaw`
+    WITH UserDetails AS (
+      SELECT id,firstName,lastName,email,profileImage,mobileNumber,gender,birthday
+      FROM User
+      WHERE id = ${userId}
+    ),
+    playerProfileWithSports AS (
+      SELECT
+      pp.id AS id,
+      pp.level AS level,
+      r.name AS region,
+      pp.userId AS userId,
+      CASE 
+      WHEN COUNT(s.id ) = 0 THEN null
+      ELSE
+      JSON_ARRAYAGG(JSON_OBJECT(
+        'id',s.id,
+        'name', s.name)) 
+      END AS sports
+      FROM PlayerProfile AS pp
+      LEFT JOIN Region AS r ON pp.regionId = r.id
+      LEFT JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
+      LEFT JOIN Sport AS s ON pps.sportId = s.id
+      WHERE pp.userId = ${userId}
+      GROUP BY pp.id
+      LIMIT 1
+    )
     SELECT
-    pp.id AS id,
-    pp.level AS level,
-    pp.regionId AS regionId,
-    pp.userId AS userId,
-    CASE 
-    WHEN COUNT(s.id ) = 0 THEN null
-    ELSE
-    JSON_ARRAYAGG(JSON_OBJECT(
-      'id',s.id,
-      'name', s.name)) 
-    END AS sports
-    FROM PlayerProfile AS pp
-    LEFT JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
-    LEFT JOIN Sport AS s ON pps.sportId = s.id
-    WHERE pp.userId = ${userId}
-    GROUP BY pp.id
-    LIMIT 1
-    ;`;
+      pps.id,
+      pps.level,
+      pps.region AS region,
+      pps.sports AS sports,
+      JSON_ARRAYAGG(JSON_OBJECT(
+      'id',ud.id,
+      'firstName',ud.firstName,
+      'lastName', ud.lastName,
+      'email',ud.email,
+      'profileImage', ud.profileImage,
+      'mobileNudmber',ud.mobileNumber,
+      'gender', ud.gender,
+      'birthday',ud.birthday
+      )
+    ) AS user
+    FROM UserDetails AS ud
+    LEFT JOIN playerProfileWithSports AS pps
+    ON pps.userId = ud.id
+    GROUP BY ud.id
+    `;
     return playerProfileWithSports[0];
   }
 
