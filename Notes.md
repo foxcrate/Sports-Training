@@ -1,5 +1,0 @@
-- [ ] Services are all tightly coupled with data access layer it would be better if you seperate the db call into their own file (look into repository pattern)
-- [ ] The killall command is not account for the case that i have different node applications running
-- [ ] the joi validation library was not a good choice, you basically have the schema and the dto referencing the same thing, if you used class validator or zod it would be better and you wouldn't have so much duplicated code
-- [ ] Create a db on the ec2 server and connect to it and use it as the default development db, so in case i use the project i would have some data i can test with and don't depend on local db for development, use it to test on your own but in general dev db need to be shared and accessible to the whole team which in this case just me and you but i hope you get the idea.
-- [ ]

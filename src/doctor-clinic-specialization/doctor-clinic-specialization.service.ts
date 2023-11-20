@@ -26,7 +26,6 @@ export class DoctorClinicSpecializationService {
       (${createData.name},
       ${this.globalService.getLocalDateTime(new Date())})`;
 
-    //NOTE: u are copying code without accounting for the entity you are working with, either change it or use a general naming convention like newRow, createdRow somethign like that
     let newRegion = await this.prisma.$queryRaw`
       SELECT *
       FROM DoctorClinicSpecialization

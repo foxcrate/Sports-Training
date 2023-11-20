@@ -31,7 +31,7 @@ export class UserController {
 
   @Put()
   @Version('1')
-  @Roles('user') //NOTE: i would prefer this to be enum not just a magic string this is error prone
+  @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(UpdateUserValidation))
   async update1(@Body() reqBody, @Request() req: ExpressRequest) {
@@ -55,7 +55,6 @@ export class UserController {
     return this.userService.createChild(reqBody, req['id']);
   }
 
-  //NOTE: childs is not an actual work. it is not a big deal but it would be better if we can change it to children everywhere
   @Get('childs')
   @Version('1')
   @Roles('user')

@@ -1,7 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-//NOTE: use prisma 
 generator client {
   provider = "prisma-client-js"
 }
@@ -16,7 +15,7 @@ enum Gender {
   male
 }
 
-enum AcceptanceStatus {
+enum AcceptanceStatus{
   accepted
   pending
   declined
@@ -47,268 +46,335 @@ enum Level {
   advanced
 }
 
+
 model User {
-  id                 Int                        @id @default(autoincrement())
-  firstName          String?
-  lastName           String?
-  profileImage       String?
-  fcm_token          String?
-  password           String?
-  email              String?                    @unique
-  mobileNumber       String                     @unique
-  gender             Gender?
-  birthday           DateTime?
-  userType           UserType?
-  isPhoneVerified    Boolean                    @default(false)
-  provider           Provider                   @default(native)
-  createdAt          DateTime                   @default(now())
-  updatedAt          DateTime                   @default(now()) @updatedAt
-  playerProfile      PlayerProfile?
-  trainerProfile     TrainerProfile?
-  childs             Child[]
-  fields             FieldsBookedHours[]
-  doctorClinics      DoctorClinicsBookedHours[]
-  addedFields        Field[]
-  addedDoctorClinics DoctorClinic[]
-  rates              Rate[]
+  id                  Int                   @id @default(autoincrement())
+  firstName           String?
+  lastName            String?
+  profileImage        String?
+  fcm_token           String?
+  password            String?
+  email               String?                @unique
+  mobileNumber        String                @unique
+  gender              Gender?
+  birthday            DateTime?
+  userType            UserType?
+  isPhoneVerified     Boolean               @default(false)
+  provider            Provider              @default(native)
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  
+  playerProfile       PlayerProfile?
+  trainerProfile      TrainerProfile?
+  childs              Child[]
+  fields              FieldsBookedHours[]
+  doctorClinics       DoctorClinicsBookedHours[]
+  addedFields         Field[]
+  addedDoctorClinics  DoctorClinic[]
+  rates               Rate[]
 }
 
-model OTP {
-  id           Int      @id @default(autoincrement())
-  mobileNumber String
-  otp          String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
+model OTP{
+  id                    Int                   @id @default(autoincrement())
+  mobileNumber          String
+  otp                   String
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-model PlayerProfile {
-  id        Int                   @id @default(autoincrement())
-  level     Level?
-  regionId  Int?
-  region    Region?               @relation(fields: [regionId], references: [id])
-  sports    PlayerProfileSports[]
-  userId    Int                   @unique
-  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime              @default(now())
-  updatedAt DateTime              @default(now()) @updatedAt
+model PlayerProfile{
+  id                    Int                   @id @default(autoincrement())
+
+  level                 Level?
+
+  regionId              Int?          
+  region                Region?               @relation(fields: [regionId], references: [id])
+
+  sports                PlayerProfileSports[]
+
+  userId                Int                   @unique
+  user                  User                  @relation(fields: [userId], references: [id],onDelete: Cascade)
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-model PlayerProfileSports {
-  playerProfile   PlayerProfile @relation(fields: [playerProfileId], references: [id])
-  playerProfileId Int
-  sport           Sport         @relation(fields: [sportId], references: [id])
-  sportId         Int
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @default(now()) @updatedAt
+model PlayerProfileSports{
+  playerProfile       PlayerProfile     @relation(fields: [playerProfileId], references: [id])
+  playerProfileId     Int
+  sport               Sport @relation(fields: [sportId], references: [id])
+  sportId             Int
 
   @@id([playerProfileId, sportId])
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-model TrainerProfile {
-  id        Int                    @id @default(autoincrement())
-  level     Level                  @default(beginner)
-  sports    TrainerProfileSports[]
-  userId    Int                    @unique
-  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime               @default(now())
-  updatedAt DateTime               @default(now()) @updatedAt
+model TrainerProfile{
+  id                  Int         @id @default(autoincrement())
+
+  level             Level       @default(beginner)
+
+
+  sports                TrainerProfileSports[]
+
+  userId              Int         @unique
+  user                User        @relation(fields: [userId], references: [id],onDelete: Cascade)
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-model TrainerProfileSports {
-  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id])
-  trainerProfileId Int
-  sport            Sport          @relation(fields: [sportId], references: [id])
-  sportId          Int
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @default(now()) @updatedAt
+model TrainerProfileSports{
+  trainerProfile       TrainerProfile     @relation(fields: [trainerProfileId], references: [id])
+  trainerProfileId     Int
+
+  sport               Sport @relation(fields: [sportId], references: [id])
+  sportId             Int
 
   @@id([trainerProfileId, sportId])
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
 model Child {
-  id              Int           @id @default(autoincrement())
-  firstName       String
-  lastName        String
-  profileImage    String?
-  password        String?
-  email           String        @unique
-  mobileNumber    String        @unique
-  gender          Gender?
-  birthday        DateTime
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @default(now()) @updatedAt
-  isPhoneVerified Boolean       @default(false)
-  childProfile    ChildProfile?
-  userId          Int
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                  Int                    @id @default(autoincrement())
+  firstName           String
+  lastName            String
+  profileImage        String?
+  password            String?
+  email               String                 @unique
+  mobileNumber        String                 @unique
+  gender              Gender?
+  birthday            DateTime
+  createdAt           DateTime               @default(now())
+  updatedAt           DateTime               @updatedAt
+  isPhoneVerified     Boolean                @default(false)
+
+  childProfile       ChildProfile?
+
+  userId              Int
+  user                User                   @relation(fields: [userId], references: [id],onDelete: Cascade)
 }
 
-model ChildProfile {
-  id        Int                  @id @default(autoincrement())
-  level     Level?
-  regionId  Int?
-  region    Region?              @relation(fields: [regionId], references: [id])
-  sports    ChildProfileSports[]
-  childId   Int                  @unique
-  child     Child                @relation(fields: [childId], references: [id], onDelete: Cascade)
-  createdAt DateTime             @default(now())
-  updatedAt DateTime             @default(now()) @updatedAt
+model ChildProfile{
+  id                    Int                   @id @default(autoincrement())
+
+  level                 Level?
+
+  regionId              Int?          
+  region                Region?               @relation(fields: [regionId], references: [id])
+
+  sports                ChildProfileSports[]
+
+  childId                Int                   @unique
+  child                  Child                  @relation(fields: [childId], references: [id],onDelete: Cascade)
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-model ChildProfileSports {
-  childProfile   ChildProfile @relation(fields: [childProfileId], references: [id])
-  childProfileId Int
-  sport          Sport        @relation(fields: [sportId], references: [id])
-  sportId        Int
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @default(now()) @updatedAt
+model ChildProfileSports{
+  childProfile       ChildProfile     @relation(fields: [childProfileId], references: [id])
+  childProfileId     Int
+  sport               Sport @relation(fields: [sportId], references: [id])
+  sportId             Int
 
   @@id([childProfileId, sportId])
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-model Field {
-  id                Int                     @id @default(autoincrement())
-  name              String
-  description       String?
-  cost              Int?
-  slotDuration      Int?
-  address           String?
-  longitude         Decimal?
-  latitude          Decimal?
-  profileImage      String?
-  acceptanceStatus  AcceptanceStatus        @default(pending)
-  availableWeekDays Json?
-  availableDayHours Json?
-  rates             Rate[]
-  addedByUserId     Int?
-  addedByUser       User?                   @relation(fields: [addedByUserId], references: [id], onDelete: Cascade)
-  sport             Sport?                  @relation(fields: [sportId], references: [id])
-  sportId           Int?
-  region            Region?                 @relation(fields: [regionId], references: [id])
-  regionId          Int?
-  users             FieldsBookedHours[]
-  notAvailableDays  FieldNotAvailableDays[]
-  createdAt         DateTime                @default(now())
-  updatedAt         DateTime                @default(now()) @updatedAt
+model Field{
+  id                  Int                    @id @default(autoincrement())
+  name                String
+  description         String?
+  cost                Int?
+
+  slotDuration        Int?
+  address             String?
+  longitude           Decimal?
+  latitude            Decimal?
+  profileImage        String?
+  acceptanceStatus    AcceptanceStatus        @default(pending)
+  availableWeekDays   Json?
+
+  availableDayHours   Json?      
+  rates                 Rate[]
+
+  addedByUserId       Int?
+  addedByUser         User?                @relation(fields: [addedByUserId], references: [id],onDelete: Cascade)
+  
+  sport               Sport? @relation(fields: [sportId], references: [id])
+  sportId             Int?
+
+  region               Region? @relation(fields: [regionId], references: [id])
+  regionId             Int?
+
+  users               FieldsBookedHours[]
+  notAvailableDays    FieldNotAvailableDays[]
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-model Rate {
-  id             Int           @id @default(autoincrement())
-  ratingNumber   Int?
-  feedback       String?
-  rateableType   RateableType
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId         Int
-  field          Field?        @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-  fieldId        Int?
-  doctorClinic   DoctorClinic? @relation(fields: [doctorClinicId], references: [id], onDelete: Cascade)
-  doctorClinicId Int?
+
+model Rate{
+  id                    Int                 @id @default(autoincrement())
+
+  ratingNumber          Int?
+
+  feedback              String?
+
+  rateableType          RateableType
+
+  user                  User @relation(fields: [userId], references: [id],onDelete: Cascade)
+  userId                Int  
+  
+  field                 Field? @relation(fields: [fieldId], references: [id],onDelete: Cascade)
+  fieldId               Int?  
+
+  doctorClinic          DoctorClinic? @relation(fields: [doctorClinicId], references: [id], onDelete: Cascade)
+  doctorClinicId        Int?  
 }
 
-model DoctorClinic {
-  id                           Int                            @id @default(autoincrement())
-  name                         String
-  description                  String?
-  cost                         Int?
-  slotDuration                 Int?
-  address                      String?
-  longitude                    Decimal?
-  latitude                     Decimal?
-  profileImage                 String?
-  acceptanceStatus             AcceptanceStatus               @default(pending)
-  availableWeekDays            Json?
-  availableDayHours            Json?
-  rates                        Rate[]
-  addedByUserId                Int?
-  addedByUser                  User?                          @relation(fields: [addedByUserId], references: [id], onDelete: Cascade)
-  region                       Region?                        @relation(fields: [regionId], references: [id])
-  regionId                     Int?
-  doctorClinicSpecialization   DoctorClinicSpecialization?    @relation(fields: [doctorClinicSpecializationId], references: [id])
-  doctorClinicSpecializationId Int?
-  users                        DoctorClinicsBookedHours[]
-  notAvailableDays             DoctorClinicNotAvailableDays[]
-  createdAt                    DateTime                       @default(now())
-  updatedAt                    DateTime                       @default(now()) @updatedAt
+model DoctorClinic{
+  id                  Int                    @id @default(autoincrement())
+  name                String
+  description         String?
+  cost                Int?
+  slotDuration        Int?
+  address             String?
+  longitude           Decimal?
+  latitude            Decimal?
+  profileImage        String?
+  acceptanceStatus    AcceptanceStatus        @default(pending)
+  availableWeekDays   Json?
+
+  availableDayHours   Json?   
+
+  rates        Rate[]
+
+  addedByUserId             Int?
+  addedByUser               User?                @relation(fields: [addedByUserId], references: [id],onDelete: Cascade)
+
+  region                    Region? @relation(fields: [regionId], references: [id])
+  regionId                  Int?
+
+  doctorClinicSpecialization      DoctorClinicSpecialization? @relation(fields: [doctorClinicSpecializationId], references: [id])
+  doctorClinicSpecializationId    Int?
+
+  users               DoctorClinicsBookedHours[]
+  notAvailableDays    DoctorClinicNotAvailableDays[]
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-model DoctorClinicSpecialization {
-  id          Int            @id @default(autoincrement())
-  name        String
-  doctorClinc DoctorClinic[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @default(now()) @updatedAt
+model DoctorClinicSpecialization{
+  id                    Int                 @id @default(autoincrement())
+
+  name                String
+
+  doctorClinc           DoctorClinic[]
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-model FieldNotAvailableDays {
-  id        Int      @id @default(autoincrement())
-  dayDate   DateTime @db.Date //NOTE: look this- use this kind of mapping to map any field that is not supported directly in prisma
-  field     Field    @relation(fields: [fieldId], references: [id])
-  fieldId   Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+model FieldNotAvailableDays{
+  id                  Int                    @id @default(autoincrement())
+  dayDate             DateTime
+
+  field               Field @relation(fields: [fieldId], references: [id])
+  fieldId             Int
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-model DoctorClinicNotAvailableDays {
-  id             Int          @id @default(autoincrement())
-  dayDate        DateTime
-  doctorClinic   DoctorClinic @relation(fields: [doctorClinicId], references: [id])
-  doctorClinicId Int
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @default(now()) @updatedAt
+model DoctorClinicNotAvailableDays{
+  id                  Int                    @id @default(autoincrement())
+  dayDate             DateTime
+
+  doctorClinic        DoctorClinic @relation(fields: [doctorClinicId], references: [id])
+  doctorClinicId      Int
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-model FieldsBookedHours {
-  id           Int      @id @default(autoincrement())
-  fromDateTime DateTime
-  gmt          Int      @default(0)
-  user         User     @relation(fields: [userId], references: [id])
-  userId       Int
-  field        Field    @relation(fields: [fieldId], references: [id])
-  fieldId      Int
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
+model FieldsBookedHours{
+  id                  Int                    @id @default(autoincrement())
+
+  fromDateTime                DateTime
+  gmt                 Int                   @default(0)
+  
+  user               User @relation(fields: [userId], references: [id])
+  userId             Int
+
+  field               Field @relation(fields: [fieldId], references: [id])
+  fieldId             Int
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-model DoctorClinicsBookedHours {
-  id             Int          @id @default(autoincrement())
-  fromDateTime   DateTime
-  gmt            Int          @default(0)
-  user           User         @relation(fields: [userId], references: [id])
-  userId         Int
-  doctorClinic   DoctorClinic @relation(fields: [doctorClinicId], references: [id])
-  doctorClinicId Int
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @default(now()) @updatedAt
+model DoctorClinicsBookedHours{
+  id                  Int                    @id @default(autoincrement())
+
+  fromDateTime                DateTime
+  gmt                 Int                   @default(0)
+  
+  user                User @relation(fields: [userId], references: [id])
+  userId              Int
+
+  doctorClinic        DoctorClinic @relation(fields: [doctorClinicId], references: [id])
+  doctorClinicId      Int
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-model Sport {
-  id              Int                    @id @default(autoincrement())
-  name            String?
-  playerProfiles  PlayerProfileSports[]
-  trainerProfiles TrainerProfileSports[]
-  childProfiles   ChildProfileSports[]
-  fields          Field[]
-  createdAt       DateTime               @default(now())
-  updatedAt       DateTime               @default(now()) @updatedAt
+model Sport{
+  id                  Int                   @id @default(autoincrement())
+
+  name                String?
+
+  playerProfiles      PlayerProfileSports[]
+  trainerProfiles     TrainerProfileSports[]
+  childProfiles       ChildProfileSports[]
+  fields              Field[]
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
-model Region {
-  id            Int             @id @default(autoincrement())
-  name          String?
-  playerProfile PlayerProfile[]
-  childProfile  ChildProfile[]
-  fields        Field[]
-  doctorClinc   DoctorClinic[]
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @default(now()) @updatedAt
+model Region{
+  id                    Int                 @id @default(autoincrement())
+  
+  name                  String?
+
+  playerProfile         PlayerProfile[]
+  childProfile          ChildProfile[]
+  fields                Field[]
+  doctorClinc           DoctorClinic[]
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
 }
 
 // model Internationalization{
 //   id                    Int                 @id @default(autoincrement())
+
 //   tableName             String
 //   rowName               String
 //   en                    String
 //   ar                    String
+
 //   createdAt             DateTime              @default(now())
-//   updatedAt             DateTime              @default(now()) @updatedAt
+//   updatedAt             DateTime              @updatedAt
 // }

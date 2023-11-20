@@ -10,7 +10,6 @@ import { FieldUpdateDto } from './dtos/update.dto';
 import { FieldAcceptanceStatusDto } from './dtos/field-acceptance-status.dto';
 import { FieldReturnDto } from './dtos/return.dto';
 
-//NOTE: if you gonna use repository pattern use it everywhere, it doesn't make sense that part of the application is tightly coupled with service layers and the other part is not
 @Injectable()
 export class FieldModel {
   constructor(
@@ -21,55 +20,6 @@ export class FieldModel {
   ) {}
 
   async allFields(): Promise<FieldBookingDetailsDTO[]> {
-    //NOTE i found a better way to handle the duplication issue with multiple one to many joins, i'll paste an example from my project and hopefully it'll make sense and you can apply the same approach
-    /**
-     * 
-      SELECT
-        apartment.id AS id,
-        CASE WHEN room.id
-          THEN 
-            JSON_ARRAYAGG(
-              DISTINCT JSON_OBJECT(          
-                'id', room.id,
-                'area', room.area,
-                'type', room.type,
-                'count', ar.count,
-                'created_at', room.created_at,
-                'updated_at', room.updated_at
-                )
-            ) 
-          ELSE
-            null 
-          END AS rooms,
-        CASE WHEN amenity.id 
-          THEN 
-            JSON_ARRAYAGG(
-              DISTINCT JSON_OBJECT(
-                'id', amenity.id,
-                'name', amenity.name,
-                'type', amenity.type,
-                'picture', amenity.picture,
-                'count', aa.count,
-                'created_at', amenity.created_at,
-                'updated_at', amenity.updated_at
-              )
-            ) 
-          ELSE
-            null
-          END AS amenities
-        FROM apartment 
-
-        LEFT JOIN apartment_amenity AS aa ON aa.apartment_id = apartment.id 
-        LEFT JOIN amenity AS amenity ON amenity.id = aa.amenity_id
-
-        LEFT JOIN apartment_room AS ar ON ar.apartment_id = apartment.id 
-        LEFT JOIN room AS room ON room.id = ar.room_id
-
-        
-        GROUP BY apartment.id  
-     */
-    //NOTE: the thing is this query is much more efficient and is using the foreign keys which is indexed to find the rows in O(1) time and is elegant and more readable
-    //NOTE: the idea quickly is in case the row exist we aggregate the distinct object and you have to include the row id in object for this to work properly and if not exist we null it
     let allFields: FieldBookingDetailsDTO[] = await this.prisma.$queryRaw`
     WITH FieldDetailsWithBookedHours AS (
       SELECT
@@ -588,7 +538,7 @@ export class FieldModel {
       ELSE
       JSON_ARRAYAGG(JSON_OBJECT(
         'id',fnad.id,
-        'dayDate', fnad.dayDate --NOTE dayDate should be a date only, and you wouldn't need to do formatting on it to compare
+        'dayDate', fnad.dayDate
         ))
       END AS fieldNotAvailableDays
     FROM FieldDetailsWithBookedHours AS fdwbh
@@ -629,7 +579,6 @@ export class FieldModel {
     // console.log('dateTime after insert:', this.globalSerice.getLocalDateTime(new Date()));
   }
 
-  //NOTE: updated at you should never need to insert it manually
   async insertNotAvailableDays(
     fieldId: number,
     datesArray: string[],
