@@ -47,7 +47,6 @@ export class AuthGuard implements CanActivate {
     }
 
     request['authType'] = payload.authType;
-
     request['id'] = payload.id;
 
     if (

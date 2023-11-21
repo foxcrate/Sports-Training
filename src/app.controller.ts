@@ -20,13 +20,12 @@ export class AppController {
   }
 
   @Get('/testTime')
-  testTime(): string {
+  testTime() {
     // let dateFromRequest = '2023-10-30T07:00';
     // moment.locale('ar');
     // moment.tz.setDefault('America/New_York');
     // let localtz = moment.tz.guess();
     // let jun: moment.Moment = moment.tz(dateFromRequest, 'Europe/London');
-
     // let b = moment.tz(jun, 'America/Toronto');
     // return b.locale(I18nContext.current().lang).format('YYYY-MM-DDThh:mm:ss');
     // return jun.tz('Africa/Cairo').format('kk:mm');
@@ -34,24 +33,31 @@ export class AppController {
     // console.log({ jun });
     // let junFormated = jun.format();
     // console.log({ junFormated });
-
     // let junDate = new Date(jun.format());
-
     // console.log({ junDate });
-
     // return moment(moment().format()).format();
-
-    console.log(this.globalSerice.getLocalDateTime(new Date()));
-    console.log(moment(new Date()).format('YYYY-MM-DD HH:mm:ss'));
-    return 'alo';
-
-    let jun = moment(`2020-01-01T${this.globalSerice.timeTo24('10:00 PM')}`);
-
+    // console.log(this.globalSerice.getLocalDateTime(new Date()));
+    // console.log(moment(new Date()).format('YYYY-MM-DD HH:mm:ss'));
+    // const CairoDateTime = moment('2020-4-4 05:00').utc();
+    // const LondonDateTime = moment('2020-4-4 05:00').utc();
+    // let utcDateTime = DateTime.utc();
+    // let utcDateTimeFormated = utcDateTime.format('HH:mmZ');
+    // const dow = date.day();
+    // return date.tz('Europe/London').format('HH:mm');
+    // console.log(CairoDateTime.tz('Africa/Cairo'));
+    // console.log(LondonDateTime.tz('Europe/London'));
+    // let localDateTime = utcDateTime.tz('Africa/Cairo');
+    // console.log({ localDateTime });
+    // return 'allow';
+    // return utcDateTime.tz('Africa/Cairo').format();
+    // let jun = moment(`2020-01-01T${this.globalSerice.timeTo24('10:00 PM')}`);
     // return jun;
     // return this.appService.getHello();
+    // let x = 2;
+    // return this.globalSerice.getDayNameByNumber(x);
   }
 
-  @Post('/testFirebase')
+  @Get('/testFirebase')
   testFirebase() {}
 
   async testSQL2() {
@@ -138,7 +144,7 @@ export class AppController {
     return theField[0];
   }
 
-  @Post('/testSQL')
+  @Get('/testSQL')
   async testSQL3() {
     let name = 'el-hamdClinic meme';
     let DoctorClinic = await this.prisma.$queryRaw`

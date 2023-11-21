@@ -46,6 +46,12 @@ enum Level {
   advanced
 }
 
+enum AgeGroup {
+  kids
+  young_adults
+  adults
+}
+
 
 model User {
   id                  Int                   @id @default(autoincrement())
@@ -114,16 +120,26 @@ model PlayerProfileSports{
 model TrainerProfile{
   id                  Int         @id @default(autoincrement())
 
-  level             Level       @default(beginner)
+  level               Level?       @default(beginner)
+
+  ageGroup            AgeGroup?       @default(young_adults)
+
+  sessionDescription  String?
 
 
-  sports                TrainerProfileSports[]
+  sports              TrainerProfileSports[]
+
+  fields              TrainerProfileFields[]
 
   userId              Int         @unique
   user                User        @relation(fields: [userId], references: [id],onDelete: Cascade)
 
+  regionId            Int?          
+  region              Region?               @relation(fields: [regionId], references: [id])
+
+  schedules           Schedule[]
+
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
 }
 
 model TrainerProfileSports{
@@ -136,7 +152,81 @@ model TrainerProfileSports{
   @@id([trainerProfileId, sportId])
 
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
+}
+
+model TrainerProfileFields{
+  id                  Int                    @id @default(autoincrement())
+
+  trainerProfile       TrainerProfile     @relation(fields: [trainerProfileId], references: [id])
+  trainerProfileId     Int
+
+  field               Field @relation(fields: [fieldId], references: [id])
+  fieldId             Int
+
+  @@unique([trainerProfileId, fieldId])
+
+  createdAt           DateTime              @default(now())
+}
+
+model Schedule{
+  id                  Int                    @id @default(autoincrement())
+
+  slots               Slot[]
+
+  TrainerProfile      TrainerProfile                   @relation(fields: [trainerProfileId], references: [id])
+  trainerProfileId    Int
+
+  months             SchedulesMonths[]
+
+  createdAt           DateTime              @default(now())
+  
+}
+
+model Slot{
+  id                  Int                    @id @default(autoincrement())
+
+  name                String?
+
+  fromTime                String
+  toTime                  String
+
+  cost                Int?
+
+  weekDayNumber       Int?
+  weekDayName         String?
+
+  Schedule            Schedule                   @relation(fields: [scheduleId], references: [id])
+  scheduleId          Int
+
+  field                 Field? @relation(fields: [fieldId], references: [id],onDelete: Cascade)
+  fieldId               Int?  
+
+  createdAt           DateTime              @default(now())
+  
+}
+
+model Month{
+  id                  Int                    @id @default(autoincrement())
+  
+  monthNumber         Int?
+  monthName           String?
+
+  schedules             SchedulesMonths[]
+
+  createdAt           DateTime              @default(now())
+}
+
+model SchedulesMonths{
+  id                  Int      @id @default(autoincrement())
+
+  schedule             Schedule  @relation(fields: [scheduleId], references: [id])
+  scheduleId           Int
+
+  month              Month   @relation(fields: [monthId], references: [id])
+  monthId            Int
+  @@unique([scheduleId, monthId])
+
+  createdAt           DateTime              @default(now())
 }
 
 model Child {
@@ -189,7 +279,7 @@ model ChildProfileSports{
 }
 
 model Field{
-  id                  Int                    @id @default(autoincrement())
+  id                  Int                   @id @default(autoincrement())
   name                String
   description         String?
   cost                Int?
@@ -199,23 +289,26 @@ model Field{
   longitude           Decimal?
   latitude            Decimal?
   profileImage        String?
-  acceptanceStatus    AcceptanceStatus        @default(pending)
+  acceptanceStatus    AcceptanceStatus      @default(pending)
   availableWeekDays   Json?
 
   availableDayHours   Json?      
-  rates                 Rate[]
+  rates               Rate[]
+
+  slots               Slot[]
 
   addedByUserId       Int?
-  addedByUser         User?                @relation(fields: [addedByUserId], references: [id],onDelete: Cascade)
+  addedByUser         User?                 @relation(fields: [addedByUserId], references: [id],onDelete: Cascade)
   
-  sport               Sport? @relation(fields: [sportId], references: [id])
+  sport               Sport?                @relation(fields: [sportId], references: [id])
   sportId             Int?
 
-  region               Region? @relation(fields: [regionId], references: [id])
-  regionId             Int?
+  region              Region?               @relation(fields: [regionId], references: [id])
+  regionId            Int?
 
   users               FieldsBookedHours[]
   notAvailableDays    FieldNotAvailableDays[]
+  trainerProfiles     TrainerProfileFields[]
 
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
@@ -238,7 +331,9 @@ model Rate{
   fieldId               Int?  
 
   doctorClinic          DoctorClinic? @relation(fields: [doctorClinicId], references: [id], onDelete: Cascade)
-  doctorClinicId        Int?  
+  doctorClinicId        Int?
+
+  createdAt           DateTime              @default(now())
 }
 
 model DoctorClinic{
@@ -310,11 +405,11 @@ model DoctorClinicNotAvailableDays{
 model FieldsBookedHours{
   id                  Int                    @id @default(autoincrement())
 
-  fromDateTime                DateTime
+  fromDateTime        DateTime
   gmt                 Int                   @default(0)
   
-  user               User @relation(fields: [userId], references: [id])
-  userId             Int
+  user                User @relation(fields: [userId], references: [id])
+  userId              Int
 
   field               Field @relation(fields: [fieldId], references: [id])
   fieldId             Int
@@ -359,6 +454,7 @@ model Region{
   name                  String?
 
   playerProfile         PlayerProfile[]
+  trainerProfile        TrainerProfile[]
   childProfile          ChildProfile[]
   fields                Field[]
   doctorClinc           DoctorClinic[]

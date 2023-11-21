@@ -6,6 +6,7 @@ import {
   Request,
   UsePipes,
   Body,
+  Get,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
 import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
@@ -26,5 +27,13 @@ export class SportController {
   @UsePipes(new JoiValidation(AddSportValidation))
   async create1(@Body() reqBody, @Request() req: ExpressRequest) {
     return this.sportService.create(reqBody, req['id']);
+  }
+
+  @Get()
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async getAll() {
+    return this.sportService.getAll();
   }
 }
