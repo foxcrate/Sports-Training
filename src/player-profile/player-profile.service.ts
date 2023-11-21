@@ -227,7 +227,13 @@ export class PlayerProfileService {
       SELECT
       pp.id AS id,
       pp.level AS level,
-      r.name AS region,
+      CASE 
+      WHEN count(r.id) = 0 THEN null
+      ELSE
+      JSON_OBJECT(
+        'id',r.id,
+        'name', r.name)
+      END AS region,
       pp.userId AS userId,
       CASE 
       WHEN COUNT(s.id ) = 0 THEN null
@@ -265,6 +271,49 @@ export class PlayerProfileService {
     ON pps.userId = ud.id
     GROUP BY ud.id
     `;
+    return playerProfileWithSports[0];
+  }
+
+  private async getPlayerProfileWithSportsByUserId2(
+    userId,
+  ): Promise<ReturnPlayerProfileDto> {
+    //NOTE: you can do this without the COUNT(s.id) = 0, you can just say WHEN s.id IS NULL..., the idea is to limit the sql function call to a minimum espically aggregate functions
+    let playerProfileWithSports = await this.prisma.$queryRaw`
+    SELECT
+    pp.id AS id,
+    pp.level AS level,
+    pp.regionId AS regionId,
+    pp.userId AS userId,
+    u.id AS id,
+    u.email AS userEmail,
+    u.firstName AS userFirstName,
+    u.lastName AS userLastName,
+    JSON_ARRAYAGG(JSON_OBJECT(
+      'id',u.id,
+      'firstName',u.firstName,
+      'lastName', u.lastName,
+      'email',u.email,
+      'profileImage', u.profileImage,
+      'mobileNumber',u.mobileNumber,
+      'gender', u.gender,
+      'birthday',u.birthday
+      )
+    ) AS user,
+    CASE 
+    WHEN COUNT(s.id ) = 0 THEN null
+    ELSE
+    JSON_ARRAYAGG(JSON_OBJECT(
+      'id',s.id,
+      'name', s.name)) 
+    END AS sports
+    FROM PlayerProfile AS pp
+    LEFT JOIN User AS u ON u.id = pp.userId
+    LEFT JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
+    LEFT JOIN Sport AS s ON pps.sportId = s.id
+    WHERE pp.userId = ${userId}
+    GROUP BY pp.id
+    LIMIT 1
+    ;`;
     return playerProfileWithSports[0];
   }
 
