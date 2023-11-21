@@ -36,7 +36,6 @@ export class SportService {
     SELECT *
     FROM Sport
       `;
-
     return allSports;
   }
 

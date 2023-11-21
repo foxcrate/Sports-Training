@@ -8,15 +8,7 @@ import * as admin from 'firebase-admin';
 
 @Injectable()
 export class GlobalService {
-  weekDays = [
-    'Sunday',
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-  ];
+  weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Saturday'];
 
   constructor(
     private config: ConfigService,
@@ -125,6 +117,14 @@ export class GlobalService {
     return dayDate.format('dddd');
   }
 
+  getDayNameByNumber(number: number): string {
+    for (let index = 0; index < this.weekDays.length; index++) {
+      if (index == number) {
+        return this.weekDays[index];
+      }
+    }
+  }
+
   timeTo24(timeStr: string): string {
     let theTime = timeStr;
     if (timeStr.includes('AM') || timeStr.includes('PM')) {
@@ -157,6 +157,12 @@ export class GlobalService {
 
   getLocalDateTime(dateTime: Date): string {
     return moment(dateTime).format('YYYY-MM-DD HH:mm:ss');
+  }
+
+  getZoneTime24(timezone, timeString: string): string {
+    let date = moment().format('YYYY-MM-DD');
+
+    return moment(`${date}T${timeString}`).tz(timezone).format('HH:mm');
   }
 
   getDate(dateTime: moment.Moment): string {
