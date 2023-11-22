@@ -47,9 +47,33 @@ export class TrainerProfileModel {
   async getOneDetailed(userId: number): Promise<ReturnTrainerProfileDetailsDto> {
     let trainerProfileDetails: ReturnTrainerProfileDetailsDto = await this.prisma
       .$queryRaw`
+    WITH userDetails AS (
+      SELECT id,firstName,lastName,email,profileImage,mobileNumber,gender,birthday
+      FROM User
+      WHERE id = ${userId}
+    ),
+    trainerProfileFields AS (
+      SELECT
+      tp.id AS trainerProfileId,
+      CASE 
+      WHEN COUNT(f.id ) = 0 THEN null
+      ELSE
+      JSON_ARRAYAGG(JSON_OBJECT(
+        'id',f.id,
+        'name', f.name)) 
+      END AS fields
+      FROM TrainerProfile AS tp
+      LEFT JOIN TrainerProfileFields AS tpf ON tp.id = tpf.trainerProfileId
+      LEFT JOIN Field AS f ON tpf.fieldId = f.id
+      WHERE userId = ${userId} 
+      GROUP BY tp.id
+    ),
+    trainerProfileWithSports AS (
     SELECT
-    tp.id AS id,
+    tp.id AS trainerProfileId,
     tp.level AS level,
+    tp.ageGroup AS ageGroup,
+    tp.sessionDescription AS sessionDescription,
     tp.regionId AS regionId,
     tp.userId AS userId,
     CASE 
@@ -65,6 +89,37 @@ export class TrainerProfileModel {
     WHERE tp.userId = ${userId}
     GROUP BY tp.id
     LIMIT 1
+    )
+    SELECT
+    tpws.trainerProfileId AS id,
+    tpws.level AS level,
+    tpws.ageGroup AS ageGroup,
+    tpws.sessionDescription AS sessionDescription,
+    CASE 
+      WHEN count(r.id) = 0 THEN null
+      ELSE
+      JSON_OBJECT(
+        'id',r.id,
+        'name', r.name)
+    END AS region,
+    JSON_OBJECT(
+      'id',ud.id,
+      'firstName',ud.firstName,
+      'lastName', ud.lastName,
+      'email',ud.email,
+      'profileImage', ud.profileImage,
+      'mobileNudmber',ud.mobileNumber,
+      'gender', ud.gender,
+      'birthday',ud.birthday
+      ) AS user,
+    tpws.sports AS sports,
+    tpf.fields AS fields
+    FROM
+    trainerProfileWithSports AS tpws
+    LEFT JOIN trainerProfileFields AS tpf ON tpws.trainerProfileId = tpf.trainerProfileId
+    LEFT JOIN userDetails AS ud ON tpws.userId = ud.id
+    LEFT JOIN Region AS r ON tpws.regionId = r.id
+    GROUP BY tpws.trainerProfileId
     ;`;
     return trainerProfileDetails[0];
   }
@@ -129,9 +184,9 @@ export class TrainerProfileModel {
     await this.prisma.$queryRaw`
       UPDATE TrainerProfile
       SET
-      level = ${createData.level}
-      ageGroup = ${createData.ageGroup}
-      sessionDescription = ${createData.sessionDescription}
+      level = ${createData.level},
+      ageGroup = ${createData.ageGroup},
+      sessionDescription = ${createData.sessionDescription},
       regionId = ${createData.regionId}
       WHERE
       userId = ${userId};
@@ -143,12 +198,18 @@ export class TrainerProfileModel {
     if (createData.sports && createData.sports.length > 0) {
       await this.createProfileSports(createData.sports, theTrainerProfile.id);
     } else if (createData.sports && createData.sports.length == 0) {
-      await this.deletePastPlayerSports(playerProfile.id);
+      await this.deletePastTrainerSports(theTrainerProfile.id);
     }
 
-    let updatedPlayerProfile = await this.getPlayerProfileWithSportsByUserId(userId);
+    if (createData.fields && createData.fields.length > 0) {
+      await this.createProfileFields(createData.fields, theTrainerProfile.id);
+    } else if (createData.fields && createData.fields.length == 0) {
+      await this.deletePastTrainerFields(theTrainerProfile.id);
+    }
 
-    return updatedPlayerProfile;
+    let updatedTrainerProfile = await this.getOneDetailed(userId);
+
+    return updatedTrainerProfile;
   }
 
   async findRepeated(userId): Promise<Boolean> {
@@ -201,7 +262,7 @@ export class TrainerProfileModel {
     }
 
     //delete past PlayerProfileSports
-    await this.deletePastTrainerSports(newTrainerProfileId);
+    await this.deletePastTrainerFields(newTrainerProfileId);
 
     await this.prisma.trainerProfileFields.createMany({ data: profilesAndFields });
   }
@@ -236,10 +297,18 @@ export class TrainerProfileModel {
     return true;
   }
 
-  private async deletePastTrainerSports(trainerProfileId: number) {
+  async deletePastTrainerFields(trainerProfileId: number) {
     await this.prisma.$queryRaw`
       DELETE
       FROM TrainerProfileFields
+      WHERE trainerProfileId = ${trainerProfileId}
+    `;
+  }
+
+  async deletePastTrainerSports(trainerProfileId: number) {
+    await this.prisma.$queryRaw`
+      DELETE
+      FROM TrainerProfileSports
       WHERE trainerProfileId = ${trainerProfileId}
     `;
   }

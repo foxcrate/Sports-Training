@@ -49,49 +49,36 @@ export class TrainerProfileService {
       );
     }
 
-    //update
-    await this.prisma.$queryRaw`
-      UPDATE PlayerProfile
-      SET
-      regionId = ${createData.regionId},
-      updatedAt = ${this.globalService.getLocalDateTime(new Date())}
-      WHERE
-      userId = ${userId};
-    `;
-
-    // if (createData.sports && createData.sports.length > 0) {
-    //   await this.createProfileSports(createData.sports, playerProfile.id);
-    // } else if (createData.sports && createData.sports.length == 0) {
-    //   await this.deletePastPlayerSports(playerProfile.id);
-    // }
-
-    let updatedPlayerProfile = await this.getPlayerProfileWithSportsByUserId(userId);
+    let updatedPlayerProfile = await this.trainerProfileModel.update(createData, userId);
 
     return updatedPlayerProfile;
   }
 
   async delete(userId): Promise<ReturnTrainerProfileDto> {
     //get deleted playerProfile
-    let deletedPlayerProfile = await this.getByUserId(userId);
+    let deletedTrainerProfile = await this.trainerProfileModel.getByUserId(userId);
 
-    if (!deletedPlayerProfile) {
+    if (!deletedTrainerProfile) {
       throw new NotFoundException(
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
       );
     }
 
     //delete playerProfileSports
-    await this.deletePastPlayerSports(deletedPlayerProfile.id);
+    await this.trainerProfileModel.deletePastTrainerSports(deletedTrainerProfile.id);
+    await this.trainerProfileModel.deletePastTrainerFields(deletedTrainerProfile.id);
+
+    //delete schedule sessions
 
     //delete
     await this.prisma.$queryRaw`
       DELETE FROM
-      PlayerProfile
+      TrainerProfile
       WHERE
       userId = ${userId};
     `;
 
-    return deletedPlayerProfile;
+    return deletedTrainerProfile;
   }
 
   private async createProfileSports(sportsIds, newPlayerProfileId) {
