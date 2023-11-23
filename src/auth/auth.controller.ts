@@ -29,6 +29,7 @@ import { CreatePasswordDto } from './dtos/create-password.dto';
 import { SendOTPDto } from './dtos/send-otp.validation';
 import { CreatePasswordValidation } from './validations/create-password.validaiton';
 import { CompleteSignupValidation } from 'src/user/validations/complete-signup.validation';
+import { AccessTokenValidation } from './validations/access-token.validation';
 
 @Controller('auth')
 export class AuthController {
@@ -133,22 +134,23 @@ export class AuthController {
     // return googleDataSerializer(userData);
   }
 
-  @Get('facebook/redirect')
+  @Post('facebook/redirect')
   @Version('1')
-  async facebookRedirect(@Query() queryParams) {
-    // console.log('queryParams:', queryParams);
-
-    let accessToken = await this.authService.facebookGetAccessTokenFromCode(
-      queryParams.code,
-    );
-
-    // console.log('accessToken:', accessToken);
-
-    let userData = await this.authService.getFacebookUserData(accessToken);
-    // console.log('userData:', userData);
+  async facebookRedirect(@Body(new JoiValidation(AccessTokenValidation)) reqBody) {
+    let userData = await this.authService.getFacebookUserData(reqBody.accessToken);
 
     return FacebookReturnDataSerializer.serialize(userData);
-
-    // return facebookDataSerializer(userData);
   }
+
+  // @Get('facebook/redirect')
+  // @Version('1')
+  // async facebookRedirect(@Query() queryParams) {
+  //   let accessToken = await this.authService.facebookGetAccessTokenFromCode(
+  //     queryParams.code,
+  //   );
+
+  //   let userData = await this.authService.getFacebookUserData(accessToken);
+
+  //   return FacebookReturnDataSerializer.serialize(userData);
+  // }
 }
