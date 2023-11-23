@@ -139,6 +139,8 @@ export class AuthController {
   async facebookRedirect(@Body(new JoiValidation(AccessTokenValidation)) reqBody) {
     let userData = await this.authService.getFacebookUserData(reqBody.accessToken);
 
+    console.log({ userData });
+
     return FacebookReturnDataSerializer.serialize(userData);
   }
 

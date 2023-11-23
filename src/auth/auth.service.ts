@@ -291,22 +291,31 @@ export class AuthService {
   }
 
   async getFacebookUserData(access_token) {
-    const { data } = await axios({
-      url: 'https://graph.facebook.com/me',
-      method: 'get',
-      params: {
-        fields: [
-          'id',
-          'email',
-          'first_name',
-          'last_name',
-          'picture',
-          // 'birthday',
-        ].join(','),
-        access_token: access_token,
-      },
-    });
+    try {
+      const { data } = await axios({
+        url: 'https://graph.facebook.com/me',
+        method: 'get',
+        params: {
+          fields: [
+            'id',
+            'email',
+            'first_name',
+            'last_name',
+            'picture',
+            // 'birthday',
+          ].join(','),
+          access_token: access_token,
+        },
+      });
+      return data;
+    } catch (err) {
+      console.log('error in getFacebookUserData() --', err);
+
+      throw new BadRequestException(
+        this.i18n.t(`errors.FACEBOOK_TOKEN_ERROR`, { lang: I18nContext.current().lang }),
+      );
+    }
     // console.log(data); // { id, email, first_name, last_name }
-    return data;
+    // return data;
   }
 }

@@ -19,7 +19,7 @@ export class GeneralFilter implements ExceptionFilter {
         statusCode: 500,
         data: null,
         error: {
-          type: 'Server2 Error',
+          type: 'Server Error',
           message: 'That is a server error, will be fixed soon',
         },
       });

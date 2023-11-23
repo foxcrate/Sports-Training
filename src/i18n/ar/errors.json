@@ -2,6 +2,7 @@
   "REPEATED_EMAIL": "الإيميل مسجل مسبقا",
   "REPEATED_MOBILE_NUMBER": "رقم الموبيل مسجل مسبقا",
   "WRONG_CREDENTIALS": "معلومات الحساب غير صحيحة",
+  "FACEBOOK_TOKEN_ERROR": "توكين الفيوبوك خاطئ",
   "NO_BEARER_TOKEN": "Authorization Bearer token should be provided",
   "JWT_ERROR": "Invalid bearer token",
   "UNAUTHORIZED": "أنت لا تملك الصلاحيات الكافية",
