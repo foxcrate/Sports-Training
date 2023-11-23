@@ -11,22 +11,40 @@ const prisma = new PrismaClient();
 async function seed() {
   for (const userData of usersSeeds) {
     userData.password = await hashPassword(userData.password);
-    await prisma.user.create({ data: userData });
+    await prisma.user.create({
+      data: {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        mobileNumber: userData.mobileNumber,
+        password: userData.password,
+      },
+    });
   }
   console.log(' -- users inserted');
 
   for (const sportData of sportsSeeds) {
-    await prisma.sport.create({ data: sportData });
+    await prisma.sport.create({
+      data: {
+        name: sportData.name,
+      },
+    });
   }
   console.log(' -- sports inserted');
 
   for (const regionData of regionsSeeds) {
-    await prisma.region.create({ data: regionData });
+    await prisma.region.create({
+      data: {
+        name: regionData.name,
+      },
+    });
   }
   console.log(' -- regions inserted');
 
   // for (const monthData of monthsSeeds) {
-  //   await prisma.month.create({ data: monthData });
+  //   await prisma.month.create({ data: {
+  //     monthNumber: monthData.monthNumber,
+  //     monthName: monthData.monthName,
+  // } });
   // }
   // console.log(' -- months inserted');
 
