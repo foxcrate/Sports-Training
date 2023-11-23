@@ -134,7 +134,7 @@ export class AuthController {
     // return googleDataSerializer(userData);
   }
 
-  @Post('facebook/redirect')
+  @Post('facebook-data')
   @Version('1')
   async facebookRedirect(@Body(new JoiValidation(AccessTokenValidation)) reqBody) {
     let userData = await this.authService.getFacebookUserData(reqBody.accessToken);
