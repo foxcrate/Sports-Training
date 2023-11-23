@@ -171,7 +171,6 @@ export class UserService {
       ${userId},
       ${this.globalService.getLocalDateTime(new Date())})`;
 
-    // let newChild = this.getLastCreatedChild();
     let newChild = this.getChildByMobileNumber(reqBody.mobileNumber);
 
     return newChild;
