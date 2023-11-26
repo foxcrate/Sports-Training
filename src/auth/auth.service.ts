@@ -251,20 +251,26 @@ export class AuthService {
         code,
       },
     });
-    // console.log(data); // { access_token, expires_in, token_type, refresh_token }
     return data.access_token;
   }
 
   async getGoogleUserData(access_token) {
-    const { data } = await axios({
-      url: 'https://www.googleapis.com/oauth2/v2/userinfo',
-      method: 'get',
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
-    });
-    // console.log(data); // { id, email, given_name, family_name }
-    return data;
+    try {
+      const { data } = await axios({
+        url: 'https://www.googleapis.com/oauth2/v2/userinfo',
+        method: 'get',
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      });
+      return data;
+    } catch (err) {
+      console.log('error in getGoogleUserData() --', err);
+
+      throw new BadRequestException(
+        this.i18n.t(`errors.GOOGLE_TOKEN_ERROR`, { lang: I18nContext.current().lang }),
+      );
+    }
   }
 
   async facebookGetAccessTokenFromCode(code) {
@@ -279,7 +285,6 @@ export class AuthService {
         code,
       },
     });
-    // console.log(data); // { access_token, token_type, expires_in }
     return data.access_token;
   }
 
@@ -308,7 +313,5 @@ export class AuthService {
         this.i18n.t(`errors.FACEBOOK_TOKEN_ERROR`, { lang: I18nContext.current().lang }),
       );
     }
-    // console.log(data); // { id, email, first_name, last_name }
-    // return data;
   }
 }

@@ -115,31 +115,30 @@ export class AuthController {
     return 'User Arrived';
   }
 
-  @Get('google/redirect')
+  @Post('google-data')
   @Version('1')
-  async googleRedirect(@Query() queryParams) {
-    // console.log('queryParams:', queryParams);
-
-    let returnGoogleData = await this.authService.googleGetAccessTokenFromCode(
-      queryParams.code,
-    );
-    // console.log('accessToken:', accessToken);
-
-    let userData = await this.authService.getGoogleUserData(returnGoogleData);
-
-    // console.log('userData:', userData);
+  async googleRedirect(@Body(new JoiValidation(AccessTokenValidation)) reqBody) {
+    let userData = await this.authService.getGoogleUserData(reqBody.accessToken);
 
     return GoogleReturnDataSerializer.serialize(userData);
-
-    // return googleDataSerializer(userData);
   }
+
+  // @Get('google/redirect')
+  // @Version('1')
+  // async googleRedirect(@Query() queryParams) {
+  //   let returnGoogleData = await this.authService.googleGetAccessTokenFromCode(
+  //     queryParams.code,
+  //   );
+
+  //   let userData = await this.authService.getGoogleUserData(returnGoogleData);
+
+  //   return GoogleReturnDataSerializer.serialize(userData);
+  // }
 
   @Post('facebook-data')
   @Version('1')
   async facebookRedirect(@Body(new JoiValidation(AccessTokenValidation)) reqBody) {
     let userData = await this.authService.getFacebookUserData(reqBody.accessToken);
-
-    console.log({ userData });
 
     return FacebookReturnDataSerializer.serialize(userData);
   }
