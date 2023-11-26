@@ -78,7 +78,7 @@ export class PlayerProfileService {
     //Chick existed email or phone number
     let repeatedPlayerProfile = await this.playerProfileModel.getOneByUserId(userId);
 
-    if (repeatedPlayerProfile[0]) {
+    if (repeatedPlayerProfile) {
       throw new BadRequestException(
         this.i18n.t(`errors.PROFILE_EXISTED`, { lang: I18nContext.current().lang }),
       );
