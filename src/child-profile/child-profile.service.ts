@@ -93,7 +93,7 @@ export class ChildProfileService {
   private async findRepeated(childId): Promise<Boolean> {
     let repeatedChildProfile = await this.childProfileModel.getOneByChildId(childId);
 
-    if (repeatedChildProfile[0]) {
+    if (repeatedChildProfile) {
       throw new BadRequestException(
         this.i18n.t(`errors.PROFILE_EXISTED`, { lang: I18nContext.current().lang }),
       );
@@ -107,6 +107,7 @@ export class ChildProfileService {
   ): Promise<ReturnChildProfileDto> {
     //get childProfile
     let childProfile = await this.childProfileModel.getOneById(childProfileId);
+
     if (!childProfile) {
       throw new NotFoundException(
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),

@@ -126,9 +126,10 @@ export class ChildProfileModel {
     LEFT JOIN Child AS c ON cp.childId = c.id
     LEFT JOIN ChildProfileSports AS cps ON cp.id = cps.childProfileId
     LEFT JOIN Sport AS s ON cps.sportId = s.id
-    WHERE cp.childId = ${childId}
+    WHERE cp.id = ${childId}
     GROUP BY cp.id
     ;`;
+
     return childProfileWithSports[0];
   }
 

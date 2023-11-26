@@ -63,10 +63,10 @@ export class PlayerProfileModel {
       'birthday',ud.birthday
       )
     ) AS user
-    FROM UserDetails AS ud
-    LEFT JOIN playerProfileWithSports AS pps
+     FROM playerProfileWithSports AS pps
+     LEFT JOIN UserDetails AS ud
     ON pps.userId = ud.id
-    GROUP BY ud.id
+    GROUP BY pps.id
     `;
     return playerProfileWithSports[0];
   }
