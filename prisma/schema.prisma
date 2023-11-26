@@ -52,17 +52,18 @@ model User {
   firstName           String?
   lastName            String?
   profileImage        String?
-  fcm_token           String?
   password            String?
   email               String?                @unique
   mobileNumber        String                @unique
   gender              Gender?
   birthday            DateTime?
-  userType            UserType?
   isPhoneVerified     Boolean               @default(false)
-  provider            Provider              @default(native)
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
+  
+  userType            UserType?
+  fcm_token           String?
+  provider            Provider              @default(native)
   
   playerProfile       PlayerProfile?
   trainerProfile      TrainerProfile?
@@ -149,9 +150,9 @@ model Child {
   mobileNumber        String                 @unique
   gender              Gender?
   birthday            DateTime
+  isPhoneVerified     Boolean                @default(false)
   createdAt           DateTime               @default(now())
   updatedAt           DateTime               @updatedAt
-  isPhoneVerified     Boolean                @default(false)
 
   childProfile       ChildProfile?
 
