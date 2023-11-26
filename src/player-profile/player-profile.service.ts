@@ -122,38 +122,6 @@ export class PlayerProfileService {
     return true;
   }
 
-  private async getLastCreated(): Promise<ReturnPlayerProfileDto> {
-    let playerProfileWithSports = await this.prisma.$queryRaw`
-    SELECT
-      pp.id AS id,
-      pp.level AS level,
-      pp.regionId AS regionId,
-      pp.userId AS userId,
-      JSON_ARRAYAGG(json_object(
-        'id',s.id,
-        'name', s.name))
-    AS sports
-    FROM PlayerProfile AS pp
-    JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
-    JOIN Sport AS s ON pps.sportId = s.id
-    GROUP BY pp.id
-    ORDER BY createdAt DESC
-    LIMIT 1
-    `;
-
-    // return playerProfile[0];
-    return playerProfileWithSports[0];
-  }
-
-  private async getLastUpdated(): Promise<ReturnPlayerProfileDto> {
-    let playerProfile = await this.prisma.$queryRaw`
-    SELECT *
-    FROM PlayerProfile
-    ORDER BY updatedAt DESC
-    LIMIT 1`;
-    return playerProfile[0];
-  }
-
   private async getByUserId(userId): Promise<ReturnPlayerProfileDto> {
     let playerProfile = await this.prisma.$queryRaw`
       SELECT *
