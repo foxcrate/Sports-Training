@@ -93,10 +93,4 @@ export class UserController {
   async deleteChild(@Param() params, @Request() req: ExpressRequest) {
     return this.userService.deleteChild(params.childId, req['id']);
   }
-
-  @Get('test')
-  @Version('1')
-  async test(@I18n() i18n: I18nContext) {
-    return this.userService.test();
-  }
 }

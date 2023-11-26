@@ -102,7 +102,7 @@ export class AuthController {
   @Get('refresh-token')
   @Version('1')
   refreshToken(@Body('refreshToken') refreshToken, @Request() req: ExpressRequest) {
-    return this.authService.refreshToken(refreshToken, req['authType']);
+    return this.authService.refreshToken(refreshToken);
   }
 
   @Get('user/testJWT')

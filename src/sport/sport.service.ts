@@ -1,9 +1,10 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateSportDto } from './dtos/create.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { GlobalService } from 'src/global/global.service';
 import { ReturnSportDto } from './dtos/return.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SportService {
@@ -57,5 +58,20 @@ export class SportService {
       }
     }
     return false;
+  }
+
+  async checkSportsExistance(sportsArray): Promise<Boolean> {
+    let foundedSports: Array<ReturnSportDto> = await this.prisma.$queryRaw`
+    SELECT *
+    FROM Sport
+    WHERE id IN (${Prisma.join(sportsArray)});
+    `;
+
+    if (foundedSports.length < sportsArray.length) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.NOT_EXISTED_SPORT`, { lang: I18nContext.current().lang }),
+      );
+    }
+    return true;
   }
 }

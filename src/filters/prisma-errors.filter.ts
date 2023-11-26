@@ -32,7 +32,7 @@ export class PrismaErrorsFilter implements ExceptionFilter {
       statusCode: 500,
       data: null,
       error: {
-        type: 'SERVER_ERROR',
+        type: 'Server Error',
         message: 'Internal server error',
       },
     });

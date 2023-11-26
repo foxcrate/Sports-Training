@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { SigninUserDto } from 'src/user/dtos/signin.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -21,11 +16,13 @@ import { IAuthToken } from './interfaces/auth-token.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { VerifyOtpDto } from './dtos/verify-otp.dto';
 import { CompleteSignupUserDto } from 'src/user/dtos/complete-signup.dto';
+import { UserModel } from 'src/user/user.model';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
+    private userModel: UserModel,
     private prisma: PrismaService,
     private childService: ChildService,
     private jwtService: JwtService,
@@ -51,20 +48,11 @@ export class AuthService {
 
   async createPassword(userId: string, password: string) {
     let hashedPassword = await this.globalService.hashPassword(password);
-    let theUser = await this.userService.getUserById(userId);
+    let theUser = await this.userModel.getUserById(userId);
 
-    //update
-    await this.prisma.$queryRaw`
-        UPDATE User
-        SET
-        password = ${hashedPassword},
-        updatedAt = ${new Date()}
-        WHERE
-        id = ${theUser.id};
-      `;
+    await this.userModel.updatePassword(userId, hashedPassword);
 
-    // let updatedUser = this.getLastUpdated();
-    let updatedUser = await this.userService.getUserById(theUser.id);
+    let updatedUser = await this.userModel.getUserById(theUser.id);
 
     return updatedUser;
   }
@@ -172,7 +160,7 @@ export class AuthService {
     return this.generateNormalAndRefreshJWTToken(AvailableRoles.Child, child.id);
   }
 
-  refreshToken(refreshToken: string, authType: string) {
+  refreshToken(refreshToken: string) {
     let payload: IAuthToken = this.verifyRefreshToken(refreshToken);
     if (payload.id === null) {
       throw new UnauthorizedException(
@@ -186,13 +174,13 @@ export class AuthService {
     }
 
     let tokenPayload: IAuthToken = {
-      authType: authType,
+      authType: payload.authType,
       id: payload.id,
       tokenType: 'normal',
     };
 
     let refreshTokenPayload: IAuthToken = {
-      authType: authType,
+      authType: payload.authType,
       id: payload.id,
       tokenType: 'refresh',
     };

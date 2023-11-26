@@ -1,22 +1,19 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { PlayerProfileCreateDto } from 'src/player-profile/dtos/create.dto';
-import { Prisma } from '@prisma/client';
 import { ReturnPlayerProfileDto } from './dtos/return.dto';
-import { ReturnSportDto } from 'src/sport/dtos/return.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { GlobalService } from 'src/global/global.service';
+import { PlayerProfileModel } from './player-profile.model';
 
 @Injectable()
 export class PlayerProfileService {
   constructor(
-    private prisma: PrismaService,
-    private globalService: GlobalService,
+    private playerProfileModel: PlayerProfileModel,
     private readonly i18n: I18nService,
   ) {}
 
   async getOne(userId): Promise<ReturnPlayerProfileDto> {
-    let playerProfileWithSports = await this.getPlayerProfileWithSportsByUserId(userId);
+    let playerProfileWithSports =
+      await this.playerProfileModel.getOneDetailedByUserId(userId);
     if (!playerProfileWithSports) {
       throw new NotFoundException(
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
@@ -33,29 +30,9 @@ export class PlayerProfileService {
     //throw an error if repeated
     await this.findRepeated(userId);
 
-    //insert
-    await this.prisma.$queryRaw`
-    INSERT INTO PlayerProfile
-      (level,
-      regionId,
-      userId,
-      updatedAt)
-      VALUES
-    (${createData.level},
-    ${createData.regionId},
-    ${userId},
-    ${this.globalService.getLocalDateTime(new Date())})`;
+    await this.playerProfileModel.create(createData, userId);
 
-    let newPlayerProfile = await this.getByUserId(userId);
-
-    if (createData.sports && createData.sports.length > 0) {
-      await this.createProfileSports(createData.sports, newPlayerProfile.id);
-    }
-
-    let newPlayerProfileWithSports =
-      await this.getPlayerProfileWithSportsByUserId(userId);
-
-    return newPlayerProfileWithSports;
+    return await this.playerProfileModel.getOneDetailedByUserId(userId);
   }
 
   async update(
@@ -63,41 +40,21 @@ export class PlayerProfileService {
     userId,
   ): Promise<ReturnPlayerProfileDto> {
     //check profile existence
-    let playerProfile = await this.getPlayerProfileWithSportsByUserId(userId);
+    let playerProfile = await this.playerProfileModel.getOneDetailedByUserId(userId);
     if (!playerProfile) {
       throw new NotFoundException(
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
       );
     }
 
-    //update
-    await this.prisma.$queryRaw`
-      UPDATE PlayerProfile
-      SET
-      level = ${createData.level},
-      regionId = ${createData.regionId},
-      updatedAt = ${this.globalService.getLocalDateTime(new Date())}
-      WHERE
-      userId = ${userId};
-    `;
+    await this.playerProfileModel.updateById(createData, playerProfile.id);
 
-    //if sportsIds array is provided, insert them in PlayerProfileSports
-    //else do nothing
-
-    if (createData.sports && createData.sports.length > 0) {
-      await this.createProfileSports(createData.sports, playerProfile.id);
-    } else if (createData.sports && createData.sports.length == 0) {
-      await this.deletePastPlayerSports(playerProfile.id);
-    }
-
-    let updatedPlayerProfile = await this.getPlayerProfileWithSportsByUserId(userId);
-
-    return updatedPlayerProfile;
+    return await this.playerProfileModel.getOneDetailedByUserId(userId);
   }
 
   async delete(userId): Promise<ReturnPlayerProfileDto> {
     //get deleted playerProfile
-    let deletedPlayerProfile = await this.getByUserId(userId);
+    let deletedPlayerProfile = await this.playerProfileModel.getOneByUserId(userId);
 
     if (!deletedPlayerProfile) {
       throw new NotFoundException(
@@ -106,27 +63,16 @@ export class PlayerProfileService {
     }
 
     //delete playerProfileSports
-    await this.deletePastPlayerSports(deletedPlayerProfile.id);
+    await this.playerProfileModel.deletePlayerSports(deletedPlayerProfile.id);
 
-    //delete
-    await this.prisma.$queryRaw`
-      DELETE FROM
-      PlayerProfile
-      WHERE
-      userId = ${userId};
-    `;
+    await this.playerProfileModel.deleteByUserId(userId);
 
     return deletedPlayerProfile;
   }
 
   private async findRepeated(userId): Promise<Boolean> {
     //Chick existed email or phone number
-    let repeatedPlayerProfile = await this.prisma.$queryRaw`
-    SELECT *
-    FROM PlayerProfile
-    WHERE userId = ${userId}
-    LIMIT 1
-    `;
+    let repeatedPlayerProfile = await this.playerProfileModel.getOneByUserId(userId);
 
     if (repeatedPlayerProfile[0]) {
       throw new BadRequestException(
@@ -134,194 +80,5 @@ export class PlayerProfileService {
       );
     }
     return false;
-  }
-
-  private async createProfileSports(sportsIds, newPlayerProfileId) {
-    //throw an error if a sport id is not exist
-    await this.checkSportsExistance(sportsIds);
-
-    //array of objects to insert to db
-    const profilesAndSports = [];
-    for (let i = 0; i < sportsIds.length; i++) {
-      profilesAndSports.push({
-        playerProfileId: newPlayerProfileId,
-        sportId: sportsIds[i],
-        // updatedAt: this.globalService.getLocalDateTime(new Date()),
-        updatedAt: new Date(),
-      });
-    }
-
-    //delete past PlayerProfileSports
-    await this.deletePastPlayerSports(newPlayerProfileId);
-
-    await this.prisma.playerProfileSports.createMany({ data: profilesAndSports });
-  }
-
-  private async checkSportsExistance(sportsArray): Promise<Boolean> {
-    let foundedSports: Array<ReturnSportDto> = await this.prisma.$queryRaw`
-    SELECT *
-    FROM Sport
-    WHERE id IN (${Prisma.join(sportsArray)});
-    `;
-
-    if (foundedSports.length < sportsArray.length) {
-      throw new NotFoundException(
-        this.i18n.t(`errors.NOT_EXISTED_SPORT`, { lang: I18nContext.current().lang }),
-      );
-    }
-    return true;
-  }
-
-  private async getLastCreated(): Promise<ReturnPlayerProfileDto> {
-    let playerProfileWithSports = await this.prisma.$queryRaw`
-    SELECT
-      pp.id AS id,
-      pp.level AS level,
-      pp.regionId AS regionId,
-      pp.userId AS userId,
-      JSON_ARRAYAGG(json_object(
-        'id',s.id,
-        'name', s.name))
-    AS sports
-    FROM PlayerProfile AS pp
-    JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
-    JOIN Sport AS s ON pps.sportId = s.id
-    GROUP BY pp.id
-    ORDER BY createdAt DESC
-    LIMIT 1
-    `;
-
-    // return playerProfile[0];
-    return playerProfileWithSports[0];
-  }
-
-  private async getLastUpdated(): Promise<ReturnPlayerProfileDto> {
-    let playerProfile = await this.prisma.$queryRaw`
-    SELECT *
-    FROM PlayerProfile
-    ORDER BY updatedAt DESC
-    LIMIT 1`;
-    return playerProfile[0];
-  }
-
-  private async getByUserId(userId): Promise<ReturnPlayerProfileDto> {
-    let playerProfile = await this.prisma.$queryRaw`
-      SELECT *
-      FROM PlayerProfile
-      WHERE userId = ${userId}
-      LIMIT 1
-    `;
-    return playerProfile[0];
-  }
-
-  private async getPlayerProfileWithSportsByUserId(
-    userId,
-  ): Promise<ReturnPlayerProfileDto> {
-    let playerProfileWithSports = await this.prisma.$queryRaw`
-    WITH UserDetails AS (
-      SELECT id,firstName,lastName,email,profileImage,mobileNumber,gender,birthday
-      FROM User
-      WHERE id = ${userId}
-    ),
-    playerProfileWithSports AS (
-      SELECT
-      pp.id AS id,
-      pp.level AS level,
-      CASE 
-      WHEN count(r.id) = 0 THEN null
-      ELSE
-      JSON_OBJECT(
-        'id',r.id,
-        'name', r.name)
-      END AS region,
-      pp.userId AS userId,
-      CASE 
-      WHEN COUNT(s.id ) = 0 THEN null
-      ELSE
-      JSON_ARRAYAGG(JSON_OBJECT(
-        'id',s.id,
-        'name', s.name)) 
-      END AS sports
-      FROM PlayerProfile AS pp
-      LEFT JOIN Region AS r ON pp.regionId = r.id
-      LEFT JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
-      LEFT JOIN Sport AS s ON pps.sportId = s.id
-      WHERE pp.userId = ${userId}
-      GROUP BY pp.id
-      LIMIT 1
-    )
-    SELECT
-      pps.id,
-      pps.level,
-      pps.region AS region,
-      pps.sports AS sports,
-      JSON_ARRAYAGG(JSON_OBJECT(
-      'id',ud.id,
-      'firstName',ud.firstName,
-      'lastName', ud.lastName,
-      'email',ud.email,
-      'profileImage', ud.profileImage,
-      'mobileNudmber',ud.mobileNumber,
-      'gender', ud.gender,
-      'birthday',ud.birthday
-      )
-    ) AS user
-    FROM UserDetails AS ud
-    LEFT JOIN playerProfileWithSports AS pps
-    ON pps.userId = ud.id
-    GROUP BY ud.id
-    `;
-    return playerProfileWithSports[0];
-  }
-
-  private async getPlayerProfileWithSportsByUserId2(
-    userId,
-  ): Promise<ReturnPlayerProfileDto> {
-    //NOTE: you can do this without the COUNT(s.id) = 0, you can just say WHEN s.id IS NULL..., the idea is to limit the sql function call to a minimum espically aggregate functions
-    let playerProfileWithSports = await this.prisma.$queryRaw`
-    SELECT
-    pp.id AS id,
-    pp.level AS level,
-    pp.regionId AS regionId,
-    pp.userId AS userId,
-    u.id AS id,
-    u.email AS userEmail,
-    u.firstName AS userFirstName,
-    u.lastName AS userLastName,
-    JSON_ARRAYAGG(JSON_OBJECT(
-      'id',u.id,
-      'firstName',u.firstName,
-      'lastName', u.lastName,
-      'email',u.email,
-      'profileImage', u.profileImage,
-      'mobileNumber',u.mobileNumber,
-      'gender', u.gender,
-      'birthday',u.birthday
-      )
-    ) AS user,
-    CASE 
-    WHEN COUNT(s.id ) = 0 THEN null
-    ELSE
-    JSON_ARRAYAGG(JSON_OBJECT(
-      'id',s.id,
-      'name', s.name)) 
-    END AS sports
-    FROM PlayerProfile AS pp
-    LEFT JOIN User AS u ON u.id = pp.userId
-    LEFT JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
-    LEFT JOIN Sport AS s ON pps.sportId = s.id
-    WHERE pp.userId = ${userId}
-    GROUP BY pp.id
-    LIMIT 1
-    ;`;
-    return playerProfileWithSports[0];
-  }
-
-  private async deletePastPlayerSports(playerProfileId: number) {
-    await this.prisma.$queryRaw`
-      DELETE
-      FROM PlayerProfileSports
-      WHERE playerProfileId = ${playerProfileId}
-    `;
   }
 }
