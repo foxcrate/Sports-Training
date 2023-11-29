@@ -13,8 +13,6 @@
   - You are about to drop the column `updatedAt` on the `PlayerProfileSports` table. All the data in the column will be lost.
   - You are about to drop the column `updatedAt` on the `Region` table. All the data in the column will be lost.
   - You are about to drop the column `updatedAt` on the `Sport` table. All the data in the column will be lost.
-  - You are about to drop the column `updatedAt` on the `TrainerProfile` table. All the data in the column will be lost.
-  - You are about to drop the column `updatedAt` on the `TrainerProfileSports` table. All the data in the column will be lost.
   - You are about to drop the column `updatedAt` on the `User` table. All the data in the column will be lost.
 
 */
@@ -53,12 +51,6 @@ ALTER TABLE `Region` DROP COLUMN `updatedAt`;
 
 -- AlterTable
 ALTER TABLE `Sport` DROP COLUMN `updatedAt`;
-
--- AlterTable
-ALTER TABLE `TrainerProfile` DROP COLUMN `updatedAt`;
-
--- AlterTable
-ALTER TABLE `TrainerProfileSports` DROP COLUMN `updatedAt`;
 
 -- AlterTable
 ALTER TABLE `User` DROP COLUMN `updatedAt`;
