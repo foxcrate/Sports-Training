@@ -20,11 +20,9 @@ export class DoctorClinicSpecializationService {
 
     await this.prisma.$queryRaw`
       INSERT INTO DoctorClinicSpecialization
-        (name,
-        updatedAt)
+        (name)
         VALUES
-      (${createData.name},
-      ${this.globalService.getLocalDateTime(new Date())})`;
+      (${createData.name})`;
 
     let newRegion = await this.prisma.$queryRaw`
       SELECT *

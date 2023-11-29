@@ -19,8 +19,8 @@ export class GeneralFilter implements ExceptionFilter {
         statusCode: 500,
         data: null,
         error: {
-          type: 'Server2 Error',
-          message: 'That is a server error, will be fixed soon',
+          type: 'Server Error',
+          message: 'Internal server error',
         },
       });
       return;

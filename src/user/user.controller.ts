@@ -21,9 +21,8 @@ import { RoleGuard } from 'src/guards/role.guard';
 import { GetOneChildValidation } from './validations/get-one-child.validation';
 import { UpdateChildValidation } from './validations/update-child.validation';
 import { UpdateUserValidation } from './validations/update-user.validation';
-import { ChildIdValidation } from 'src/child-profile/validations/child-id.validation';
-import { I18n, I18nContext } from 'nestjs-i18n';
 import { AvailableRoles } from 'src/auth/dtos/availableRoles.dto';
+import { ChildIdValidation } from 'src/child-profile/validations/child-id.validation';
 
 @Controller('user')
 export class UserController {
@@ -96,7 +95,9 @@ export class UserController {
 
   @Get('test')
   @Version('1')
-  async test(@I18n() i18n: I18nContext) {
-    return this.userService.test();
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async test(@Request() req: ExpressRequest) {
+    return await this.userService.getChilds(req['id']);
   }
 }

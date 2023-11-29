@@ -12,14 +12,12 @@ import { AuthService } from './auth.service';
 import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { SignupValidation } from 'src/user/validations/signup.validation';
 import { UserSigninValidation } from 'src/user/validations/signin.validaiton';
-import { ChildSigninValidation } from 'src/child/validaitons/signin.validation';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
 import { SigninUserDto } from 'src/user/dtos/signin.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Request as ExpressRequest } from 'express';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/guards/role.guard';
-import { SigninChildDto } from 'src/child/dtos/signin.dto';
 import { GoogleReturnDataSerializer } from './serializers/google-return-data.serializer';
 import { FacebookReturnDataSerializer } from './serializers/facebook-return-data.serializer';
 import { SendOTPValidation } from './validations/send-otp.validation';
@@ -29,6 +27,7 @@ import { CreatePasswordDto } from './dtos/create-password.dto';
 import { SendOTPDto } from './dtos/send-otp.validation';
 import { CreatePasswordValidation } from './validations/create-password.validaiton';
 import { CompleteSignupValidation } from 'src/user/validations/complete-signup.validation';
+import { AccessTokenValidation } from './validations/access-token.validation';
 
 @Controller('auth')
 export class AuthController {
@@ -36,14 +35,12 @@ export class AuthController {
 
   @Post('user/signup')
   @Version('1')
-  // @UsePipes(new JoiValidation(SignupValidation))
   async signup1(@Body(new JoiValidation(SignupValidation)) signupData: SignupUserDto) {
     return this.authService.userSignup(signupData);
   }
 
   @Post('user/send-signup-otp')
   @Version('1')
-  // @UsePipes(new JoiValidation(SignupValidation))
   async sendOtp1(@Body(new JoiValidation(SendOTPValidation)) sendOTPData: SendOTPDto) {
     return this.authService.sendOtp(sendOTPData.mobileNumber);
   }
@@ -52,7 +49,6 @@ export class AuthController {
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  // @UsePipes(new JoiValidation(SignupValidation))
   async createPassword1(
     @Body(new JoiValidation(CreatePasswordValidation))
     createPasswordData: CreatePasswordDto,
@@ -63,7 +59,6 @@ export class AuthController {
 
   @Post('user/verify-signup-otp')
   @Version('1')
-  // @UsePipes(new JoiValidation(SignupValidation))
   async verifyOtp1(
     @Body(new JoiValidation(VerifyOtpValidation)) verifyOtpData: VerifyOtpDto,
   ) {
@@ -83,7 +78,6 @@ export class AuthController {
 
   @Post('/user/signin')
   @Version('1')
-  // @UsePipes(new JoiValidation(UserSigninValidation))
   async userSignin1(
     @Body(new JoiValidation(UserSigninValidation)) signinData: SigninUserDto,
   ) {
@@ -92,9 +86,8 @@ export class AuthController {
 
   @Post('/child/signin')
   @Version('1')
-  // @UsePipes(new JoiValidation(ChildSigninValidation))
   async childSignin(
-    @Body(new JoiValidation(ChildSigninValidation)) signinData: SigninChildDto,
+    @Body(new JoiValidation(UserSigninValidation)) signinData: SigninUserDto,
   ) {
     return this.authService.childSignin(signinData);
   }
@@ -102,53 +95,55 @@ export class AuthController {
   @Get('refresh-token')
   @Version('1')
   refreshToken(@Body('refreshToken') refreshToken, @Request() req: ExpressRequest) {
-    return this.authService.refreshToken(refreshToken, req['authType']);
+    return this.authService.refreshToken(refreshToken);
   }
+
+  @Post('google-data')
+  @Version('1')
+  async googleRedirect(@Body(new JoiValidation(AccessTokenValidation)) reqBody) {
+    let userData = await this.authService.getGoogleUserData(reqBody.accessToken);
+
+    return GoogleReturnDataSerializer.serialize(userData);
+  }
+
+  // @Get('google/redirect')
+  // @Version('1')
+  // async googleRedirect(@Query() queryParams) {
+  //   let returnGoogleData = await this.authService.googleGetAccessTokenFromCode(
+  //     queryParams.code,
+  //   );
+
+  //   let userData = await this.authService.getGoogleUserData(returnGoogleData);
+
+  //   return GoogleReturnDataSerializer.serialize(userData);
+  // }
+
+  @Post('facebook-data')
+  @Version('1')
+  async facebookRedirect(@Body(new JoiValidation(AccessTokenValidation)) reqBody) {
+    let userData = await this.authService.getFacebookUserData(reqBody.accessToken);
+
+    return FacebookReturnDataSerializer.serialize(userData);
+  }
+
+  // @Get('facebook/redirect')
+  // @Version('1')
+  // async facebookRedirect(@Query() queryParams) {
+  //   let accessToken = await this.authService.facebookGetAccessTokenFromCode(
+  //     queryParams.code,
+  //   );
+
+  //   let userData = await this.authService.getFacebookUserData(accessToken);
+
+  //   return FacebookReturnDataSerializer.serialize(userData);
+  // }
 
   @Get('user/testJWT')
   @Version('1')
-  @Roles('child')
+  @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   test() {
     console.log('-- test jwt route --');
     return 'User Arrived';
-  }
-
-  @Get('google/redirect')
-  @Version('1')
-  async googleRedirect(@Query() queryParams) {
-    // console.log('queryParams:', queryParams);
-
-    let returnGoogleData = await this.authService.googleGetAccessTokenFromCode(
-      queryParams.code,
-    );
-    // console.log('accessToken:', accessToken);
-
-    let userData = await this.authService.getGoogleUserData(returnGoogleData);
-
-    // console.log('userData:', userData);
-
-    return GoogleReturnDataSerializer.serialize(userData);
-
-    // return googleDataSerializer(userData);
-  }
-
-  @Get('facebook/redirect')
-  @Version('1')
-  async facebookRedirect(@Query() queryParams) {
-    // console.log('queryParams:', queryParams);
-
-    let accessToken = await this.authService.facebookGetAccessTokenFromCode(
-      queryParams.code,
-    );
-
-    // console.log('accessToken:', accessToken);
-
-    let userData = await this.authService.getFacebookUserData(accessToken);
-    // console.log('userData:', userData);
-
-    return FacebookReturnDataSerializer.serialize(userData);
-
-    // return facebookDataSerializer(userData);
   }
 }

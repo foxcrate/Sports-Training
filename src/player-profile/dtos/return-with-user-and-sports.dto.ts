@@ -4,11 +4,11 @@ enum Level {
   Advanced = 'advanced',
 }
 
-export class ReturnChildProfileWithChildAndSportsDto {
+export class ReturnPlayerProfileWithUserAndSportsDto {
   id: number;
   level: Level;
   regionId: number;
-  childId: number;
+  userId: number;
   firstName: string;
   lastName: string;
   sports: [];

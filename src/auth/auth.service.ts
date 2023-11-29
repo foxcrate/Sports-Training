@@ -9,8 +9,6 @@ import { SigninUserDto } from 'src/user/dtos/signin.dto';
 import { JwtService } from '@nestjs/jwt';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
 import { ConfigService } from '@nestjs/config';
-import { SigninChildDto } from 'src/child/dtos/signin.dto';
-import { ChildService } from 'src/child/child.service';
 
 import axios from 'axios';
 import { AuthTokensDTO } from './dtos/auth-tokens.dto';
@@ -21,13 +19,14 @@ import { IAuthToken } from './interfaces/auth-token.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { VerifyOtpDto } from './dtos/verify-otp.dto';
 import { CompleteSignupUserDto } from 'src/user/dtos/complete-signup.dto';
+import { UserModel } from 'src/user/user.model';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
+    private userModel: UserModel,
     private prisma: PrismaService,
-    private childService: ChildService,
     private jwtService: JwtService,
     private config: ConfigService,
     private globalService: GlobalService,
@@ -49,27 +48,18 @@ export class AuthService {
     }
   }
 
-  async createPassword(userId: string, password: string) {
+  async createPassword(userId: number, password: string) {
     let hashedPassword = await this.globalService.hashPassword(password);
-    let theUser = await this.userService.getUserById(userId);
+    let theUser = await this.userModel.getById(userId);
 
-    //update
-    await this.prisma.$queryRaw`
-        UPDATE User
-        SET
-        password = ${hashedPassword},
-        updatedAt = ${new Date()}
-        WHERE
-        id = ${theUser.id};
-      `;
+    await this.userModel.updatePassword(userId, hashedPassword);
 
-    // let updatedUser = this.getLastUpdated();
-    let updatedUser = await this.userService.getUserById(theUser.id);
+    let updatedUser = await this.userModel.getById(theUser.id);
 
     return updatedUser;
   }
 
-  async userCompleteSignup(userId: string, completeSignupData: CompleteSignupUserDto) {
+  async userCompleteSignup(userId: number, completeSignupData: CompleteSignupUserDto) {
     let repeatedAccount = await this.userService.findRepeatedEmail(
       completeSignupData.email,
     );
@@ -104,14 +94,12 @@ export class AuthService {
     INSERT INTO OTP
     (
       mobileNumber,
-      OTP,
-      updatedAt
+      OTP
     )
     VALUES
     (
       ${mobileNumber},
-      ${otp},
-      ${new Date()}
+      ${otp}
     )`;
   }
 
@@ -155,8 +143,8 @@ export class AuthService {
     return this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id);
   }
 
-  async childSignin(signinData: SigninChildDto): Promise<AuthTokensDTO> {
-    const child = await this.childService.findByMobile(signinData.mobileNumber);
+  async childSignin(signinData: SigninUserDto): Promise<AuthTokensDTO> {
+    const child = await this.userService.findByMobile(signinData.mobileNumber);
 
     const validPassword = await this.globalService.verifyPassword(
       signinData.password,
@@ -172,7 +160,7 @@ export class AuthService {
     return this.generateNormalAndRefreshJWTToken(AvailableRoles.Child, child.id);
   }
 
-  refreshToken(refreshToken: string, authType: string) {
+  refreshToken(refreshToken: string) {
     let payload: IAuthToken = this.verifyRefreshToken(refreshToken);
     if (payload.id === null) {
       throw new UnauthorizedException(
@@ -186,13 +174,13 @@ export class AuthService {
     }
 
     let tokenPayload: IAuthToken = {
-      authType: authType,
+      authType: payload.authType,
       id: payload.id,
       tokenType: 'normal',
     };
 
     let refreshTokenPayload: IAuthToken = {
-      authType: authType,
+      authType: payload.authType,
       id: payload.id,
       tokenType: 'refresh',
     };
@@ -258,20 +246,26 @@ export class AuthService {
         code,
       },
     });
-    // console.log(data); // { access_token, expires_in, token_type, refresh_token }
     return data.access_token;
   }
 
   async getGoogleUserData(access_token) {
-    const { data } = await axios({
-      url: 'https://www.googleapis.com/oauth2/v2/userinfo',
-      method: 'get',
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
-    });
-    // console.log(data); // { id, email, given_name, family_name }
-    return data;
+    try {
+      const { data } = await axios({
+        url: 'https://www.googleapis.com/oauth2/v2/userinfo',
+        method: 'get',
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
+      });
+      return data;
+    } catch (err) {
+      console.log('error in getGoogleUserData() --', err);
+
+      throw new BadRequestException(
+        this.i18n.t(`errors.GOOGLE_TOKEN_ERROR`, { lang: I18nContext.current().lang }),
+      );
+    }
   }
 
   async facebookGetAccessTokenFromCode(code) {
@@ -286,27 +280,33 @@ export class AuthService {
         code,
       },
     });
-    // console.log(data); // { access_token, token_type, expires_in }
     return data.access_token;
   }
 
   async getFacebookUserData(access_token) {
-    const { data } = await axios({
-      url: 'https://graph.facebook.com/me',
-      method: 'get',
-      params: {
-        fields: [
-          'id',
-          'email',
-          'first_name',
-          'last_name',
-          'picture',
-          // 'birthday',
-        ].join(','),
-        access_token: access_token,
-      },
-    });
-    // console.log(data); // { id, email, first_name, last_name }
-    return data;
+    try {
+      const { data } = await axios({
+        url: 'https://graph.facebook.com/me',
+        method: 'get',
+        params: {
+          fields: [
+            'id',
+            'email',
+            'first_name',
+            'last_name',
+            'picture',
+            // 'birthday',
+          ].join(','),
+          access_token: access_token,
+        },
+      });
+      return data;
+    } catch (err) {
+      console.log('error in getFacebookUserData() --', err);
+
+      throw new BadRequestException(
+        this.i18n.t(`errors.FACEBOOK_TOKEN_ERROR`, { lang: I18nContext.current().lang }),
+      );
+    }
   }
 }

@@ -23,7 +23,7 @@ import { UpdateDoctorClinicValidation } from './validations/update.validation';
 import { DoctorClinicIdValidation } from './validations/doctor-clinic-id.validaiton';
 import { DoctorClinicAcceptanceStatusDto } from './dtos/doctor-clinic-acceptance-status.dto';
 
-@Controller('admin/doctorClinic')
+@Controller('admin/doctor-clinic')
 export class AdminDoctorClinicController {
   constructor(private adminDoctorClinicService: AdminDoctorClinicService) {}
 
@@ -66,7 +66,7 @@ export class AdminDoctorClinicController {
     return this.adminDoctorClinicService.delete(params.id);
   }
 
-  @Get('/pending-doctorClinics')
+  @Get('/pending-doctor-clinics')
   @Version('1')
   @Roles('admin')
   @UseGuards(AuthGuard, RoleGuard)
@@ -74,7 +74,7 @@ export class AdminDoctorClinicController {
     return await this.adminDoctorClinicService.getPendingDoctorClinics();
   }
 
-  @Put('/:id/accept-doctorClinic-request')
+  @Put('/:id/accept-doctor-clinic-request')
   @Version('1')
   @Roles('admin')
   @UseGuards(AuthGuard, RoleGuard)
@@ -87,7 +87,7 @@ export class AdminDoctorClinicController {
     );
   }
 
-  @Put('/:id/decline-doctorClinic-request')
+  @Put('/:id/decline-doctor-clinic-request')
   @Version('1')
   @Roles('admin')
   @UseGuards(AuthGuard, RoleGuard)

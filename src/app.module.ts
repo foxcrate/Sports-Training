@@ -9,12 +9,10 @@ import { GeneralFilter } from './filters/general.filter';
 import { APP_FILTER, APP_INTERCEPTOR, HttpAdapterHost } from '@nestjs/core';
 import { TransformInterceptor } from './interceptors/transform.interceptor';
 import { AuthModule } from './auth/auth.module';
-import { ChildModule } from './child/child.module';
 import { PrismaErrorsFilter } from './filters/prisma-errors.filter';
 import { PlayerProfileModule } from './player-profile/player-profile.module';
 import { RegionModule } from './region/region.module';
 import { SportModule } from './sport/sport.module';
-import { ChildProfileModule } from './child-profile/child-profile.module';
 import { GlobalModule } from './global/global.module';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 
@@ -25,6 +23,8 @@ import { DoctorClinicSpecializationModule } from './doctor-clinic-specialization
 import { ScheduleModule } from './schedule/schedule.module';
 import { TrainerProfileModule } from './trainer-profile/trainer-profile.module';
 import { TimezoneMiddleware } from './middlewares/timezone.middleware';
+import { ChildProfileModule } from './child-profile/child-profile.module';
+import { ChildModule } from './child/child.module';
 
 @Module({
   imports: [
@@ -49,17 +49,17 @@ import { TimezoneMiddleware } from './middlewares/timezone.middleware';
     PrismaModule,
     UserModule,
     AuthModule,
-    ChildModule,
     PlayerProfileModule,
     RegionModule,
     SportModule,
-    ChildProfileModule,
     GlobalModule,
     FieldModule,
     DoctorClinicModule,
     DoctorClinicSpecializationModule,
     ScheduleModule,
     TrainerProfileModule,
+    ChildProfileModule,
+    ChildModule,
   ],
   controllers: [AppController],
   providers: [
