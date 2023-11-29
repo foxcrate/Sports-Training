@@ -54,25 +54,40 @@ model User {
   profileImage        String?
   password            String?
   email               String?                @unique
-  mobileNumber        String                @unique
+  mobileNumber        String                  @unique
   gender              Gender?
   birthday            DateTime?
   isPhoneVerified     Boolean               @default(false)
+  isActivated         Boolean               @default(true)
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
   
-  userType            UserType?
+  userType            UserType?             @default(user)
   fcm_token           String?
   provider            Provider              @default(native)
   
   playerProfile       PlayerProfile?
   trainerProfile      TrainerProfile?
-  childs              Child[]
   fields              FieldsBookedHours[]
   doctorClinics       DoctorClinicsBookedHours[]
   addedFields         Field[]
   addedDoctorClinics  DoctorClinic[]
+  parentsChilds       ParentsChilds[] @relation("ParentsChilds")
+  childsParents       ParentsChilds[] @relation("ChildsParents")
   rates               Rate[]
+}
+
+model ParentsChilds{
+  id                  Int           @id @default(autoincrement())
+
+  parent              User          @relation("ParentsChilds",fields: [parentId], references: [id])
+  parentId            Int
+
+  child               User          @relation("ChildsParents",fields: [childId], references: [id])
+  childId             Int
+
+  @@unique([parentId,childId])
+
+  createdAt           DateTime      @default(now())
 }
 
 model OTP{
@@ -80,7 +95,6 @@ model OTP{
   mobileNumber          String
   otp                   String
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
 }
 
 model PlayerProfile{
@@ -97,7 +111,6 @@ model PlayerProfile{
   user                  User                  @relation(fields: [userId], references: [id],onDelete: Cascade)
 
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
 }
 
 model PlayerProfileSports{
@@ -109,7 +122,6 @@ model PlayerProfileSports{
   @@id([playerProfileId, sportId])
 
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
 }
 
 model TrainerProfile{
@@ -124,7 +136,6 @@ model TrainerProfile{
   user                User        @relation(fields: [userId], references: [id],onDelete: Cascade)
 
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
 }
 
 model TrainerProfileSports{
@@ -137,56 +148,6 @@ model TrainerProfileSports{
   @@id([trainerProfileId, sportId])
 
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-}
-
-model Child {
-  id                  Int                    @id @default(autoincrement())
-  firstName           String
-  lastName            String
-  profileImage        String?
-  password            String?
-  email               String                 @unique
-  mobileNumber        String                 @unique
-  gender              Gender?
-  birthday            DateTime
-  isPhoneVerified     Boolean                @default(false)
-  createdAt           DateTime               @default(now())
-  updatedAt           DateTime               @updatedAt
-
-  childProfile       ChildProfile?
-
-  userId              Int
-  user                User                   @relation(fields: [userId], references: [id],onDelete: Cascade)
-}
-
-model ChildProfile{
-  id                    Int                   @id @default(autoincrement())
-
-  level                 Level?
-
-  regionId              Int?          
-  region                Region?               @relation(fields: [regionId], references: [id])
-
-  sports                ChildProfileSports[]
-
-  childId                Int                   @unique
-  child                  Child                  @relation(fields: [childId], references: [id],onDelete: Cascade)
-
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
-}
-
-model ChildProfileSports{
-  childProfile       ChildProfile     @relation(fields: [childProfileId], references: [id])
-  childProfileId     Int
-  sport               Sport @relation(fields: [sportId], references: [id])
-  sportId             Int
-
-  @@id([childProfileId, sportId])
-
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
 }
 
 model Field{
@@ -219,7 +180,6 @@ model Field{
   notAvailableDays    FieldNotAvailableDays[]
 
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
 }
 
 
@@ -272,7 +232,6 @@ model DoctorClinic{
   notAvailableDays    DoctorClinicNotAvailableDays[]
 
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
 }
 
 model DoctorClinicSpecialization{
@@ -283,7 +242,6 @@ model DoctorClinicSpecialization{
   doctorClinc           DoctorClinic[]
 
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
 }
 
 model FieldNotAvailableDays{
@@ -294,7 +252,6 @@ model FieldNotAvailableDays{
   fieldId             Int
 
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
 }
 
 model DoctorClinicNotAvailableDays{
@@ -305,7 +262,6 @@ model DoctorClinicNotAvailableDays{
   doctorClinicId      Int
 
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
 }
 
 model FieldsBookedHours{
@@ -321,7 +277,6 @@ model FieldsBookedHours{
   fieldId             Int
 
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
 }
 
 model DoctorClinicsBookedHours{
@@ -337,7 +292,6 @@ model DoctorClinicsBookedHours{
   doctorClinicId      Int
 
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
 }
 
 model Sport{
@@ -347,11 +301,9 @@ model Sport{
 
   playerProfiles      PlayerProfileSports[]
   trainerProfiles     TrainerProfileSports[]
-  childProfiles       ChildProfileSports[]
   fields              Field[]
 
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
 }
 
 model Region{
@@ -360,12 +312,10 @@ model Region{
   name                  String?
 
   playerProfile         PlayerProfile[]
-  childProfile          ChildProfile[]
   fields                Field[]
   doctorClinc           DoctorClinic[]
 
   createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
 }
 
 // model Internationalization{
@@ -377,5 +327,4 @@ model Region{
 //   ar                    String
 
 //   createdAt             DateTime              @default(now())
-//   updatedAt             DateTime              @updatedAt
 // }

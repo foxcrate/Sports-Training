@@ -7,8 +7,8 @@ enum Level {
 export class ReturnPlayerProfileDto {
   id: number;
   level: Level;
-  userId: number;
   regionId: number;
-  createdAt: number;
+  userId: number;
   sports: [];
+  createdAt: number;
 }

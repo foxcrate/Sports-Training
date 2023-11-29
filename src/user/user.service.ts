@@ -6,103 +6,101 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
-import { ChildService } from 'src/child/child.service';
 import { ReturnUserDto } from './dtos/return.dto';
 import { NativeUserDto } from './dtos/native.dto';
-import { ReturnChildDto } from 'src/child/dtos/return.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { CompleteSignupUserDto } from './dtos/complete-signup.dto';
 import { UserModel } from './user.model';
-import { ChildProfileModel } from 'src/child-profile/child-profile.model';
+import { PlayerProfileModel } from 'src/player-profile/player-profile.model';
 
 @Injectable()
 export class UserService {
   constructor(
-    private childService: ChildService,
     private userModel: UserModel,
-    private childProfileModel: ChildProfileModel,
+    private playerProfileModel: PlayerProfileModel,
     private readonly i18n: I18nService,
   ) {}
 
   async create(signupData: SignupUserDto): Promise<ReturnUserDto> {
     await this.userModel.create(signupData);
 
-    let newUser = await this.userModel.getUserByMobileNumber(signupData.mobileNumber);
+    let newUser = await this.userModel.getByMobileNumber(signupData.mobileNumber);
 
     return newUser;
   }
 
   async createByMobile(mobileNumber: string): Promise<ReturnUserDto> {
     await this.userModel.createByMobile(mobileNumber);
-    let createdUser = await this.userModel.getUserByMobileNumber(mobileNumber);
+    let createdUser = await this.userModel.getByMobileNumber(mobileNumber);
     return createdUser;
   }
 
-  async completeSignup(userId: string, completeSignupUserDto: CompleteSignupUserDto) {
-    let theUser = await this.userModel.getUserById(userId);
+  async completeSignup(userId: number, completeSignupUserDto: CompleteSignupUserDto) {
+    let theUser = await this.userModel.getById(userId);
 
     //complete profile
     await this.userModel.updateById(userId, completeSignupUserDto);
 
-    return this.userModel.getUserById(theUser.id);
+    return this.userModel.getById(theUser.id);
   }
 
   async update(reqBody, userId) {
-    let user = await this.userModel.getUserById(userId);
+    let user = await this.userModel.getById(userId);
 
     //update
     await this.userModel.updateById(userId, reqBody);
 
-    return await this.userModel.getUserById(user.id);
+    return await this.userModel.getById(user.id);
   }
 
   async getOne(userId): Promise<ReturnUserDto> {
-    let user = await this.userModel.getUserById(userId);
+    let user = await this.userModel.getById(userId);
 
     return user;
   }
 
   async createChild(reqBody, userId) {
-    await this.childService.findRepeated(reqBody.email, reqBody.mobileNumber);
+    await this.findRepeated(reqBody.email, reqBody.mobileNumber);
 
-    await this.childService.createByUser(reqBody, userId);
+    await this.userModel.createChild(reqBody, userId);
 
-    let newChild = await this.childService.getByMobileNumber(reqBody.mobileNumber);
+    let newChild = await this.userModel.getByMobileNumber(reqBody.mobileNumber);
 
     return newChild;
   }
 
-  async getChilds(userId): Promise<ReturnChildDto[]> {
-    let userChilds = await this.userModel.getUserChilds(userId);
+  async getChilds(userId): Promise<ReturnUserDto[]> {
+    let userChilds = await this.userModel.getChilds(userId);
 
     return userChilds;
   }
 
-  async getChild(childId, userId): Promise<ReturnChildDto> {
-    let child = await this.authorizeResource(userId, childId);
+  async getChild(childId, userId): Promise<ReturnUserDto> {
+    let child = await this.authorizeChildResource(userId, childId);
 
     return child;
   }
 
   async updateChild(reqBody, childId, userId) {
-    let child = await this.authorizeResource(userId, childId);
+    let child = await this.authorizeChildResource(userId, childId);
 
-    await this.childService.updateById(child.id, reqBody);
+    await this.userModel.updateById(child.id, reqBody);
 
-    let updatedChild = await this.childService.getChildById(child.id);
+    let updatedChild = await this.userModel.getById(child.id);
 
     return updatedChild;
   }
 
-  async deleteChild(childId, userId): Promise<ReturnChildDto> {
-    let child = await this.authorizeResource(userId, childId);
-    await this.childProfileModel.deleteByChildId(childId);
-    await this.childService.deleteById(childId);
+  async deleteChild(childId, userId): Promise<ReturnUserDto> {
+    let child = await this.authorizeChildResource(userId, childId);
+    await this.playerProfileModel.deleteByUserId(childId);
+    await this.userModel.deleteChildRelations(childId);
+    await this.userModel.deleteById(childId);
     return child;
   }
 
   async findByMobile(mobileNumber: string): Promise<NativeUserDto> {
-    let foundedAccount = await this.userModel.getNativeUserByMobileNumber(mobileNumber);
+    let foundedAccount = await this.userModel.getNativeByMobileNumber(mobileNumber);
 
     if (!foundedAccount) {
       throw new UnauthorizedException(
@@ -121,7 +119,7 @@ export class UserService {
 
   async findRepeatedMobile(mobileNumber): Promise<Boolean> {
     //Chick existed  phone number
-    let repeatedMobile = await this.userModel.getUserByMobileNumber(mobileNumber);
+    let repeatedMobile = await this.userModel.getByMobileNumber(mobileNumber);
 
     if (repeatedMobile) {
       if (repeatedMobile.mobileNumber == mobileNumber) {
@@ -137,7 +135,7 @@ export class UserService {
 
   async findRepeatedEmail(email): Promise<Boolean> {
     //Chick existed email or phone number
-    let repeatedEmail = await this.userModel.getUserByEmail(email);
+    let repeatedEmail = await this.userModel.getByEmail(email);
 
     if (repeatedEmail) {
       if (repeatedEmail.email == email) {
@@ -151,12 +149,12 @@ export class UserService {
     return false;
   }
 
-  private async authorizeResource(
+  private async authorizeChildResource(
     userId: number,
     childId: number,
-  ): Promise<ReturnChildDto> {
+  ): Promise<ReturnUserDto> {
     //get childProfile
-    let child = await this.childService.getChildById(childId);
+    let child = await this.userModel.getById(childId);
     if (!child) {
       throw new NotFoundException(
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
@@ -164,7 +162,7 @@ export class UserService {
     }
 
     //get current user childs
-    let childs = await this.userModel.getUserChilds(userId);
+    let childs = await this.userModel.getChilds(userId);
     let childsIds = childs.map((child) => {
       return child.id;
     });

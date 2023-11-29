@@ -37,6 +37,7 @@ export class PlayerProfileController {
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(AddPlayerProfileValidation))
   async create1(@Body() reqBody, @Request() req: ExpressRequest) {
+    reqBody.userId = req['id'];
     return this.playerProfileService.create(reqBody, req['id']);
   }
 
@@ -46,6 +47,7 @@ export class PlayerProfileController {
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(AddPlayerProfileValidation))
   async update1(@Body() reqBody, @Request() req: ExpressRequest) {
+    reqBody.userId = req['id'];
     return this.playerProfileService.update(reqBody, req['id']);
   }
 

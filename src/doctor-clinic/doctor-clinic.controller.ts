@@ -19,7 +19,7 @@ import { DoctorClinicAvailableHoursValidation } from './validations/doctor-clini
 import { AddDoctorClinicValidation } from './validations/create.validation';
 import { DoctorClinicIdValidation } from './validations/doctor-clinic-id.validaiton';
 
-@Controller('doctorClinic')
+@Controller('doctor-clinic')
 export class DoctorClinicController {
   constructor(private doctorClinicService: DoctorClinicService) {}
 
@@ -31,7 +31,7 @@ export class DoctorClinicController {
     return this.doctorClinicService.getAll();
   }
 
-  @Get('/:id/doctorClinic-DayAvailableHours/:date')
+  @Get('/:id/day-available-hours/:date')
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)

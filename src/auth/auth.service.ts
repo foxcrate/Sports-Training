@@ -9,8 +9,6 @@ import { SigninUserDto } from 'src/user/dtos/signin.dto';
 import { JwtService } from '@nestjs/jwt';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
 import { ConfigService } from '@nestjs/config';
-import { SigninChildDto } from 'src/child/dtos/signin.dto';
-import { ChildService } from 'src/child/child.service';
 
 import axios from 'axios';
 import { AuthTokensDTO } from './dtos/auth-tokens.dto';
@@ -29,7 +27,6 @@ export class AuthService {
     private userService: UserService,
     private userModel: UserModel,
     private prisma: PrismaService,
-    private childService: ChildService,
     private jwtService: JwtService,
     private config: ConfigService,
     private globalService: GlobalService,
@@ -51,18 +48,18 @@ export class AuthService {
     }
   }
 
-  async createPassword(userId: string, password: string) {
+  async createPassword(userId: number, password: string) {
     let hashedPassword = await this.globalService.hashPassword(password);
-    let theUser = await this.userModel.getUserById(userId);
+    let theUser = await this.userModel.getById(userId);
 
     await this.userModel.updatePassword(userId, hashedPassword);
 
-    let updatedUser = await this.userModel.getUserById(theUser.id);
+    let updatedUser = await this.userModel.getById(theUser.id);
 
     return updatedUser;
   }
 
-  async userCompleteSignup(userId: string, completeSignupData: CompleteSignupUserDto) {
+  async userCompleteSignup(userId: number, completeSignupData: CompleteSignupUserDto) {
     let repeatedAccount = await this.userService.findRepeatedEmail(
       completeSignupData.email,
     );
@@ -97,14 +94,12 @@ export class AuthService {
     INSERT INTO OTP
     (
       mobileNumber,
-      OTP,
-      updatedAt
+      OTP
     )
     VALUES
     (
       ${mobileNumber},
-      ${otp},
-      ${new Date()}
+      ${otp}
     )`;
   }
 
@@ -148,8 +143,8 @@ export class AuthService {
     return this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id);
   }
 
-  async childSignin(signinData: SigninChildDto): Promise<AuthTokensDTO> {
-    const child = await this.childService.findByMobile(signinData.mobileNumber);
+  async childSignin(signinData: SigninUserDto): Promise<AuthTokensDTO> {
+    const child = await this.userService.findByMobile(signinData.mobileNumber);
 
     const validPassword = await this.globalService.verifyPassword(
       signinData.password,

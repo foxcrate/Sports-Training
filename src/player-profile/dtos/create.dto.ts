@@ -7,5 +7,6 @@ enum Level {
 export class PlayerProfileCreateDto {
   level: Level;
   regionId: Number;
+  userId: Number;
   sports: Number[];
 }
