@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { JwtModule } from '@nestjs/jwt';
@@ -20,6 +20,9 @@ import { join } from 'path';
 import { FieldModule } from './field/field.module';
 import { DoctorClinicModule } from './doctor-clinic/doctor-clinic.module';
 import { DoctorClinicSpecializationModule } from './doctor-clinic-specialization/doctor-clinic-specialization.module';
+import { ScheduleModule } from './schedule/schedule.module';
+import { TrainerProfileModule } from './trainer-profile/trainer-profile.module';
+import { TimezoneMiddleware } from './middlewares/timezone.middleware';
 import { ChildProfileModule } from './child-profile/child-profile.module';
 import { ChildModule } from './child/child.module';
 
@@ -53,6 +56,8 @@ import { ChildModule } from './child/child.module';
     FieldModule,
     DoctorClinicModule,
     DoctorClinicSpecializationModule,
+    ScheduleModule,
+    TrainerProfileModule,
     ChildProfileModule,
     ChildModule,
   ],
@@ -73,4 +78,8 @@ import { ChildModule } from './child/child.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(TimezoneMiddleware).forRoutes('*');
+  }
+}

@@ -25,10 +25,10 @@ async function seed() {
   }
   console.log(' -- regions inserted');
 
-  // for (const monthData of monthsSeeds) {
-  //   await prisma.month.create({ data: monthData });
-  // }
-  // console.log(' -- months inserted');
+  for (const monthData of monthsSeeds) {
+    await prisma.month.create({ data: monthData });
+  }
+  console.log(' -- months inserted');
 
   await prisma.$disconnect();
 }
