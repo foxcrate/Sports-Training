@@ -4,47 +4,46 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ChildProfileCreateDto } from './dtos/create.dto';
-import { ReturnChildProfileDto } from './dtos/return.dto';
+import { PlayerProfileCreateDto } from '../player-profile/dtos/create.dto';
+import { ReturnPlayerProfileDto } from '../player-profile/dtos/return.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { ReturnChildProfileWithChildAndSportsDto } from './dtos/return-with-child-and-sports.dto';
-import { ChildProfileModel } from './child-profile.model';
-import { ChildService } from 'src/child/child.service';
+import { ReturnPlayerProfileWithUserAndSportsDto } from '../player-profile/dtos/return-with-user-and-sports.dto';
+import { PlayerProfileModel } from '../player-profile/player-profile.model';
 import { UserModel } from 'src/user/user.model';
 
 @Injectable()
 export class ChildProfileService {
   constructor(
     private userModel: UserModel,
-    private childService: ChildService,
-    private childProfileModel: ChildProfileModel,
+    private playerProfileModel: PlayerProfileModel,
     private readonly i18n: I18nService,
   ) {}
 
   async create(
-    createData: ChildProfileCreateDto,
+    createData: PlayerProfileCreateDto,
     childId,
     userId,
-  ): Promise<ReturnChildProfileWithChildAndSportsDto> {
-    //throw an error if child not exist
-    let child = await this.childService.getChildById(childId);
-    if (child.userId != userId) {
+  ): Promise<ReturnPlayerProfileDto> {
+    let child = await this.userModel.getById(childId);
+
+    if (!(await this.userModel.isMyChild(userId, child.id))) {
       throw new ForbiddenException(
         this.i18n.t(`errors.UNAUTHORIZED`, { lang: I18nContext.current().lang }),
       );
     }
-    //throw an error if repeated
+
     await this.findRepeated(childId);
 
-    let newChildProfileWithSports = this.childProfileModel.create(createData, childId);
-    return newChildProfileWithSports;
+    await this.playerProfileModel.create(createData, childId);
+
+    return await this.playerProfileModel.getOneDetailedByUserId(childId);
   }
 
   async update(
-    createData: ChildProfileCreateDto,
+    createData: PlayerProfileCreateDto,
     childProfileId,
     userId,
-  ): Promise<ReturnChildProfileWithChildAndSportsDto> {
+  ): Promise<ReturnPlayerProfileDto> {
     //check profile existance
     let childProfile = await this.authorizeResource(userId, childProfileId);
 
@@ -54,44 +53,45 @@ export class ChildProfileService {
       );
     }
 
-    return await this.childProfileModel.updateById(createData, childProfileId);
+    await this.playerProfileModel.updateById(createData, childProfile.id);
+    return await this.playerProfileModel.getOneDetailedByUserId(childProfile.userId);
   }
 
-  async delete(userId, childProfileId): Promise<ReturnChildProfileDto> {
+  async delete(userId, childProfileId): Promise<ReturnPlayerProfileDto> {
     // return the childProfile or throw unauthorized error
     await this.authorizeResource(userId, childProfileId);
 
-    let deletedChildProfile: ReturnChildProfileDto =
-      await this.childProfileModel.getOneById(childProfileId);
+    let deletedChildProfile: ReturnPlayerProfileDto =
+      await this.playerProfileModel.getOneById(childProfileId);
 
-    await this.childProfileModel.deleteById(deletedChildProfile.id);
+    await this.playerProfileModel.deleteById(deletedChildProfile.id);
 
     return deletedChildProfile;
   }
 
-  async getAll(userId): Promise<ReturnChildProfileWithChildAndSportsDto[]> {
+  async getAll(userId): Promise<ReturnPlayerProfileWithUserAndSportsDto[]> {
     //get all user's childs
-    let childsIds = await this.userModel.getUserChildsIds(userId);
+    let childsIds = await this.userModel.getChildsIds(userId);
 
     //return empty array if childsIds is empty
     if (childsIds.length == 0) {
       return [];
     }
 
-    return await this.childProfileModel.getManyByChildIds(childsIds);
+    return await this.playerProfileModel.getManyByUserIds(childsIds);
   }
 
-  async getOne(userId, childProfileId): Promise<ReturnChildProfileWithChildAndSportsDto> {
+  async getOne(userId, childProfileId): Promise<ReturnPlayerProfileWithUserAndSportsDto> {
     // return the childProfile or throw unauthorized error
     let childProfile = await this.authorizeResource(userId, childProfileId);
 
     //get childProfile
 
-    return await this.childProfileModel.getOneDetailedById(childProfile.id);
+    return await this.playerProfileModel.getOneDetailedById(childProfile.id);
   }
 
   private async findRepeated(childId): Promise<Boolean> {
-    let repeatedChildProfile = await this.childProfileModel.getOneByChildId(childId);
+    let repeatedChildProfile = await this.playerProfileModel.getOneByUserId(childId);
 
     if (repeatedChildProfile) {
       throw new BadRequestException(
@@ -104,21 +104,21 @@ export class ChildProfileService {
   private async authorizeResource(
     userId: number,
     childProfileId: number,
-  ): Promise<ReturnChildProfileDto> {
+  ): Promise<ReturnPlayerProfileDto> {
     //get childProfile
-    let childProfile = await this.childProfileModel.getOneById(childProfileId);
+    let childProfile = await this.playerProfileModel.getOneById(childProfileId);
 
     if (!childProfile) {
       throw new NotFoundException(
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
       );
     }
-    let childId = childProfile.childId;
+    let childId = childProfile.userId;
 
     //get current user childs
     // console.log({ userId });
 
-    let childsIds = await this.userModel.getUserChildsIds(userId);
+    let childsIds = await this.userModel.getChildsIds(userId);
     // console.log({ childsIds });
 
     childId = childId;

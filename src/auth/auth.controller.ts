@@ -12,14 +12,12 @@ import { AuthService } from './auth.service';
 import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { SignupValidation } from 'src/user/validations/signup.validation';
 import { UserSigninValidation } from 'src/user/validations/signin.validaiton';
-import { ChildSigninValidation } from 'src/child/validaitons/signin.validation';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
 import { SigninUserDto } from 'src/user/dtos/signin.dto';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Request as ExpressRequest } from 'express';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/guards/role.guard';
-import { SigninChildDto } from 'src/child/dtos/signin.dto';
 import { GoogleReturnDataSerializer } from './serializers/google-return-data.serializer';
 import { FacebookReturnDataSerializer } from './serializers/facebook-return-data.serializer';
 import { SendOTPValidation } from './validations/send-otp.validation';
@@ -37,14 +35,12 @@ export class AuthController {
 
   @Post('user/signup')
   @Version('1')
-  // @UsePipes(new JoiValidation(SignupValidation))
   async signup1(@Body(new JoiValidation(SignupValidation)) signupData: SignupUserDto) {
     return this.authService.userSignup(signupData);
   }
 
   @Post('user/send-signup-otp')
   @Version('1')
-  // @UsePipes(new JoiValidation(SignupValidation))
   async sendOtp1(@Body(new JoiValidation(SendOTPValidation)) sendOTPData: SendOTPDto) {
     return this.authService.sendOtp(sendOTPData.mobileNumber);
   }
@@ -53,7 +49,6 @@ export class AuthController {
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  // @UsePipes(new JoiValidation(SignupValidation))
   async createPassword1(
     @Body(new JoiValidation(CreatePasswordValidation))
     createPasswordData: CreatePasswordDto,
@@ -64,7 +59,6 @@ export class AuthController {
 
   @Post('user/verify-signup-otp')
   @Version('1')
-  // @UsePipes(new JoiValidation(SignupValidation))
   async verifyOtp1(
     @Body(new JoiValidation(VerifyOtpValidation)) verifyOtpData: VerifyOtpDto,
   ) {
@@ -84,7 +78,6 @@ export class AuthController {
 
   @Post('/user/signin')
   @Version('1')
-  // @UsePipes(new JoiValidation(UserSigninValidation))
   async userSignin1(
     @Body(new JoiValidation(UserSigninValidation)) signinData: SigninUserDto,
   ) {
@@ -93,9 +86,8 @@ export class AuthController {
 
   @Post('/child/signin')
   @Version('1')
-  // @UsePipes(new JoiValidation(ChildSigninValidation))
   async childSignin(
-    @Body(new JoiValidation(ChildSigninValidation)) signinData: SigninChildDto,
+    @Body(new JoiValidation(UserSigninValidation)) signinData: SigninUserDto,
   ) {
     return this.authService.childSignin(signinData);
   }
@@ -104,15 +96,6 @@ export class AuthController {
   @Version('1')
   refreshToken(@Body('refreshToken') refreshToken, @Request() req: ExpressRequest) {
     return this.authService.refreshToken(refreshToken);
-  }
-
-  @Get('user/testJWT')
-  @Version('1')
-  @Roles('child')
-  @UseGuards(AuthGuard, RoleGuard)
-  test() {
-    console.log('-- test jwt route --');
-    return 'User Arrived';
   }
 
   @Post('google-data')
@@ -154,4 +137,13 @@ export class AuthController {
 
   //   return FacebookReturnDataSerializer.serialize(userData);
   // }
+
+  @Get('user/testJWT')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  test() {
+    console.log('-- test jwt route --');
+    return 'User Arrived';
+  }
 }

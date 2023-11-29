@@ -8,5 +8,6 @@ import { SportModule } from 'src/sport/sport.module';
   controllers: [PlayerProfileController],
   providers: [PlayerProfileService, PlayerProfileModel],
   imports: [SportModule],
+  exports: [PlayerProfileModel],
 })
 export class PlayerProfileModule {}

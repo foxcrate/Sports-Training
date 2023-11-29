@@ -18,11 +18,9 @@ export class SportService {
 
     await this.prisma.$queryRaw`
       INSERT INTO Sport
-        (name,
-        updatedAt)
+        (name)
         VALUES
-      (${createData.name},
-      ${this.globalService.getLocalDateTime(new Date())})`;
+      (${createData.name})`;
 
     let newRegion = await this.prisma.$queryRaw`
       SELECT *

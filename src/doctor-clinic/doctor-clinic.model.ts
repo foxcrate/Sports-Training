@@ -294,7 +294,6 @@ export class DoctorClinicModel {
             regionId,
             availableWeekDays,
             availableDayHours,
-            updatedAt
           )
           VALUES
         (
@@ -310,7 +309,6 @@ export class DoctorClinicModel {
           ${reqBody.regionId},
           ${reqBody.availableWeekDays},
           ${{ from: reqBody.startTime, to: reqBody.endTime }},
-          ${this.globalSerice.getLocalDateTime(new Date())}
         );`,
         this.prisma.$queryRaw`
           SELECT
@@ -347,8 +345,7 @@ export class DoctorClinicModel {
             regionId,
             availableWeekDays,
             availableDayHours,
-            addedByUserId,
-            updatedAt
+            addedByUserId
           )
           VALUES
         (
@@ -363,8 +360,7 @@ export class DoctorClinicModel {
           ${reqBody.regionId},
           ${reqBody.availableWeekDays},
           ${{ from: reqBody.startTime, to: reqBody.endTime }},
-          ${userId},
-          ${this.globalSerice.getLocalDateTime(new Date())}
+          ${userId}
         );`,
         this.prisma.$queryRaw`
           SELECT
@@ -400,8 +396,7 @@ export class DoctorClinicModel {
             profileImage = ${reqBody.profileImage},
             regionId = ${reqBody.regionId},
             availableWeekDays = ${reqBody.availableWeekDays},
-            availableDayHours = ${{ from: reqBody.startTime, to: reqBody.endTime }},
-            updatedAt = ${this.globalSerice.getLocalDateTime(new Date())}
+            availableDayHours = ${{ from: reqBody.startTime, to: reqBody.endTime }}
           WHERE
           id = ${id};
           `,
@@ -488,8 +483,7 @@ export class DoctorClinicModel {
     let updatedDoctorClinic = await this.prisma.$queryRaw`
           UPDATE DoctorClinic
           SET
-            acceptanceStatus = ${newStatus},
-            updatedAt = ${this.globalSerice.getLocalDateTime(new Date())}
+            acceptanceStatus = ${newStatus}
           WHERE
           id = ${doctorClinicId}
           `;
@@ -562,15 +556,13 @@ export class DoctorClinicModel {
         (fromDateTime,
           gmt,
           userId,
-          doctorClinicId,
-        updatedAt)
+          doctorClinicId)
         VALUES
       (
       ${dateTime},
       ${this.config.get('GMT')},
       ${userId},
-      ${doctorClinicId},
-      ${this.globalSerice.getLocalDateTime(new Date())})`;
+      ${doctorClinicId})`;
 
     // console.log('dateTime after insert:', this.globalSerice.getLocalDateTime(new Date()));
   }
@@ -582,16 +574,12 @@ export class DoctorClinicModel {
     console.log(datesArray);
     let newDatesArray = [];
     for (let i = 0; i < datesArray.length; i++) {
-      newDatesArray.push([
-        new Date(datesArray[i]),
-        doctorClinicId,
-        this.globalSerice.getLocalDateTime(new Date()),
-      ]);
+      newDatesArray.push([new Date(datesArray[i]), doctorClinicId]);
     }
     await this.prisma.$executeRaw`
       INSERT INTO
       DoctorClinicNotAvailableDays
-      (dayDate, doctorClinicId,updatedAt)
+      (dayDate, doctorClinicId)
       VALUES
       ${Prisma.join(newDatesArray.map((row) => Prisma.sql`(${Prisma.join(row)})`))}
       `;

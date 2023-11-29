@@ -9,21 +9,21 @@ import { monthsSeeds } from './seeds-files/months.seed';
 const prisma = new PrismaClient();
 
 async function seed() {
-  // for (const userData of usersSeeds) {
-  //   userData.password = await hashPassword(userData.password);
-  //   await prisma.user.create({ data: userData });
-  // }
-  // console.log(' -- users inserted');
+  for (const userData of usersSeeds) {
+    userData.password = await hashPassword(userData.password);
+    await prisma.user.create({ data: userData });
+  }
+  console.log(' -- users inserted');
 
-  // for (const sportData of sportsSeeds) {
-  //   await prisma.sport.create({ data: sportData });
-  // }
-  // console.log(' -- sports inserted');
+  for (const sportData of sportsSeeds) {
+    await prisma.sport.create({ data: sportData });
+  }
+  console.log(' -- sports inserted');
 
-  // for (const regionData of regionsSeeds) {
-  //   await prisma.region.create({ data: regionData });
-  // }
-  // console.log(' -- regions inserted');
+  for (const regionData of regionsSeeds) {
+    await prisma.region.create({ data: regionData });
+  }
+  console.log(' -- regions inserted');
 
   // for (const monthData of monthsSeeds) {
   //   await prisma.month.create({ data: monthData });

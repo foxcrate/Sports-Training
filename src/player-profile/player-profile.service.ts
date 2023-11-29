@@ -96,8 +96,6 @@ export class PlayerProfileService {
       profilesAndSports.push({
         playerProfileId: newPlayerProfileId,
         sportId: sportsIds[i],
-        // updatedAt: this.globalService.getLocalDateTime(new Date()),
-        updatedAt: new Date(),
       });
     }
 

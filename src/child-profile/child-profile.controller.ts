@@ -14,9 +14,9 @@ import {
 import { Request as ExpressRequest } from 'express';
 import { ChildProfileService } from './child-profile.service';
 import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
-import { AddChildProfileValidation } from './validations/create.validation';
-import { UpdateChildProfileValidation } from './validations/update.validation';
-import { DeleteChildProfileValidation } from './validations/delete.validation';
+import { AddPlayerProfileValidation } from '../player-profile/validations/create.validation';
+import { UpdatePlayerProfileValidation } from '../player-profile/validations/update.validation';
+import { DeleteChildProfileValidation } from '../child-profile/validations/delete.validation';
 import { GetOneChildProfileValidation } from './validations/get-one.validation';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Roles } from 'src/decorators/roles.decorator';
@@ -33,7 +33,7 @@ export class ChildProfileController {
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   async create1(
-    @Body(new JoiValidation(AddChildProfileValidation)) reqBody,
+    @Body(new JoiValidation(AddPlayerProfileValidation)) reqBody,
     @Param(new JoiValidation(ChildIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {
@@ -46,7 +46,7 @@ export class ChildProfileController {
   @UseGuards(AuthGuard, RoleGuard)
   // @UsePipes(new JoiValidation(UpdateChildProfileValidation))
   async update1(
-    @Body(new JoiValidation(UpdateChildProfileValidation)) reqBody,
+    @Body(new JoiValidation(UpdatePlayerProfileValidation)) reqBody,
     @Param(new JoiValidation(ChildProfileIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {
@@ -78,7 +78,6 @@ export class ChildProfileController {
   @UsePipes(new JoiValidation(GetOneChildProfileValidation))
   async getOne1(@Param() params, @Request() req: ExpressRequest) {
     const childProfileId = params.childProfileId;
-    // console.log("req['id']:", req['id']);
 
     return this.childProfileService.getOne(req['id'], childProfileId);
   }

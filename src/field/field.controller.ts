@@ -31,7 +31,7 @@ export class FieldController {
     return this.fieldService.getAll();
   }
 
-  @Get('/:id/fieldDayAvailableHours/:date')
+  @Get('/:id/day-available-hours/:date')
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)

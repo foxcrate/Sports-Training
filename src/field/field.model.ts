@@ -220,8 +220,7 @@ export class FieldModel {
           sportId,
           regionId,
           availableWeekDays,
-          availableDayHours,
-          updatedAt
+          availableDayHours
         )
         VALUES
       (
@@ -237,8 +236,7 @@ export class FieldModel {
         ${reqBody.sportId},
         ${reqBody.regionId},
         ${reqBody.availableWeekDays},
-        ${{ from: reqBody.startTime, to: reqBody.endTime }},
-        ${this.globalSerice.getLocalDateTime(new Date())}
+        ${{ from: reqBody.startTime, to: reqBody.endTime }}
       );`,
         this.prisma.$queryRaw`
         SELECT
@@ -273,8 +271,7 @@ export class FieldModel {
           regionId,
           availableWeekDays,
           availableDayHours,
-          addedByUserId,
-          updatedAt
+          addedByUserId
         )
         VALUES
       (
@@ -290,8 +287,7 @@ export class FieldModel {
         ${reqBody.regionId},
         ${reqBody.availableWeekDays},
         ${{ from: reqBody.startTime, to: reqBody.endTime }},
-        ${userId},
-        ${this.globalSerice.getLocalDateTime(new Date())}
+        ${userId}
       );`,
         this.prisma.$queryRaw`
         SELECT
@@ -325,8 +321,7 @@ export class FieldModel {
           sportId = ${reqBody.sportId},
           regionId = ${reqBody.regionId},
           availableWeekDays = ${reqBody.availableWeekDays},
-          availableDayHours = ${{ from: reqBody.startTime, to: reqBody.endTime }},
-          updatedAt = ${this.globalSerice.getLocalDateTime(new Date())}
+          availableDayHours = ${{ from: reqBody.startTime, to: reqBody.endTime }}
         WHERE 
         id = ${id};
         `,
@@ -416,8 +411,7 @@ export class FieldModel {
     let updatedField = await this.prisma.$queryRaw`
         UPDATE Field
         SET
-          acceptanceStatus = ${newStatus},
-          updatedAt = ${this.globalSerice.getLocalDateTime(new Date())}
+          acceptanceStatus = ${newStatus}
         WHERE 
         id = ${fieldId}
         `;
@@ -566,15 +560,14 @@ export class FieldModel {
       (fromDateTime,
         gmt,
         userId,
-        fieldId,
-      updatedAt)
+        fieldId)
       VALUES
     (
     ${dateTime},
     ${this.config.get('GMT')},
     ${userId},
-    ${fieldId},
-    ${this.globalSerice.getLocalDateTime(new Date())})`;
+    ${fieldId}
+    )`;
 
     // console.log('dateTime after insert:', this.globalSerice.getLocalDateTime(new Date()));
   }
@@ -586,16 +579,12 @@ export class FieldModel {
     console.log(datesArray);
     let newDatesArray = [];
     for (let i = 0; i < datesArray.length; i++) {
-      newDatesArray.push([
-        new Date(datesArray[i]),
-        fieldId,
-        this.globalSerice.getLocalDateTime(new Date()),
-      ]);
+      newDatesArray.push([new Date(datesArray[i]), fieldId]);
     }
     await this.prisma.$executeRaw`
     INSERT INTO
     FieldNotAvailableDays
-    (dayDate, fieldId,updatedAt)
+    (dayDate, fieldId)
     VALUES
     ${Prisma.join(newDatesArray.map((row) => Prisma.sql`(${Prisma.join(row)})`))}
     `;

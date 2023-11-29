@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { ReturnChildDto } from 'src/child/dtos/return.dto';
-import { GlobalService } from 'src/global/global.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ReturnUserDto } from './dtos/return.dto';
 import { SignupUserDto } from './dtos/signup.dto';
@@ -9,25 +7,25 @@ import { NativeUserDto } from './dtos/native.dto';
 
 @Injectable()
 export class UserModel {
-  constructor(
-    private prisma: PrismaService,
-    private globalService: GlobalService,
-  ) {}
+  constructor(private prisma: PrismaService) {}
 
-  async getUserChilds(userId): Promise<ReturnChildDto[]> {
-    let userChilds: ReturnChildDto[] = await this.prisma.$queryRaw`
+  async getChilds(userId): Promise<ReturnUserDto[]> {
+    let userChilds: ReturnUserDto[] = await this.prisma.$queryRaw`
       SELECT
-      id,
-      firstName,
-      lastName,
-      profileImage,
-      email,
-      mobileNumber,
-      gender,
-      birthday,
-      userId
-      FROM Child
-      WHERE userId = ${userId}
+      u.id AS id,
+      u.firstName AS firstName,
+      u.lastName AS lastName,
+      u.profileImage AS profileImage,
+      u.email AS email,
+      u.mobileNumber AS mobileNumber,
+      u.gender AS gender,
+      u.birthday AS birthday
+      FROM ParentsChilds AS pc
+      INNER JOIN User AS u
+      ON pc.childId = u.id
+      AND
+      u.userType = 'child'
+      WHERE parentId = ${userId}
     `;
     return userChilds;
   }
@@ -43,8 +41,7 @@ export class UserModel {
       email,
       mobileNumber,
       gender,
-      birthday,
-      updatedAt
+      birthday
     )
     VALUES
     (
@@ -55,8 +52,7 @@ export class UserModel {
       ${signupData.email},
       ${signupData.mobileNumber},
       ${signupData.gender},
-      ${new Date(signupData.birthday)},
-      ${this.globalService.getLocalDateTime(new Date())}
+      ${new Date(signupData.birthday)}
     )`;
   }
 
@@ -64,17 +60,15 @@ export class UserModel {
     await this.prisma.$queryRaw`
     INSERT INTO User
     (
-      mobileNumber,
-      updatedAt
+      mobileNumber
     )
     VALUES
     (
-      ${mobileNumber},
-      ${new Date()}
+      ${mobileNumber}
     )`;
   }
 
-  async updateById(userId: string, data: CompleteSignupUserDto) {
+  async updateById(userId: number, data: CompleteSignupUserDto) {
     //complete profile
     await this.prisma.$queryRaw`
         UPDATE User
@@ -84,26 +78,50 @@ export class UserModel {
         email = ${data.email},
         profileImage = ${data.profileImage},
         gender = ${data.gender},
-        birthday = ${new Date(data.birthday)},
-        updatedAt = ${this.globalService.getLocalDateTime(new Date())}
+        birthday = ${new Date(data.birthday)}
         WHERE
         id = ${userId};
       `;
   }
 
-  async updatePassword(userId: string, hashedPassword: string) {
+  async updatePassword(userId: number, hashedPassword: string) {
     //update
     await this.prisma.$queryRaw`
        UPDATE User
        SET
-       password = ${hashedPassword},
-       updatedAt = ${new Date()}
+       password = ${hashedPassword}
        WHERE
        id = ${userId};
      `;
   }
 
-  async getUserById(userId): Promise<ReturnUserDto> {
+  async activateAccount(userId: number) {
+    await this.prisma.$queryRaw`
+       UPDATE User
+       SET
+       isActivated = true
+       WHERE
+       id = ${userId};
+     `;
+  }
+
+  async isMyChild(parentId: number, childId: number): Promise<Boolean> {
+    let parentChild = await this.prisma.$queryRaw`
+      SELECT
+      id
+      FROM ParentsChilds
+      WHERE parentId = ${parentId}
+      AND
+      childId = ${childId}
+      LIMIT 1
+    `;
+    if (!parentChild[0]) {
+      return false;
+    }
+    return true;
+  }
+
+  async getById(userId): Promise<ReturnUserDto> {
     let theUser = await this.prisma.$queryRaw`
       SELECT
       id,
@@ -121,7 +139,7 @@ export class UserModel {
     return theUser[0];
   }
 
-  async getUserByMobileNumber(mobileNumber): Promise<ReturnUserDto> {
+  async getByMobileNumber(mobileNumber): Promise<ReturnUserDto> {
     let theUser = await this.prisma.$queryRaw`
       SELECT
       id,
@@ -139,7 +157,7 @@ export class UserModel {
     return theUser[0];
   }
 
-  async getNativeUserByMobileNumber(mobileNumber): Promise<NativeUserDto> {
+  async getNativeByMobileNumber(mobileNumber): Promise<NativeUserDto> {
     let theUser = await this.prisma.$queryRaw`
       SELECT
       *
@@ -150,7 +168,7 @@ export class UserModel {
     return theUser[0];
   }
 
-  async getUserByEmail(email): Promise<ReturnUserDto> {
+  async getByEmail(email): Promise<ReturnUserDto> {
     let theUser = await this.prisma.$queryRaw`
       SELECT
       id,
@@ -168,18 +186,68 @@ export class UserModel {
     return theUser[0];
   }
 
-  async getUserChildsIds(userId: number): Promise<number[]> {
+  async getChildsIds(userId: number): Promise<number[]> {
     let idsObject: any[] = await this.prisma.$queryRaw`
-      SELECT id
-      FROM Child
-      WHERE userId = ${userId}
+      SELECT childId
+      FROM ParentsChilds
+      WHERE parentId = ${userId}
     `;
 
     // console.log({ idsObject });
 
     let childsIds = idsObject.map((obj) => {
-      return obj.id;
+      return obj.childId;
     });
     return childsIds;
+  }
+
+  async createChild(reqBody, userId) {
+    await this.prisma.$queryRaw`
+    INSERT INTO User
+      (firstName,
+      lastName,
+      userType,
+      isActivated,
+      profileImage,
+      email,
+      mobileNumber,
+      gender,
+      birthday)
+      VALUES
+    (${reqBody.firstName},
+    ${reqBody.lastName},
+    'child',
+    false,
+    ${reqBody.profileImage},
+    ${reqBody.email},
+    ${reqBody.mobileNumber},
+    ${reqBody.gender},
+    ${reqBody.birthday})`;
+
+    let theChild = await this.getByMobileNumber(reqBody.mobileNumber);
+
+    await this.prisma.$queryRaw`
+    INSERT INTO ParentsChilds
+      (parentId,
+      childId)
+      VALUES
+    (${userId},
+    ${theChild.id})`;
+  }
+
+  async deleteById(userId) {
+    await this.prisma.$queryRaw`
+    DELETE FROM
+    User
+    WHERE
+    id = ${userId};`;
+  }
+
+  async deleteChildRelations(childId) {
+    await this.prisma.$queryRaw`
+    DELETE FROM
+    ParentsChilds
+    WHERE
+    childId = ${childId};`;
   }
 }
