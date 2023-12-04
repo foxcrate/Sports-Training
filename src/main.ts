@@ -17,10 +17,10 @@ async function bootstrap() {
   //NOTE: i had this fixed before please don't revert the fix again.
   // var serviceAccount = require(process.env.FIREBASE_AUTH_FILE);
 
-  admin.initializeApp({
+  const firebaseAdminApp = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
   });
-
+  console.log(firebaseAdminApp);
   await app.listen(8000);
 
   process.on('beforeExit', async () => {
