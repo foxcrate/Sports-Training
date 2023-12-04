@@ -49,6 +49,9 @@ export class AuthGuard implements CanActivate {
     request['authType'] = payload.authType;
     request['id'] = payload.id;
 
+    //NOTE: this is a violation of seperation of concerns. please migrate these functions to their respective services and inject the services or make them global
+    //also i think you are no longer using the Child table so make sure this works as expected
+    //also if you are gonna use more than one db query. use Promise.all if they are not dependant of each other. db queries are IO operations and can work on parallel by default in node
     if (
       !(await this.userAvailable(request['id'])) &&
       !(await this.childAvailable(request['id']))
