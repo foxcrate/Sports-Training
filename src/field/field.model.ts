@@ -407,7 +407,7 @@ export class FieldModel {
   async setFieldAcceptanceStatue(
     fieldId: number,
     newStatus: FieldAcceptanceStatusDto,
-  ): Promise<Boolean> {
+  ): Promise<boolean> {
     let updatedField = await this.prisma.$queryRaw`
         UPDATE Field
         SET

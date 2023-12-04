@@ -90,7 +90,7 @@ export class ChildProfileService {
     return await this.playerProfileModel.getOneDetailedById(childProfile.id);
   }
 
-  private async findRepeated(childId): Promise<Boolean> {
+  private async findRepeated(childId): Promise<boolean> {
     let repeatedChildProfile = await this.playerProfileModel.getOneByUserId(childId);
 
     if (repeatedChildProfile) {

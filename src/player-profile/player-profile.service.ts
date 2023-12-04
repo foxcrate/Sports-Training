@@ -74,7 +74,7 @@ export class PlayerProfileService {
     return deletedPlayerProfile;
   }
 
-  private async findRepeated(userId): Promise<Boolean> {
+  private async findRepeated(userId): Promise<boolean> {
     //Chick existed email or phone number
     let repeatedPlayerProfile = await this.playerProfileModel.getOneByUserId(userId);
 
@@ -105,7 +105,7 @@ export class PlayerProfileService {
     await this.prisma.playerProfileSports.createMany({ data: profilesAndSports });
   }
 
-  private async checkSportsExistance(sportsArray): Promise<Boolean> {
+  private async checkSportsExistance(sportsArray): Promise<boolean> {
     let foundedSports: Array<ReturnSportDto> = await this.prisma.$queryRaw`
     SELECT *
     FROM Sport

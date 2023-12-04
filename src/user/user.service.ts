@@ -110,14 +110,14 @@ export class UserService {
     return foundedAccount;
   }
 
-  async findRepeated(email, mobileNumber): Promise<Boolean> {
+  async findRepeated(email, mobileNumber): Promise<boolean> {
     await this.findRepeatedMobile(mobileNumber);
     await this.findRepeatedEmail(email);
 
     return false;
   }
 
-  async findRepeatedMobile(mobileNumber): Promise<Boolean> {
+  async findRepeatedMobile(mobileNumber): Promise<boolean> {
     //Chick existed  phone number
     let repeatedMobile = await this.userModel.getByMobileNumber(mobileNumber);
 
@@ -133,7 +133,7 @@ export class UserService {
     return false;
   }
 
-  async findRepeatedEmail(email): Promise<Boolean> {
+  async findRepeatedEmail(email): Promise<boolean> {
     //Chick existed email or phone number
     let repeatedEmail = await this.userModel.getByEmail(email);
 

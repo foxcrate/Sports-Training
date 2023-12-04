@@ -75,7 +75,7 @@ export class AdminDoctorClinicService {
   async changeDoctorClinicAcceptanceStatue(
     doctorClinicId: number,
     newStatus: DoctorClinicAcceptanceStatusDto,
-  ): Promise<Boolean> {
+  ): Promise<boolean> {
     let theDoctorClinic = await this.doctorClinicModel.getByID(doctorClinicId);
     if (theDoctorClinic.acceptanceStatus != DoctorClinicAcceptanceStatusDto.Pending) {
       throw new BadRequestException(
