@@ -11,7 +11,7 @@ import { GlobalService } from './global.service';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Roles } from 'src/decorators/roles.decorator';
-import { AvailableRoles } from 'src/auth/dtos/availableRoles.dto';
+import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 import { RoleGuard } from 'src/guards/role.guard';
 
 @Controller('global')

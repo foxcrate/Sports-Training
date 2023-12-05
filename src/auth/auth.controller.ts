@@ -28,6 +28,7 @@ import { SendOTPDto } from './dtos/send-otp.validation';
 import { CreatePasswordValidation } from './validations/create-password.validaiton';
 import { CompleteSignupValidation } from 'src/user/validations/complete-signup.validation';
 import { AccessTokenValidation } from './validations/access-token.validation';
+import { AppleReturnDataSerializer } from './serializers/apple-return-data.serializer';
 
 @Controller('auth')
 export class AuthController {
@@ -137,6 +138,14 @@ export class AuthController {
 
   //   return FacebookReturnDataSerializer.serialize(userData);
   // }
+
+  @Post('apple-data')
+  @Version('1')
+  async appleRedirect(@Body(new JoiValidation(AccessTokenValidation)) reqBody) {
+    let userData = await this.authService.getAppleUserData(reqBody.accessToken);
+
+    return AppleReturnDataSerializer.serialize(userData);
+  }
 
   @Get('user/testJWT')
   @Version('1')

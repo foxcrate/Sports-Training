@@ -21,7 +21,7 @@ import { RoleGuard } from 'src/guards/role.guard';
 import { GetOneChildValidation } from './validations/get-one-child.validation';
 import { UpdateChildValidation } from './validations/update-child.validation';
 import { UpdateUserValidation } from './validations/update-user.validation';
-import { AvailableRoles } from 'src/auth/dtos/availableRoles.dto';
+import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 import { ChildIdValidation } from 'src/child-profile/validations/child-id.validation';
 
 @Controller('user')

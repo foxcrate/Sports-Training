@@ -7,6 +7,8 @@ import {
 import { UserService } from 'src/user/user.service';
 import { SigninUserDto } from 'src/user/dtos/signin.dto';
 import { JwtService } from '@nestjs/jwt';
+import * as jwt from 'jsonwebtoken';
+import * as jwksClient from 'jwks-rsa';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
 import { ConfigService } from '@nestjs/config';
 
@@ -14,7 +16,7 @@ import axios from 'axios';
 import { AuthTokensDTO } from './dtos/auth-tokens.dto';
 import { GlobalService } from 'src/global/global.service';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { AvailableRoles } from './dtos/availableRoles.dto';
+import { AvailableRoles } from './dtos/available-roles.dto';
 import { IAuthToken } from './interfaces/auth-token.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { VerifyOtpDto } from './dtos/verify-otp.dto';
@@ -308,5 +310,36 @@ export class AuthService {
         this.i18n.t(`errors.FACEBOOK_TOKEN_ERROR`, { lang: I18nContext.current().lang }),
       );
     }
+  }
+
+  async getAppleUserData(access_token) {
+    try {
+      const { header } = jwt.decode(access_token, {
+        complete: true,
+      });
+
+      console.log({ header });
+
+      const kid = header.kid;
+      const publicKey = (await this.key(kid)).getPublicKey();
+
+      const data = jwt.verify(access_token, publicKey);
+      return data;
+    } catch (err) {
+      console.log('error in getAppleUserData() --', err);
+
+      throw new BadRequestException(
+        this.i18n.t(`errors.APPLE_TOKEN_ERROR`, { lang: I18nContext.current().lang }),
+      );
+    }
+  }
+
+  private async key(kid) {
+    const client = jwksClient({
+      jwksUri: 'https://appleid.apple.com/auth/keys',
+      timeout: 30000,
+    });
+
+    return await client.getSigningKey(kid);
   }
 }

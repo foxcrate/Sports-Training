@@ -4,6 +4,7 @@
   "WRONG_CREDENTIALS": "معلومات الحساب غير صحيحة",
   "FACEBOOK_TOKEN_ERROR": "توكين قيسبوك خاطئ",
   "GOOGLE_TOKEN_ERROR": "توكين جوجل خاطئ",
+  "APPLE_TOKEN_ERROR": "توكين آبل خاطئ",
   "NO_BEARER_TOKEN": "Authorization Bearer token should be provided",
   "JWT_ERROR": "Invalid bearer token",
   "UNAUTHORIZED": "أنت لا تملك الصلاحيات الكافية",

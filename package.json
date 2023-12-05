@@ -34,6 +34,8 @@
     "bcrypt": "^5.1.1",
     "firebase-admin": "^11.11.0",
     "joi": "^17.10.1",
+    "jsonwebtoken": "^9.0.2",
+    "jwks-rsa": "^3.1.0",
     "moment-timezone": "^0.5.43",
     "nestjs-i18n": "^10.3.6",
     "object-inspect": "^1.12.3",

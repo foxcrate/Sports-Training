@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { IAuthToken } from 'src/auth/interfaces/auth-token.interface';
-import { UserService } from 'src/user/user.service';
+import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -18,7 +18,6 @@ export class AuthGuard implements CanActivate {
     private jwtService: JwtService,
     private config: ConfigService,
     private prisma: PrismaService,
-    // private userService: UserService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -86,6 +85,7 @@ export class AuthGuard implements CanActivate {
       SELECT *
       FROM User
       WHERE id = ${userId}
+      AND userType = ${AvailableRoles.User}
       LIMIT 1
     `;
     return user[0];
@@ -94,8 +94,9 @@ export class AuthGuard implements CanActivate {
   private async childAvailable(childId) {
     let user = await this.prisma.$queryRaw`
       SELECT *
-      FROM Child
+      FROM User
       WHERE id = ${childId}
+      AND userType = ${AvailableRoles.Child}
       LIMIT 1
     `;
     return user[0];
