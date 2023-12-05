@@ -102,7 +102,7 @@ export class TrainerProfileService {
     await this.prisma.playerProfileSports.createMany({ data: profilesAndSports });
   }
 
-  private async checkSportsExistance(sportsArray): Promise<Boolean> {
+  private async checkSportsExistance(sportsArray): Promise<boolean> {
     let foundedSports: Array<ReturnSportDto> = await this.prisma.$queryRaw`
     SELECT *
     FROM Sport

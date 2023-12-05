@@ -40,7 +40,7 @@ export class RegionService {
     return allRegions;
   }
 
-  async findRepeated(name): Promise<Boolean> {
+  async findRepeated(name): Promise<boolean> {
     //Chick existed email or phone number
     let repeatedRegion = await this.prisma.$queryRaw`
     SELECT *

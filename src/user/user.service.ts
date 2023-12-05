@@ -91,11 +91,13 @@ export class UserService {
     return updatedChild;
   }
 
+  //NOTE: you have around 300 implicit any variables. this is really not a good practice. you need to inforce certain types so the complier can yell when it is necessary
   async deleteChild(childId, userId): Promise<ReturnUserDto> {
     let child = await this.authorizeChildResource(userId, childId);
     await this.playerProfileModel.deleteByUserId(childId);
     await this.userModel.deleteChildRelations(childId);
     await this.userModel.deleteById(childId);
+
     return child;
   }
 
@@ -110,14 +112,14 @@ export class UserService {
     return foundedAccount;
   }
 
-  async findRepeated(email, mobileNumber): Promise<Boolean> {
+  async findRepeated(email, mobileNumber): Promise<boolean> {
     await this.findRepeatedMobile(mobileNumber);
     await this.findRepeatedEmail(email);
 
     return false;
   }
 
-  async findRepeatedMobile(mobileNumber): Promise<Boolean> {
+  async findRepeatedMobile(mobileNumber): Promise<boolean> {
     //Chick existed  phone number
     let repeatedMobile = await this.userModel.getByMobileNumber(mobileNumber);
 
@@ -133,7 +135,7 @@ export class UserService {
     return false;
   }
 
-  async findRepeatedEmail(email): Promise<Boolean> {
+  async findRepeatedEmail(email): Promise<boolean> {
     //Chick existed email or phone number
     let repeatedEmail = await this.userModel.getByEmail(email);
 
@@ -154,6 +156,9 @@ export class UserService {
     childId: number,
   ): Promise<ReturnUserDto> {
     //get childProfile
+    //NOTE: this would be better if u had a function that fetch the child and checks if it belongs to a parent of given id instead of doing two queries
+    //Nevertheless it is not a big performance issue as it is would be very short list but for future reference use the db initiall to do all the checkups not in code
+    //This helps with isolating bussiness logic with db layer
     let child = await this.userModel.getById(childId);
     if (!child) {
       throw new NotFoundException(

@@ -38,7 +38,7 @@ export class SportService {
     return allSports;
   }
 
-  async findRepeated(name): Promise<Boolean> {
+  async findRepeated(name): Promise<boolean> {
     //Chick existed email or phone number
     let repeatedRegion = await this.prisma.$queryRaw`
     SELECT *
@@ -57,7 +57,7 @@ export class SportService {
     return false;
   }
 
-  async checkSportsExistance(sportsArray): Promise<Boolean> {
+  async checkSportsExistance(sportsArray): Promise<boolean> {
     let foundedSports: Array<ReturnSportDto> = await this.prisma.$queryRaw`
     SELECT *
     FROM Sport

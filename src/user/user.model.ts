@@ -105,7 +105,7 @@ export class UserModel {
      `;
   }
 
-  async isMyChild(parentId: number, childId: number): Promise<Boolean> {
+  async isMyChild(parentId: number, childId: number): Promise<boolean> {
     let parentChild = await this.prisma.$queryRaw`
       SELECT
       id

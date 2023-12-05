@@ -32,7 +32,7 @@ export class DoctorClinicSpecializationService {
     return newRegion[0];
   }
 
-  async findRepeated(name): Promise<Boolean> {
+  async findRepeated(name): Promise<boolean> {
     //Chick existed email or phone number
     let repeatedDoctorClinicSpecialization = await this.prisma.$queryRaw`
     SELECT *

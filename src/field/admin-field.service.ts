@@ -68,7 +68,7 @@ export class AdminFieldService {
   async changeFieldAcceptanceStatue(
     fieldId: number,
     newStatus: FieldAcceptanceStatusDto,
-  ): Promise<Boolean> {
+  ): Promise<boolean> {
     let theField = await this.fieldModel.getByID(fieldId);
     if (theField.acceptanceStatus != FieldAcceptanceStatusDto.Pending) {
       throw new BadRequestException(

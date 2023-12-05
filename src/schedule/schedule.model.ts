@@ -125,6 +125,9 @@ export class ScheduleModel {
     );
     let newSchedule = createdSchedule[1][0];
 
+    //VERY IMPORTANT NOTE: These two statements don't depend on each other. you can use Promise.all here to douple the performance basically.
+    //db queryies are IO opertations. they can work on parallel as they can be executed on different threads natively. so make sure you take advantage of this.
+
     await this.savingNewScheduleMonths(newSchedule.id, reqBody.months);
     await this.savingNewScheduleSlots(newSchedule.id, reqBody.slots);
     return await this.getByID(timezone, newSchedule.id);
@@ -133,6 +136,7 @@ export class ScheduleModel {
   async update(timezone, scheduleId: number, reqBody: ScheduleCreateDto) {
     let theSchedule = await this.getByID(timezone, scheduleId);
 
+    //NOTE: use Promise.all
     //delete past scheduleMonths
     await this.deleteScheduleMonths(scheduleId);
 
@@ -215,7 +219,7 @@ export class ScheduleModel {
     for (let i = 0; i < monthsArray.length; i++) {
       schedulesMonthsArray.push([scheduleId, monthsArray[i]]);
     }
-
+    //NOTE: Good use of batch inserting
     await this.prisma.$queryRaw`
     INSERT INTO SchedulesMonths
     (scheduleId,monthId)

@@ -479,7 +479,7 @@ export class DoctorClinicModel {
   async setDoctorClinicAcceptanceStatue(
     doctorClinicId: number,
     newStatus: DoctorClinicAcceptanceStatusDto,
-  ): Promise<Boolean> {
+  ): Promise<boolean> {
     let updatedDoctorClinic = await this.prisma.$queryRaw`
           UPDATE DoctorClinic
           SET

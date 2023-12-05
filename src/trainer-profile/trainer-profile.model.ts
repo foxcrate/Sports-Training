@@ -212,7 +212,7 @@ export class TrainerProfileModel {
     return updatedTrainerProfile;
   }
 
-  async findRepeated(userId): Promise<Boolean> {
+  async findRepeated(userId): Promise<boolean> {
     //Chick existed email or phone number
     let repeatedTrainerProfile = await this.prisma.$queryRaw`
     SELECT *
@@ -267,7 +267,7 @@ export class TrainerProfileModel {
     await this.prisma.trainerProfileFields.createMany({ data: profilesAndFields });
   }
 
-  private async checkSportsExistance(sportsArray): Promise<Boolean> {
+  private async checkSportsExistance(sportsArray): Promise<boolean> {
     let foundedSports: Array<ReturnSportDto> = await this.prisma.$queryRaw`
     SELECT *
     FROM Sport
@@ -282,7 +282,7 @@ export class TrainerProfileModel {
     return true;
   }
 
-  private async checkFieldsExistance(fieldsArray): Promise<Boolean> {
+  private async checkFieldsExistance(fieldsArray): Promise<boolean> {
     let foundedFields: Array<FieldReturnDto> = await this.prisma.$queryRaw`
     SELECT *
     FROM Field
