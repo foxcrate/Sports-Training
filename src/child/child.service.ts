@@ -24,8 +24,12 @@ export class ChildService {
 
     let hashedPassword = await this.globalService.hashPassword(reqBody.password);
 
-    await this.userModel.updatePassword(child.id, hashedPassword);
-    await this.userModel.activateAccount(child.id);
+    Promise.all([
+      await this.userModel.updatePassword(child.id, hashedPassword),
+      await this.userModel.activateAccount(child.id),
+    ]);
+    // await this.userModel.updatePassword(child.id, hashedPassword);
+    // await this.userModel.activateAccount(child.id);
 
     let updatedChild = await this.userModel.getById(child.id);
 

@@ -5,14 +5,12 @@ import { Prisma } from '@prisma/client';
 import { ReturnTrainerProfileDto } from './dtos/return.dto';
 import { ReturnSportDto } from 'src/sport/dtos/return.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { GlobalService } from 'src/global/global.service';
 import { TrainerProfileModel } from './trainer-profile.model';
 
 @Injectable()
 export class TrainerProfileService {
   constructor(
     private prisma: PrismaService,
-    private globalService: GlobalService,
     private trainerProfileModel: TrainerProfileModel,
     private readonly i18n: I18nService,
   ) {}
@@ -65,8 +63,12 @@ export class TrainerProfileService {
     }
 
     //delete playerProfileSports
-    await this.trainerProfileModel.deletePastTrainerSports(deletedTrainerProfile.id);
-    await this.trainerProfileModel.deletePastTrainerFields(deletedTrainerProfile.id);
+    Promise.all([
+      await this.trainerProfileModel.deletePastTrainerSports(deletedTrainerProfile.id),
+      await this.trainerProfileModel.deletePastTrainerFields(deletedTrainerProfile.id),
+    ]);
+    // await this.trainerProfileModel.deletePastTrainerSports(deletedTrainerProfile.id);
+    // await this.trainerProfileModel.deletePastTrainerFields(deletedTrainerProfile.id);
 
     //delete schedule sessions
 

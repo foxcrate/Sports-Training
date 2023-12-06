@@ -4,6 +4,7 @@ import { ReturnUserDto } from './dtos/return.dto';
 import { SignupUserDto } from './dtos/signup.dto';
 import { CompleteSignupUserDto } from './dtos/complete-signup.dto';
 import { NativeUserDto } from './dtos/native.dto';
+import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 
 @Injectable()
 export class UserModel {
@@ -38,6 +39,7 @@ export class UserModel {
       lastName,
       profileImage,
       password,
+      userType,
       email,
       mobileNumber,
       gender,
@@ -49,6 +51,7 @@ export class UserModel {
       ${signupData.lastName},
       ${signupData.profileImage},
       ${signupData.password},
+      ${AvailableRoles.User},
       ${signupData.email},
       ${signupData.mobileNumber},
       ${signupData.gender},
@@ -60,11 +63,13 @@ export class UserModel {
     await this.prisma.$queryRaw`
     INSERT INTO User
     (
-      mobileNumber
+      mobileNumber,
+      userType
     )
     VALUES
     (
-      ${mobileNumber}
+      ${mobileNumber},
+      ${AvailableRoles.User}
     )`;
   }
 
@@ -216,7 +221,7 @@ export class UserModel {
       VALUES
     (${reqBody.firstName},
     ${reqBody.lastName},
-    'child',
+    ${AvailableRoles.Child},
     false,
     ${reqBody.profileImage},
     ${reqBody.email},

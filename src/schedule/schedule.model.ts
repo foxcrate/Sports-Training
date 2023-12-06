@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { GlobalService } from 'src/global/global.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { ScheduleSlotsDetailsDTO } from './dtos/schedule-slots-details';
 import { ScheduleCreateDto } from './dtos/create.dto';
@@ -14,7 +13,6 @@ import { SlotDetailsDto } from './dtos/slot-details.dto';
 export class ScheduleModel {
   constructor(
     private prisma: PrismaService,
-    private config: ConfigService,
     private readonly i18n: I18nService,
     private globalSerice: GlobalService,
   ) {}
@@ -125,26 +123,36 @@ export class ScheduleModel {
     );
     let newSchedule = createdSchedule[1][0];
 
-    //VERY IMPORTANT NOTE: These two statements don't depend on each other. you can use Promise.all here to douple the performance basically.
-    //db queryies are IO opertations. they can work on parallel as they can be executed on different threads natively. so make sure you take advantage of this.
+    Promise.all([
+      await this.savingNewScheduleMonths(newSchedule.id, reqBody.months),
+      await this.savingNewScheduleSlots(newSchedule.id, reqBody.slots),
+    ]);
 
-    await this.savingNewScheduleMonths(newSchedule.id, reqBody.months);
-    await this.savingNewScheduleSlots(newSchedule.id, reqBody.slots);
+    // await this.savingNewScheduleMonths(newSchedule.id, reqBody.months);
+    // await this.savingNewScheduleSlots(newSchedule.id, reqBody.slots);
+
     return await this.getByID(timezone, newSchedule.id);
   }
 
   async update(timezone, scheduleId: number, reqBody: ScheduleCreateDto) {
     let theSchedule = await this.getByID(timezone, scheduleId);
 
-    //NOTE: use Promise.all
     //delete past scheduleMonths
-    await this.deleteScheduleMonths(scheduleId);
-
     //delete past scheduleSlots
-    await this.deleteScheduleSlots(scheduleId);
 
-    await this.savingNewScheduleMonths(theSchedule.id, reqBody.months);
-    await this.savingNewScheduleSlots(theSchedule.id, reqBody.slots);
+    Promise.all([
+      await this.deleteScheduleMonths(scheduleId),
+      await this.deleteScheduleSlots(scheduleId),
+    ]);
+    // await this.deleteScheduleMonths(scheduleId);
+    // await this.deleteScheduleSlots(scheduleId);
+
+    Promise.all([
+      await this.savingNewScheduleMonths(theSchedule.id, reqBody.months),
+      await this.savingNewScheduleSlots(theSchedule.id, reqBody.slots),
+    ]);
+    // await this.savingNewScheduleMonths(theSchedule.id, reqBody.months);
+    // await this.savingNewScheduleSlots(theSchedule.id, reqBody.slots);
 
     return await this.getByID(timezone, scheduleId);
   }
@@ -152,18 +160,13 @@ export class ScheduleModel {
   async deleteByID(timezone, id: number): Promise<ScheduleSlotsDetailsDTO> {
     let deletedSchedle = await this.getByID(timezone, id);
 
-    await this.prisma.$queryRaw`
-    DELETE
-    FROM Slot
-    WHERE scheduleId = ${id}
-    `;
+    Promise.all([
+      await this.deleteScheduleSlots(id),
+      await this.deleteScheduleMonths(id),
+    ]);
 
-    // delete schedule months
-    await this.prisma.$queryRaw`
-    DELETE
-    FROM SchedulesMonths
-    WHERE scheduleId = ${id}
-    `;
+    // await this.deleteScheduleSlots(id);
+    // await this.deleteScheduleMonths(id);
 
     // delete schedule
     await this.prisma.$queryRaw`
@@ -219,7 +222,6 @@ export class ScheduleModel {
     for (let i = 0; i < monthsArray.length; i++) {
       schedulesMonthsArray.push([scheduleId, monthsArray[i]]);
     }
-    //NOTE: Good use of batch inserting
     await this.prisma.$queryRaw`
     INSERT INTO SchedulesMonths
     (scheduleId,monthId)

@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { GlobalService } from 'src/global/global.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { ReturnPlayerProfileDto } from './dtos/return.dto';
@@ -11,7 +10,6 @@ import { ReturnPlayerProfileWithUserAndSportsDto } from './dtos/return-with-user
 export class PlayerProfileModel {
   constructor(
     private prisma: PrismaService,
-    private globalService: GlobalService,
     private sportService: SportService,
   ) {}
 
@@ -66,9 +64,6 @@ export class PlayerProfileModel {
   }
 
   async getOneDetailedByUserId(userId): Promise<ReturnPlayerProfileDto> {
-    //NOTE: the use of COUNT aggregate function in  "WHEN COUNT(s.id ) = 0 THEN null" is not necessary please just change it to "WHEN s.id IS NULL THEN NULL"
-    //this idea you used alot and it is not necessary. please find each occurrence of it and change it as it just calls the aggregate function without any need to do so and this can impact performance.
-    //aggregate function usually do a full table lookup so we need to be careful and make sure it is only used when needed and that our joining conditions are using indexes whenever possible.
     let playerProfileWithSports = await this.prisma.$queryRaw`
     WITH UserDetails AS (
       SELECT id,firstName,lastName,email,profileImage,mobileNumber,gender,birthday
@@ -123,7 +118,6 @@ export class PlayerProfileModel {
     ON pps.userId = ud.id
     GROUP BY pps.id
     `;
-    //NOTE: i think you should use inner join. you need this null if use details doesn't exists
     return playerProfileWithSports[0];
   }
 

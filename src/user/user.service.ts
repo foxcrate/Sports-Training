@@ -91,11 +91,17 @@ export class UserService {
     return updatedChild;
   }
 
-  //NOTE: you have around 300 implicit any variables. this is really not a good practice. you need to inforce certain types so the complier can yell when it is necessary
   async deleteChild(childId, userId): Promise<ReturnUserDto> {
     let child = await this.authorizeChildResource(userId, childId);
-    await this.playerProfileModel.deleteByUserId(childId);
-    await this.userModel.deleteChildRelations(childId);
+
+    let childProfile = await this.playerProfileModel.getOneByUserId(childId);
+
+    Promise.all([
+      await this.playerProfileModel.deletePlayerSports(childProfile?.id),
+      await this.playerProfileModel.deleteByUserId(childId),
+      await this.userModel.deleteChildRelations(childId),
+    ]);
+
     await this.userModel.deleteById(childId);
 
     return child;
@@ -113,8 +119,12 @@ export class UserService {
   }
 
   async findRepeated(email, mobileNumber): Promise<boolean> {
-    await this.findRepeatedMobile(mobileNumber);
-    await this.findRepeatedEmail(email);
+    Promise.all([
+      await this.findRepeatedMobile(mobileNumber),
+      await this.findRepeatedEmail(email),
+    ]);
+    // await this.findRepeatedMobile(mobileNumber);
+    // await this.findRepeatedEmail(email);
 
     return false;
   }
@@ -156,9 +166,6 @@ export class UserService {
     childId: number,
   ): Promise<ReturnUserDto> {
     //get childProfile
-    //NOTE: this would be better if u had a function that fetch the child and checks if it belongs to a parent of given id instead of doing two queries
-    //Nevertheless it is not a big performance issue as it is would be very short list but for future reference use the db initiall to do all the checkups not in code
-    //This helps with isolating bussiness logic with db layer
     let child = await this.userModel.getById(childId);
     if (!child) {
       throw new NotFoundException(
@@ -166,14 +173,8 @@ export class UserService {
       );
     }
 
-    //get current user childs
-    let childs = await this.userModel.getChilds(userId);
-    let childsIds = childs.map((child) => {
-      return child.id;
-    });
-
     //check if the child is the current user's child
-    if (!childsIds.includes(child.id)) {
+    if (!(await this.userModel.isMyChild(userId, childId))) {
       throw new ForbiddenException(
         this.i18n.t(`errors.UNAUTHORIZED`, { lang: I18nContext.current().lang }),
       );

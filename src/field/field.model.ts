@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { GlobalService } from 'src/global/global.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FieldBookingDetailsDTO } from './dtos/fieldBookingDetails.dto';
 import { ConfigService } from '@nestjs/config';
@@ -16,7 +15,6 @@ export class FieldModel {
     private prisma: PrismaService,
     private config: ConfigService,
     private readonly i18n: I18nService,
-    private globalSerice: GlobalService,
   ) {}
 
   async allFields(): Promise<FieldBookingDetailsDTO[]> {
@@ -254,10 +252,6 @@ export class FieldModel {
   }
 
   async createByUser(userId: number, reqBody: FieldCreateDto): Promise<FieldReturnDto> {
-    //NOTE: i think a better way to handle availableWeekDays and Hours is to accept them as json objects from the body and stringify them on creation
-    //this way you can enforce a certain shape and also for someone like me to know how this is shaped exactly in db
-    //right now i need to ask you to know and i should not need to do that
-
     let createdField: FieldReturnDto[] = await this.prisma.$transaction(
       [
         this.prisma.$queryRaw`
@@ -493,9 +487,6 @@ export class FieldModel {
     fieldId: number,
     dayDate: string,
   ): Promise<FieldBookingDetailsDTO> {
-    //NOTE: you need not to use count on line "WHEN COUNT(fbh.id ) = 0 THEN null" you can just say "WHEN fbh.id IS NULL THEN NULL"
-    //this way you are not using an aggregate function on each query for no reason
-
     let theField = await this.prisma.$queryRaw`
     WITH FieldDetailsWithBookedHours AS (
       SELECT

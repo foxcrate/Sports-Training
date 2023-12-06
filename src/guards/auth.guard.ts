@@ -7,17 +7,16 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { IAuthToken } from 'src/auth/interfaces/auth-token.interface';
-import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
+import { UserModel } from 'src/user/user.model';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
     private config: ConfigService,
-    private prisma: PrismaService,
+    private userModel: UserModel,
     private readonly i18n: I18nService,
   ) {}
 
@@ -48,13 +47,7 @@ export class AuthGuard implements CanActivate {
     request['authType'] = payload.authType;
     request['id'] = payload.id;
 
-    //NOTE: this is a violation of seperation of concerns. please migrate these functions to their respective services and inject the services or make them global
-    //also i think you are no longer using the Child table so make sure this works as expected
-    //also if you are gonna use more than one db query. use Promise.all if they are not dependant of each other. db queries are IO operations and can work on parallel by default in node
-    if (
-      !(await this.userAvailable(request['id'])) &&
-      !(await this.childAvailable(request['id']))
-    ) {
+    if (!(await this.userAvailable(request['id']))) {
       throw new UnauthorizedException(
         this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
       );
@@ -84,24 +77,10 @@ export class AuthGuard implements CanActivate {
   }
 
   private async userAvailable(userId) {
-    let user = await this.prisma.$queryRaw`
-      SELECT *
-      FROM User
-      WHERE id = ${userId}
-      AND userType = ${AvailableRoles.User}
-      LIMIT 1
-    `;
-    return user[0];
-  }
-
-  private async childAvailable(childId) {
-    let user = await this.prisma.$queryRaw`
-      SELECT *
-      FROM User
-      WHERE id = ${childId}
-      AND userType = ${AvailableRoles.Child}
-      LIMIT 1
-    `;
-    return user[0];
+    let theUser = await this.userModel.getById(userId);
+    if (!theUser) {
+      return false;
+    }
+    return true;
   }
 }
