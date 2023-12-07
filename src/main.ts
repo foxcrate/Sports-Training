@@ -13,11 +13,12 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
 
-  var serviceAccount = require(process.env.FIREBASE_AUTH_FILE);
+  var serviceAccount = process.env.FIREBASE_AUTH_FILE;
 
   const firebaseAdminApp = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
   });
+
   console.log(firebaseAdminApp);
   await app.listen(8000);
 
