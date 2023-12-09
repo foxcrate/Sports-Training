@@ -32,7 +32,7 @@ export class AdminFieldController {
   @Roles('admin')
   @UseGuards(AuthGuard, RoleGuard)
   async getAll1() {
-    return this.adminFieldService.getAll();
+    return await this.adminFieldService.getAll();
   }
 
   @Post()
@@ -43,7 +43,7 @@ export class AdminFieldController {
     @Body(new JoiValidation(AddFieldValidation)) reqBody,
     @Request() req: ExpressRequest,
   ) {
-    return this.adminFieldService.create(reqBody);
+    return await this.adminFieldService.create(reqBody);
   }
 
   @Put('/:id')
@@ -55,7 +55,7 @@ export class AdminFieldController {
     @Param(new JoiValidation(FieldIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {
-    return this.adminFieldService.update(params.id, reqBody);
+    return await this.adminFieldService.update(params.id, reqBody);
   }
 
   @Delete('/:id')
@@ -63,7 +63,7 @@ export class AdminFieldController {
   @Roles('admin')
   @UseGuards(AuthGuard, RoleGuard)
   async delete1(@Param() params) {
-    return this.adminFieldService.delete(params.id);
+    return await this.adminFieldService.delete(params.id);
   }
 
   @Get('/pending-fields')
@@ -105,7 +105,7 @@ export class AdminFieldController {
     @Param(new JoiValidation(FieldIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {
-    return this.adminFieldService.addNotAvailableDays(
+    return await this.adminFieldService.addNotAvailableDays(
       Number(params.id),
       reqBody.notAvailableDays,
     );
@@ -116,6 +116,6 @@ export class AdminFieldController {
   @Roles('admin')
   @UseGuards(AuthGuard, RoleGuard)
   async getOne1(@Param(new JoiValidation(FieldIdValidation)) params) {
-    return this.adminFieldService.getOne(params.id);
+    return await this.adminFieldService.getOne(params.id);
   }
 }

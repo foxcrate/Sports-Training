@@ -34,7 +34,7 @@ export class UserController {
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(UpdateUserValidation))
   async update1(@Body() reqBody, @Request() req: ExpressRequest) {
-    return this.userService.update(reqBody, req['id']);
+    return await this.userService.update(reqBody, req['id']);
   }
 
   @Get()
@@ -42,7 +42,7 @@ export class UserController {
   @Roles(AvailableRoles.User)
   @UseGuards(AuthGuard, RoleGuard)
   async getOne(@Request() req: ExpressRequest) {
-    return this.userService.getOne(req['id']);
+    return await this.userService.getOne(req['id']);
   }
 
   @Post()
@@ -51,7 +51,7 @@ export class UserController {
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(AddChildValidation))
   async createChild1(@Body() reqBody, @Request() req: ExpressRequest) {
-    return this.userService.createChild(reqBody, req['id']);
+    return await this.userService.createChild(reqBody, req['id']);
   }
 
   @Get('childs')
@@ -59,7 +59,7 @@ export class UserController {
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   async getChilds(@Request() req: ExpressRequest) {
-    return this.userService.getChilds(req['id']);
+    return await this.userService.getChilds(req['id']);
   }
 
   @Get('childs/:childId')
@@ -68,7 +68,7 @@ export class UserController {
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(GetOneChildValidation))
   async getChild(@Param() params, @Request() req: ExpressRequest) {
-    return this.userService.getChild(params.childId, req['id']);
+    return await this.userService.getChild(params.childId, req['id']);
   }
 
   @Put('childs/:childId')
@@ -81,7 +81,7 @@ export class UserController {
     @Param(new JoiValidation(ChildIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {
-    return this.userService.updateChild(reqBody, params.childId, req['id']);
+    return await this.userService.updateChild(reqBody, params.childId, req['id']);
   }
 
   @Delete('childs/:childId')
@@ -90,7 +90,7 @@ export class UserController {
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(GetOneChildValidation))
   async deleteChild(@Param() params, @Request() req: ExpressRequest) {
-    return this.userService.deleteChild(params.childId, req['id']);
+    return await this.userService.deleteChild(params.childId, req['id']);
   }
 
   @Get('test')

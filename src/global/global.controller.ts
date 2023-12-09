@@ -23,11 +23,11 @@ export class GlobalController {
   @UseGuards(AuthGuard, RoleGuard)
   @Version('1')
   @UseInterceptors(FileInterceptor('imageFile'))
-  uploadFile(
+  async uploadFile(
     @UploadedFile(new ParseFilePipe())
     file: Express.Multer.File,
   ) {
-    return this.globalService.uploadFile(file);
+    return await this.globalService.uploadFile(file);
   }
 }
 

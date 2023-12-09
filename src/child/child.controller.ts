@@ -12,6 +12,6 @@ export class ChildController {
   @Version('1')
   @UsePipes(new JoiValidation(ChildActivateAccountValidation))
   async activateAccount1(@Request() req: ExpressRequest) {
-    return this.childService.activateAccount(req.body);
+    return await this.childService.activateAccount(req.body);
   }
 }

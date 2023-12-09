@@ -346,6 +346,45 @@ export class FieldModel {
   `;
   }
 
+  async deleteNotAvailableDays(fieldId: number) {
+    await this.prisma.$queryRaw`
+      DELETE
+      FROM FieldNotAvailableDays
+      WHERE fieldId = ${fieldId}
+    `;
+  }
+
+  async deleteRates(fieldId: number) {
+    await this.prisma.$queryRaw`
+      DELETE
+      FROM Rate
+      WHERE fieldId = ${fieldId}
+    `;
+  }
+
+  async deleteSlots(fieldId: number) {
+    await this.prisma.$queryRaw`
+      DELETE
+      FROM Slot
+      WHERE fieldId = ${fieldId}
+    `;
+  }
+  async deleteBookedHours(fieldId: number) {
+    await this.prisma.$queryRaw`
+      DELETE
+      FROM FieldsBookedHours
+      WHERE fieldId = ${fieldId}
+    `;
+  }
+
+  async deleteTrainerProfileFields(fieldId: number) {
+    await this.prisma.$queryRaw`
+      DELETE
+      FROM TrainerProfileFields
+      WHERE fieldId = ${fieldId}
+    `;
+  }
+
   async selectPendingFields(): Promise<FieldBookingDetailsDTO[]> {
     // return 'alo';
 
@@ -355,7 +394,6 @@ export class FieldModel {
         f.id,
         f.name,
         f.acceptanceStatus,
-        AVG(r.ratingNumber) AS rate,
         f.availableWeekDays AS availableWeekDays,
         f.availableDayHours AS availableDayHours,
         CASE
@@ -380,7 +418,6 @@ export class FieldModel {
       fdwbh.id,
       fdwbh.name,
       fdwbh.acceptanceStatus,
-      fdwbh.rate,
       fdwbh.availableWeekDays AS availableWeekDays,
       fdwbh.availableDayHours AS availableDayHours,
       fdwbh.fieldBookedHours AS fieldBookedHours,

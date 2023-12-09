@@ -37,13 +37,13 @@ export class AuthController {
   @Post('user/signup')
   @Version('1')
   async signup1(@Body(new JoiValidation(SignupValidation)) signupData: SignupUserDto) {
-    return this.authService.userSignup(signupData);
+    return await this.authService.userSignup(signupData);
   }
 
   @Post('user/send-signup-otp')
   @Version('1')
   async sendOtp1(@Body(new JoiValidation(SendOTPValidation)) sendOTPData: SendOTPDto) {
-    return this.authService.sendOtp(sendOTPData.mobileNumber);
+    return await this.authService.sendOtp(sendOTPData.mobileNumber);
   }
 
   @Post('user/create-password')
@@ -55,7 +55,7 @@ export class AuthController {
     createPasswordData: CreatePasswordDto,
     @Request() req: ExpressRequest,
   ) {
-    return this.authService.createPassword(req['id'], createPasswordData.password);
+    return await this.authService.createPassword(req['id'], createPasswordData.password);
   }
 
   @Post('user/verify-signup-otp')
@@ -63,7 +63,7 @@ export class AuthController {
   async verifyOtp1(
     @Body(new JoiValidation(VerifyOtpValidation)) verifyOtpData: VerifyOtpDto,
   ) {
-    return this.authService.verifyOTP(verifyOtpData);
+    return await this.authService.verifyOTP(verifyOtpData);
   }
 
   @Post('user/complete-signup')
@@ -74,7 +74,7 @@ export class AuthController {
     @Body(new JoiValidation(CompleteSignupValidation)) completeSignupData: SignupUserDto,
     @Request() req: ExpressRequest,
   ) {
-    return this.authService.userCompleteSignup(req['id'], completeSignupData);
+    return await this.authService.userCompleteSignup(req['id'], completeSignupData);
   }
 
   @Post('/user/signin')
@@ -82,7 +82,7 @@ export class AuthController {
   async userSignin1(
     @Body(new JoiValidation(UserSigninValidation)) signinData: SigninUserDto,
   ) {
-    return this.authService.userSignin(signinData);
+    return await this.authService.userSignin(signinData);
   }
 
   @Post('/child/signin')
@@ -90,13 +90,13 @@ export class AuthController {
   async childSignin(
     @Body(new JoiValidation(UserSigninValidation)) signinData: SigninUserDto,
   ) {
-    return this.authService.childSignin(signinData);
+    return await this.authService.childSignin(signinData);
   }
 
   @Get('refresh-token')
   @Version('1')
-  refreshToken(@Body('refreshToken') refreshToken, @Request() req: ExpressRequest) {
-    return this.authService.refreshToken(refreshToken);
+  async refreshToken(@Body('refreshToken') refreshToken, @Request() req: ExpressRequest) {
+    return await this.authService.refreshToken(refreshToken);
   }
 
   @Post('google-data')

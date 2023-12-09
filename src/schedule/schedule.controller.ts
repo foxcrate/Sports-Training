@@ -30,7 +30,7 @@ export class ScheduleController {
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   async getAll1(@Body() reqBody, @Param() params, @Request() req: ExpressRequest) {
-    return this.scheduleService.getAll(req['id']);
+    return await this.scheduleService.getAll(req['id']);
   }
 
   @Post()
@@ -42,7 +42,7 @@ export class ScheduleController {
     @Request() req: ExpressRequest,
   ) {
     // return 'alo';
-    return this.scheduleService.create(req['timezone'], req['id'], reqBody);
+    return await this.scheduleService.create(req['timezone'], req['id'], reqBody);
   }
 
   @Put('/:id')
@@ -54,7 +54,12 @@ export class ScheduleController {
     @Body(new JoiValidation(AddScheduleValidation)) reqBody,
     @Request() req: ExpressRequest,
   ) {
-    return this.scheduleService.update(req['timezone'], req['id'], params.id, reqBody);
+    return await this.scheduleService.update(
+      req['timezone'],
+      req['id'],
+      params.id,
+      reqBody,
+    );
   }
 
   @Delete('/:id')
@@ -65,7 +70,7 @@ export class ScheduleController {
     @Param(new JoiValidation(ScheduleIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {
-    return this.scheduleService.delete(req['timezone'], req['id'], params.id);
+    return await this.scheduleService.delete(req['timezone'], req['id'], params.id);
   }
 
   @Get('/:id')
@@ -76,6 +81,6 @@ export class ScheduleController {
     @Param(new JoiValidation(ScheduleIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {
-    return this.scheduleService.getOne(req['timezone'], req['id'], params.id);
+    return await this.scheduleService.getOne(req['timezone'], req['id'], params.id);
   }
 }

@@ -1,7 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { GlobalService } from 'src/global/global.service';
-import { FreeSlots } from './dtos/free-slots.dto';
 import { DoctorClinicModel } from './doctor-clinic.model';
 import { DoctorClinicBookingDetailsDTO } from './dtos/doctorClinicBookingDetails.dto';
 import { DoctorClinicCreateDto } from './dtos/create.dto';
@@ -14,7 +12,6 @@ export class AdminDoctorClinicService {
   constructor(
     private doctorClinicModel: DoctorClinicModel,
     private readonly i18n: I18nService,
-    private globalSerice: GlobalService,
   ) {}
 
   async getAll(): Promise<DoctorClinicBookingDetailsDTO[]> {
@@ -62,8 +59,15 @@ export class AdminDoctorClinicService {
   }
 
   async delete(id: number): Promise<DoctorClinicBookingDetailsDTO> {
+    console.log('alo');
+
     let deletedDoctorClinic = await this.doctorClinicModel.getByID(id);
-    this.doctorClinicModel.deleteByID(id);
+    Promise.all([
+      await this.doctorClinicModel.deleteNotAvailableDays(id),
+      await this.doctorClinicModel.deleteRates(id),
+      await this.doctorClinicModel.deleteBookedHours(id),
+    ]);
+    await this.doctorClinicModel.deleteByID(id);
     return deletedDoctorClinic;
   }
 

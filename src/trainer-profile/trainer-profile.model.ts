@@ -312,4 +312,13 @@ export class TrainerProfileModel {
       WHERE trainerProfileId = ${trainerProfileId}
     `;
   }
+
+  async deleteByUserId(userId) {
+    await this.prisma.$queryRaw`
+    DELETE FROM
+    TrainerProfile
+    WHERE
+    userId = ${userId};
+  `;
+  }
 }

@@ -423,6 +423,30 @@ export class DoctorClinicModel {
     `;
   }
 
+  async deleteNotAvailableDays(doctorClinicId: number) {
+    await this.prisma.$queryRaw`
+      DELETE
+      FROM DoctorClinicNotAvailableDays
+      WHERE doctorClinicId = ${doctorClinicId}
+    `;
+  }
+
+  async deleteRates(doctorClinicId: number) {
+    await this.prisma.$queryRaw`
+      DELETE
+      FROM Rate
+      WHERE doctorClinicId = ${doctorClinicId}
+    `;
+  }
+
+  async deleteBookedHours(doctorClinicId: number) {
+    await this.prisma.$queryRaw`
+      DELETE
+      FROM DoctorClinicsBookedHours
+      WHERE doctorClinicId = ${doctorClinicId}
+    `;
+  }
+
   async selectPendingDoctorClinics(): Promise<DoctorClinicBookingDetailsDTO[]> {
     let theDoctorClinic: DoctorClinicBookingDetailsDTO[] = await this.prisma.$queryRaw`
       WITH DoctorClinicDetailsWithBookedHours AS (

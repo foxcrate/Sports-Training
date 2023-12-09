@@ -19,13 +19,11 @@ export class PrismaErrorsFilter implements ExceptionFilter {
   ) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
-    let errorMessage = exception.message;
+    // let errorMessage = exception.message;
 
     console.log('--- PrismaError ---');
     console.log(exception);
     console.log('--- PrismaError ---');
-
-    //Logging Prisma error
 
     response.status(500).json({
       success: false,

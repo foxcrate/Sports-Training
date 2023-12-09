@@ -56,6 +56,15 @@ export class FieldService {
 
   async delete(id: number): Promise<FieldBookingDetailsDTO> {
     let deletedField = await this.fieldModel.getByID(id);
+
+    Promise.all([
+      await this.fieldModel.deleteSlots(id),
+      await this.fieldModel.deleteRates(id),
+      await this.fieldModel.deleteNotAvailableDays(id),
+      await this.fieldModel.deleteBookedHours(id),
+      await this.fieldModel.deleteTrainerProfileFields(id),
+    ]);
+
     this.fieldModel.deleteByID(id);
     return deletedField;
   }

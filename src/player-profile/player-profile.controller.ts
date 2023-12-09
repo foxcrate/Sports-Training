@@ -28,7 +28,7 @@ export class PlayerProfileController {
   @UseGuards(AuthGuard, RoleGuard)
   // @UsePipes(new JoiValidation(AddPlayerProfileValidation))
   async getOne1(@Body() reqBody, @Request() req: ExpressRequest) {
-    return this.playerProfileService.getOne(req['id']);
+    return await this.playerProfileService.getOne(req['id']);
   }
 
   @Post()
@@ -38,7 +38,7 @@ export class PlayerProfileController {
   @UsePipes(new JoiValidation(AddPlayerProfileValidation))
   async create1(@Body() reqBody, @Request() req: ExpressRequest) {
     reqBody.userId = req['id'];
-    return this.playerProfileService.create(reqBody, req['id']);
+    return await this.playerProfileService.create(reqBody, req['id']);
   }
 
   @Put()
@@ -48,7 +48,7 @@ export class PlayerProfileController {
   @UsePipes(new JoiValidation(AddPlayerProfileValidation))
   async update1(@Body() reqBody, @Request() req: ExpressRequest) {
     reqBody.userId = req['id'];
-    return this.playerProfileService.update(reqBody, req['id']);
+    return await this.playerProfileService.update(reqBody, req['id']);
   }
 
   @Delete()
@@ -56,7 +56,7 @@ export class PlayerProfileController {
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   async delete1(@Request() req: ExpressRequest) {
-    return this.playerProfileService.delete(req['id']);
+    return await this.playerProfileService.delete(req['id']);
   }
 
   @Get('testHesham')

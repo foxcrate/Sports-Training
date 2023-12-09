@@ -6,6 +6,7 @@ import {
   UsePipes,
   Version,
   Request,
+  Get,
 } from '@nestjs/common';
 import { DoctorClinicSpecializationService } from './doctor-clinic-specialization.service';
 import { Roles } from 'src/decorators/roles.decorator';
@@ -21,12 +22,20 @@ export class DoctorClinicSpecializationController {
     private doctorClinicSpecializationService: DoctorClinicSpecializationService,
   ) {}
 
+  @Get()
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async getAll() {
+    return await this.doctorClinicSpecializationService.getAll();
+  }
+
   @Post()
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(AddDoctorClinicSpecializationValidation))
   async create1(@Body() reqBody, @Request() req: ExpressRequest) {
-    return this.doctorClinicSpecializationService.create(reqBody, req['id']);
+    return await this.doctorClinicSpecializationService.create(reqBody, req['id']);
   }
 }

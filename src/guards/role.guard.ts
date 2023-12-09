@@ -32,7 +32,7 @@ export class RoleGuard implements CanActivate {
 
     if (!accepted) {
       throw new ForbiddenException(
-        this.i18n.t(`errors.UNAUTHORIZED`, { lang: I18nContext.current().lang }),
+        this.i18n.t(`errors.NOT_ALLOWED`, { lang: I18nContext.current().lang }),
       );
     }
 

@@ -75,7 +75,7 @@ export class AuthService {
   async sendOtp(mobileNumber: string) {
     await this.userService.findRepeatedMobile(mobileNumber);
 
-    this.saveOTP(mobileNumber, '1234');
+    await this.saveOTP(mobileNumber, '1234');
     //send otp
     return 'OTP sent successfully';
   }
@@ -147,6 +147,12 @@ export class AuthService {
 
   async childSignin(signinData: SigninUserDto): Promise<AuthTokensDTO> {
     const child = await this.userService.findByMobile(signinData.mobileNumber);
+
+    if (!child.isActivated) {
+      throw new UnauthorizedException(
+        this.i18n.t(`errors.ACCOUNT_NOT_ACTIVATED`, { lang: I18nContext.current().lang }),
+      );
+    }
 
     const validPassword = await this.globalService.verifyPassword(
       signinData.password,

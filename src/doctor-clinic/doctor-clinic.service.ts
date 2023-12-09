@@ -18,11 +18,11 @@ export class DoctorClinicService {
   ) {}
 
   async getAll(): Promise<DoctorClinicBookingDetailsDTO[]> {
-    return this.doctorClinicModel.allDoctorClinics();
+    return await this.doctorClinicModel.allDoctorClinics();
   }
 
   async getOne(id: number): Promise<DoctorClinicBookingDetailsDTO> {
-    return this.doctorClinicModel.getByID(id);
+    return await this.doctorClinicModel.getByID(id);
   }
 
   async create(
@@ -65,9 +65,15 @@ export class DoctorClinicService {
   }
 
   async delete(id: number): Promise<DoctorClinicBookingDetailsDTO> {
-    let deletedClinicField = await this.doctorClinicModel.getByID(id);
-    this.doctorClinicModel.deleteByID(id);
-    return deletedClinicField;
+    let deletedClinic = await this.doctorClinicModel.getByID(id);
+
+    Promise.all([
+      await this.doctorClinicModel.deleteNotAvailableDays(id),
+      await this.doctorClinicModel.deleteRates(id),
+      await this.doctorClinicModel.deleteBookedHours(id),
+    ]);
+    await this.doctorClinicModel.deleteByID(id);
+    return deletedClinic;
   }
 
   async doctorClinicDayAvailableHours(

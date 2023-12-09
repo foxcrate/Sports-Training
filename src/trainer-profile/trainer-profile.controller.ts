@@ -27,7 +27,7 @@ export class TrainerProfileController {
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   async getOne1(@Body() reqBody, @Request() req: ExpressRequest) {
-    return this.trainerProfileService.getOne(req['id']);
+    return await this.trainerProfileService.getOne(req['id']);
   }
 
   @Post()
@@ -36,7 +36,7 @@ export class TrainerProfileController {
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(AddTrainerProfileValidation))
   async create1(@Body() reqBody, @Request() req: ExpressRequest) {
-    return this.trainerProfileService.create(reqBody, req['id']);
+    return await this.trainerProfileService.create(reqBody, req['id']);
   }
 
   @Put()
@@ -45,7 +45,7 @@ export class TrainerProfileController {
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(AddTrainerProfileValidation))
   async update1(@Body() reqBody, @Request() req: ExpressRequest) {
-    return this.trainerProfileService.update(reqBody, req['id']);
+    return await this.trainerProfileService.update(reqBody, req['id']);
   }
 
   @Delete()
@@ -53,7 +53,7 @@ export class TrainerProfileController {
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   async delete1(@Request() req: ExpressRequest) {
-    return this.trainerProfileService.delete(req['id']);
+    return await this.trainerProfileService.delete(req['id']);
   }
 
   @Get('testHesham')

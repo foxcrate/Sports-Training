@@ -41,7 +41,7 @@ export class UserService {
     //complete profile
     await this.userModel.updateById(userId, completeSignupUserDto);
 
-    return this.userModel.getById(theUser.id);
+    return await this.userModel.getById(theUser.id);
   }
 
   async update(reqBody, userId) {
@@ -176,7 +176,7 @@ export class UserService {
     //check if the child is the current user's child
     if (!(await this.userModel.isMyChild(userId, childId))) {
       throw new ForbiddenException(
-        this.i18n.t(`errors.UNAUTHORIZED`, { lang: I18nContext.current().lang }),
+        this.i18n.t(`errors.NOT_ALLOWED`, { lang: I18nContext.current().lang }),
       );
     }
     return child;

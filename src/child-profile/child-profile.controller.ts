@@ -37,7 +37,7 @@ export class ChildProfileController {
     @Param(new JoiValidation(ChildIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {
-    return this.childProfileService.create(reqBody, params.childId, req['id']);
+    return await this.childProfileService.create(reqBody, params.childId, req['id']);
   }
 
   @Put('/:childProfileId')
@@ -50,7 +50,11 @@ export class ChildProfileController {
     @Param(new JoiValidation(ChildProfileIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {
-    return this.childProfileService.update(reqBody, params.childProfileId, req['id']);
+    return await this.childProfileService.update(
+      reqBody,
+      params.childProfileId,
+      req['id'],
+    );
   }
 
   @Delete('/:childProfileId')
@@ -60,7 +64,7 @@ export class ChildProfileController {
   @UsePipes(new JoiValidation(DeleteChildProfileValidation))
   async delete1(@Param() params, @Request() req: ExpressRequest) {
     const childProfileId = params.childProfileId;
-    return this.childProfileService.delete(req['id'], childProfileId);
+    return await this.childProfileService.delete(req['id'], childProfileId);
   }
 
   @Get()
@@ -68,7 +72,7 @@ export class ChildProfileController {
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   async getAll1(@Request() req: ExpressRequest) {
-    return this.childProfileService.getAll(req['id']);
+    return await this.childProfileService.getAll(req['id']);
   }
 
   @Get('/:childProfileId')
@@ -79,6 +83,6 @@ export class ChildProfileController {
   async getOne1(@Param() params, @Request() req: ExpressRequest) {
     const childProfileId = params.childProfileId;
 
-    return this.childProfileService.getOne(req['id'], childProfileId);
+    return await this.childProfileService.getOne(req['id'], childProfileId);
   }
 }

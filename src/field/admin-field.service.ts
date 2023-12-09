@@ -1,20 +1,17 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { GlobalService } from 'src/global/global.service';
 import { FieldModel } from './field.model';
 import { FieldCreateDto } from './dtos/create.dto';
 import { FieldUpdateDto } from './dtos/update.dto';
 import { FieldAcceptanceStatusDto } from './dtos/field-acceptance-status.dto';
 import { FieldBookingDetailsDTO } from './dtos/fieldBookingDetails.dto';
 import { FieldReturnDto } from './dtos/return.dto';
-import { FreeSlots } from './dtos/free-slots.dto';
 
 @Injectable()
 export class AdminFieldService {
   constructor(
     private fieldModel: FieldModel,
     private readonly i18n: I18nService,
-    private globalSerice: GlobalService,
   ) {}
 
   async getAll(): Promise<FieldBookingDetailsDTO[]> {
@@ -56,7 +53,16 @@ export class AdminFieldService {
 
   async delete(id: number): Promise<FieldBookingDetailsDTO> {
     let deletedField = await this.fieldModel.getByID(id);
-    this.fieldModel.deleteByID(id);
+
+    Promise.all([
+      await this.fieldModel.deleteSlots(id),
+      await this.fieldModel.deleteRates(id),
+      await this.fieldModel.deleteNotAvailableDays(id),
+      await this.fieldModel.deleteBookedHours(id),
+      await this.fieldModel.deleteTrainerProfileFields(id),
+    ]);
+
+    await this.fieldModel.deleteByID(id);
     return deletedField;
   }
 

@@ -1,17 +1,9 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { GlobalService } from 'src/global/global.service';
 import { ScheduleModel } from './schedule.model';
 import { ScheduleSlotsDetailsDTO } from './dtos/schedule-slots-details';
 import { TrainerProfileModel } from 'src/trainer-profile/trainer-profile.model';
-import { ReturnScheduleDto } from './dtos/return.dto';
 import { ScheduleCreateDto } from './dtos/create.dto';
 import { SlotDetailsDto } from './dtos/slot-details.dto';
 import * as moment from 'moment-timezone';
@@ -20,7 +12,6 @@ import * as moment from 'moment-timezone';
 export class ScheduleService {
   constructor(
     private scheduleModel: ScheduleModel,
-    private prisma: PrismaService,
     private globalService: GlobalService,
     private readonly i18n: I18nService,
     private trainerProfileModel: TrainerProfileModel,
@@ -93,7 +84,7 @@ export class ScheduleService {
 
     if (!schedulesIds.includes(schedule.id)) {
       throw new ForbiddenException(
-        this.i18n.t(`errors.UNAUTHORIZED`, { lang: I18nContext.current().lang }),
+        this.i18n.t(`errors.NOT_ALLOWED`, { lang: I18nContext.current().lang }),
       );
     }
     return schedule;

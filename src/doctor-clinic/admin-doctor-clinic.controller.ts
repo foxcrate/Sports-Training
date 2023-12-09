@@ -32,7 +32,7 @@ export class AdminDoctorClinicController {
   @Roles('admin')
   @UseGuards(AuthGuard, RoleGuard)
   async getAll1() {
-    return this.adminDoctorClinicService.getAll();
+    return await this.adminDoctorClinicService.getAll();
   }
 
   @Post()
@@ -43,7 +43,7 @@ export class AdminDoctorClinicController {
     @Body(new JoiValidation(AddDoctorClinicValidation)) reqBody,
     @Request() req: ExpressRequest,
   ) {
-    return this.adminDoctorClinicService.create(reqBody);
+    return await this.adminDoctorClinicService.create(reqBody);
   }
 
   @Put('/:id')
@@ -55,7 +55,7 @@ export class AdminDoctorClinicController {
     @Param(new JoiValidation(DoctorClinicIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {
-    return this.adminDoctorClinicService.update(params.id, reqBody);
+    return await this.adminDoctorClinicService.update(params.id, reqBody);
   }
 
   @Delete('/:id')
@@ -63,7 +63,7 @@ export class AdminDoctorClinicController {
   @Roles('admin')
   @UseGuards(AuthGuard, RoleGuard)
   async delete1(@Param() params) {
-    return this.adminDoctorClinicService.delete(params.id);
+    return await this.adminDoctorClinicService.delete(params.id);
   }
 
   @Get('/pending-doctor-clinics')
@@ -109,7 +109,7 @@ export class AdminDoctorClinicController {
     @Param(new JoiValidation(DoctorClinicIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {
-    return this.adminDoctorClinicService.addNotAvailableDays(
+    return await this.adminDoctorClinicService.addNotAvailableDays(
       Number(params.id),
       reqBody.notAvailableDays,
     );
@@ -120,6 +120,6 @@ export class AdminDoctorClinicController {
   @Roles('admin')
   @UseGuards(AuthGuard, RoleGuard)
   async getOne1(@Param(new JoiValidation(DoctorClinicIdValidation)) params) {
-    return this.adminDoctorClinicService.getOne(params.id);
+    return await this.adminDoctorClinicService.getOne(params.id);
   }
 }

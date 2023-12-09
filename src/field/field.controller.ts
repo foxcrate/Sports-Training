@@ -28,7 +28,7 @@ export class FieldController {
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   async getAll1() {
-    return this.fieldService.getAll();
+    return await this.fieldService.getAll();
   }
 
   @Get('/:id/day-available-hours/:date')
@@ -38,7 +38,7 @@ export class FieldController {
   async fieldDayAvailableHours1(
     @Param(new JoiValidation(FieldAvailableHoursValidation)) params,
   ) {
-    return this.fieldService.fieldDayAvailableHours(params.id, params.date);
+    return await this.fieldService.fieldDayAvailableHours(params.id, params.date);
   }
 
   @Post()
@@ -49,7 +49,7 @@ export class FieldController {
     @Body(new JoiValidation(AddFieldValidation)) reqBody,
     @Request() req: ExpressRequest,
   ) {
-    return this.fieldService.create(req['id'], reqBody);
+    return await this.fieldService.create(req['id'], reqBody);
   }
 
   @Post('/:id/reserve-slot')
@@ -61,7 +61,7 @@ export class FieldController {
     @Param(new JoiValidation(FieldIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {
-    return this.fieldService.reserveSlot(params.id, req['id'], reqBody);
+    return await this.fieldService.reserveSlot(params.id, req['id'], reqBody);
   }
 
   @Get('/:id')
@@ -69,6 +69,6 @@ export class FieldController {
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   async getOne1(@Param(new JoiValidation(FieldIdValidation)) params) {
-    return this.fieldService.getOne(params.id);
+    return await this.fieldService.getOne(params.id);
   }
 }

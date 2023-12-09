@@ -28,7 +28,7 @@ export class DoctorClinicController {
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   async getAll1() {
-    return this.doctorClinicService.getAll();
+    return await this.doctorClinicService.getAll();
   }
 
   @Get('/:id/day-available-hours/:date')
@@ -38,7 +38,10 @@ export class DoctorClinicController {
   async doctorClinicDayAvailableHours1(
     @Param(new JoiValidation(DoctorClinicAvailableHoursValidation)) params,
   ) {
-    return this.doctorClinicService.doctorClinicDayAvailableHours(params.id, params.date);
+    return await this.doctorClinicService.doctorClinicDayAvailableHours(
+      params.id,
+      params.date,
+    );
   }
 
   @Post()
@@ -49,7 +52,7 @@ export class DoctorClinicController {
     @Body(new JoiValidation(AddDoctorClinicValidation)) reqBody,
     @Request() req: ExpressRequest,
   ) {
-    return this.doctorClinicService.create(req['id'], reqBody);
+    return await this.doctorClinicService.create(req['id'], reqBody);
   }
 
   @Post('/:id/reserve-slot')
@@ -61,7 +64,7 @@ export class DoctorClinicController {
     @Param(new JoiValidation(DoctorClinicIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {
-    return this.doctorClinicService.reserveSlot(params.id, req['id'], reqBody);
+    return await this.doctorClinicService.reserveSlot(params.id, req['id'], reqBody);
   }
 
   @Get('/:id')
@@ -69,6 +72,6 @@ export class DoctorClinicController {
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   async getOne1(@Param(new JoiValidation(DoctorClinicIdValidation)) params) {
-    return this.doctorClinicService.getOne(params.id);
+    return await this.doctorClinicService.getOne(params.id);
   }
 }
