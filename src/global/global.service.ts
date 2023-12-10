@@ -169,6 +169,12 @@ export class GlobalService {
     return dateTime.locale(I18nContext.current().lang).format('YYYY-MM-DD');
   }
 
+  checkRepeatedDates(datesArray) {
+    let datesArrayElements = datesArray.map((i) => moment(i).format('YYYY-MM-DD'));
+
+    return new Set(datesArrayElements).size !== datesArrayElements.length;
+  }
+
   private getFileName(originalname) {
     let splitReturn = originalname.split('.');
 

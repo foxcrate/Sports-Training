@@ -26,6 +26,7 @@
   "WRONG_SLOT_TIMING": "خطأ في التوقيف في وقت البداية أو وقت النهاية للمعاد",
   "FIELD_NOT_PENDING": "الملعب ليس تحت انتظار التأكيد",
   "DOCTOR_CLINIC_NOT_PENDING": "عيادة الدكتور ليست تحت انتظار التأكيد",
+  "REPEATED_DATES": "يوجد تواريخ مكررة",
   "NOT_EXISTED_SPORT": "هذة الرياضة غير متوفرة",
   "NOT_EXISTED_FIELD": "هذا الملعب غير متوفر",
   "WRONG_OTP": "رمز خاطئ",

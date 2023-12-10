@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FieldBookingDetailsDTO } from './dtos/fieldBookingDetails.dto';
@@ -8,12 +8,14 @@ import { Prisma } from '@prisma/client';
 import { FieldUpdateDto } from './dtos/update.dto';
 import { FieldAcceptanceStatusDto } from './dtos/field-acceptance-status.dto';
 import { FieldReturnDto } from './dtos/return.dto';
+import { GlobalService } from 'src/global/global.service';
 
 @Injectable()
 export class FieldModel {
   constructor(
     private prisma: PrismaService,
     private config: ConfigService,
+    private globalService: GlobalService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -612,7 +614,16 @@ export class FieldModel {
     fieldId: number,
     datesArray: string[],
   ): Promise<FieldBookingDetailsDTO> {
-    console.log(datesArray);
+    if (this.globalService.checkRepeatedDates(datesArray)) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.REPEATED_DATES`, { lang: I18nContext.current().lang }),
+      );
+    }
+
+    await this.deleteNotAvailableDays(fieldId);
+    if (datesArray.length == 0) {
+      return await this.getByID(fieldId);
+    }
     let newDatesArray = [];
     for (let i = 0; i < datesArray.length; i++) {
       newDatesArray.push([new Date(datesArray[i]), fieldId]);

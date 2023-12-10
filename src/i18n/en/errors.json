@@ -26,6 +26,7 @@
   "WRONG_SLOT_TIMING": "Wrong timing for slot begin-time or end-time",
   "FIELD_NOT_PENDING": "The field is not in pending",
   "DOCTOR_CLINIC_NOT_PENDING": "The doctor clinic is not in pending",
+  "REPEATED_DATES": "There is a repeated dates",
   "NOT_EXISTED_SPORT": "Sport not exist",
   "NOT_EXISTED_FIELD": "Field not exist",
   "WRONG_OTP": "Wrong OTP",

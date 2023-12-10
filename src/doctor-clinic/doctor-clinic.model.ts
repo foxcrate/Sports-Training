@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { GlobalService } from 'src/global/global.service';
@@ -16,7 +16,7 @@ export class DoctorClinicModel {
     private prisma: PrismaService,
     private config: ConfigService,
     private readonly i18n: I18nService,
-    private globalSerice: GlobalService,
+    private globalService: GlobalService,
   ) {}
 
   async allDoctorClinics(): Promise<DoctorClinicBookingDetailsDTO[]> {
@@ -595,7 +595,15 @@ export class DoctorClinicModel {
     doctorClinicId: number,
     datesArray: string[],
   ): Promise<DoctorClinicBookingDetailsDTO> {
-    console.log(datesArray);
+    if (this.globalService.checkRepeatedDates(datesArray)) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.REPEATED_DATES`, { lang: I18nContext.current().lang }),
+      );
+    }
+    await this.deleteNotAvailableDays(doctorClinicId);
+    if (datesArray.length == 0) {
+      return await this.getByID(doctorClinicId);
+    }
     let newDatesArray = [];
     for (let i = 0; i < datesArray.length; i++) {
       newDatesArray.push([new Date(datesArray[i]), doctorClinicId]);
