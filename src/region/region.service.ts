@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { RegionCreateDto } from './dtos/create.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
@@ -55,5 +55,20 @@ export class RegionService {
       }
     }
     return false;
+  }
+
+  async checkExistance(regionId): Promise<boolean> {
+    let foundedRegion = await this.prisma.$queryRaw`
+    SELECT *
+    FROM Region
+    WHERE id = ${regionId};
+    `;
+
+    if (!foundedRegion[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.NOT_EXISTED_REGION`, { lang: I18nContext.current().lang }),
+      );
+    }
+    return true;
   }
 }

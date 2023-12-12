@@ -31,24 +31,34 @@ export class PlayerProfileController {
     return await this.playerProfileService.getOne(req['id']);
   }
 
+  // @Post()
+  // @Version('1')
+  // @Roles('user')
+  // @UseGuards(AuthGuard, RoleGuard)
+  // @UsePipes(new JoiValidation(AddPlayerProfileValidation))
+  // async create1(@Body() reqBody, @Request() req: ExpressRequest) {
+  //   return await this.playerProfileService.create(reqBody, req['id']);
+  // }
+
+  // @Put()
+  // @Version('1')
+  // @Roles('user')
+  // @UseGuards(AuthGuard, RoleGuard)
+  // @UsePipes(new JoiValidation(AddPlayerProfileValidation))
+  // async update1(@Body() reqBody, @Request() req: ExpressRequest) {
+  //   reqBody.userId = req['id'];
+  //   return await this.playerProfileService.update(reqBody, req['id']);
+  // }
+
   @Post()
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(AddPlayerProfileValidation))
-  async create1(@Body() reqBody, @Request() req: ExpressRequest) {
-    reqBody.userId = req['id'];
-    return await this.playerProfileService.create(reqBody, req['id']);
-  }
+  async set1(@Body() reqBody, @Request() req: ExpressRequest) {
+    // console.log({ req });
 
-  @Put()
-  @Version('1')
-  @Roles('user')
-  @UseGuards(AuthGuard, RoleGuard)
-  @UsePipes(new JoiValidation(AddPlayerProfileValidation))
-  async update1(@Body() reqBody, @Request() req: ExpressRequest) {
-    reqBody.userId = req['id'];
-    return await this.playerProfileService.update(reqBody, req['id']);
+    return await this.playerProfileService.set(reqBody, req['id']);
   }
 
   @Delete()

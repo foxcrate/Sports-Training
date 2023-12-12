@@ -9,6 +9,8 @@ import { TrainerProfileCreateDto } from './dtos/create.dto';
 import { ReturnSportDto } from 'src/sport/dtos/return.dto';
 import { Prisma } from '@prisma/client';
 import { FieldReturnDto } from 'src/field/dtos/return.dto';
+import { RegionService } from 'src/region/region.service';
+import { SportService } from 'src/sport/sport.service';
 
 @Injectable()
 export class TrainerProfileModel {
@@ -16,7 +18,8 @@ export class TrainerProfileModel {
     private prisma: PrismaService,
     private config: ConfigService,
     private readonly i18n: I18nService,
-    private globalSerice: GlobalService,
+    private sportService: SportService,
+    private regionService: RegionService,
   ) {}
 
   async getByUserId(userId: number): Promise<ReturnTrainerProfileDto> {
@@ -231,7 +234,7 @@ export class TrainerProfileModel {
 
   private async createProfileSports(sportsIds, newTrainerProfileId) {
     //throw an error if a sport id is not exist
-    await this.checkSportsExistance(sportsIds);
+    await this.sportService.checkExistance(sportsIds);
 
     //array of objects to insert to db
     const profilesAndSports = [];
@@ -265,21 +268,6 @@ export class TrainerProfileModel {
     await this.deletePastTrainerFields(newTrainerProfileId);
 
     await this.prisma.trainerProfileFields.createMany({ data: profilesAndFields });
-  }
-
-  private async checkSportsExistance(sportsArray): Promise<boolean> {
-    let foundedSports: Array<ReturnSportDto> = await this.prisma.$queryRaw`
-    SELECT *
-    FROM Sport
-    WHERE id IN (${Prisma.join(sportsArray)});
-    `;
-
-    if (foundedSports.length < sportsArray.length) {
-      throw new NotFoundException(
-        this.i18n.t(`errors.NOT_EXISTED_SPORT`, { lang: I18nContext.current().lang }),
-      );
-    }
-    return true;
   }
 
   private async checkFieldsExistance(fieldsArray): Promise<boolean> {

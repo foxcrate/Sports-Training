@@ -6,12 +6,14 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { PlayerProfileModel } from './player-profile.model';
 import { ReturnSportDto } from 'src/sport/dtos/return.dto';
+import { GlobalService } from 'src/global/global.service';
 
 @Injectable()
 export class PlayerProfileService {
   constructor(
     private playerProfileModel: PlayerProfileModel,
     private prisma: PrismaService,
+    private globalService: GlobalService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -27,34 +29,42 @@ export class PlayerProfileService {
     return playerProfileWithSports;
   }
 
-  async create(
+  // async create(createData: PlayerProfileCreateDto, userId) {
+  //   //throw an error if repeated
+
+  //   await this.findRepeated(userId);
+
+  //   await this.playerProfileModel.create(createData, userId);
+
+  //   return await this.playerProfileModel.getOneDetailedByUserId(userId);
+  // }
+
+  async set(
     createData: PlayerProfileCreateDto,
-    userId,
+    userId: number,
   ): Promise<ReturnPlayerProfileDto> {
-    //throw an error if repeated
-    await this.findRepeated(userId);
+    let playerProfile = await this.playerProfileModel.createIfNotExist(userId);
 
-    await this.playerProfileModel.create(createData, userId);
-
+    await this.playerProfileModel.setById(createData, playerProfile.id);
     return await this.playerProfileModel.getOneDetailedByUserId(userId);
   }
 
-  async update(
-    createData: PlayerProfileCreateDto,
-    userId,
-  ): Promise<ReturnPlayerProfileDto> {
-    //check profile existence
-    let playerProfile = await this.playerProfileModel.getOneDetailedByUserId(userId);
-    if (!playerProfile) {
-      throw new NotFoundException(
-        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
-      );
-    }
+  // async update(
+  //   createData: PlayerProfileCreateDto,
+  //   userId,
+  // ): Promise<ReturnPlayerProfileDto> {
+  //   //check profile existence
+  //   let playerProfile = await this.playerProfileModel.getOneDetailedByUserId(userId);
+  //   if (!playerProfile) {
+  //     throw new NotFoundException(
+  //       this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+  //     );
+  //   }
 
-    await this.playerProfileModel.updateById(createData, playerProfile.id);
+  //   await this.playerProfileModel.updateById(createData, playerProfile.id);
 
-    return await this.playerProfileModel.getOneDetailedByUserId(userId);
-  }
+  //   return await this.playerProfileModel.getOneDetailedByUserId(userId);
+  // }
 
   async delete(userId): Promise<ReturnPlayerProfileDto> {
     //get deleted playerProfile

@@ -190,6 +190,24 @@ model TrainerProfileFields{
   updatedAt           DateTime                @default(now())
 }
 
+// model TrainerBookedHours{
+//   id                  Int                     @id @default(autoincrement())
+
+//   gmt                 Int                     @default(0)
+  
+//   playerProfile       PlayerProfile           @relation(fields: [playerProfileId], references: [id])
+//   playerProfileId     Int
+
+//   trainerProfile      TrainerProfile         @relation(fields: [trainerProfileId], references: [id])
+//   trainerProfileId    Int
+
+//   slot                Slot                    @relation(fields: [slotId], references: [id])
+//   slotId              Int
+
+//   createdAt           DateTime                @default(now())
+//   updatedAt           DateTime                @default(now())
+// }
+
 model Schedule{
   id                  Int                     @id @default(autoincrement())
 

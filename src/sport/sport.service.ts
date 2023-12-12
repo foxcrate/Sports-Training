@@ -55,7 +55,7 @@ export class SportService {
     return false;
   }
 
-  async checkSportsExistance(sportsArray): Promise<boolean> {
+  async checkExistance(sportsArray): Promise<boolean> {
     let foundedSports: Array<ReturnSportDto> = await this.prisma.$queryRaw`
     SELECT *
     FROM Sport

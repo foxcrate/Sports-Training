@@ -28,6 +28,7 @@
   "DOCTOR_CLINIC_NOT_PENDING": "عيادة الدكتور ليست تحت انتظار التأكيد",
   "REPEATED_DATES": "يوجد تواريخ مكررة",
   "NOT_EXISTED_SPORT": "هذة الرياضة غير متوفرة",
+  "NOT_EXISTED_REGION": "هذة المنطقة غير متوفرة",
   "NOT_EXISTED_FIELD": "هذا الملعب غير متوفر",
   "WRONG_OTP": "رمز خاطئ",
   "DAY_NOT_AVAILABLE": "هذا اليوم غير متوفر",

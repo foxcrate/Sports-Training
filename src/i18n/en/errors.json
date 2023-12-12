@@ -28,6 +28,7 @@
   "DOCTOR_CLINIC_NOT_PENDING": "The doctor clinic is not in pending",
   "REPEATED_DATES": "There is a repeated dates",
   "NOT_EXISTED_SPORT": "Sport not exist",
+  "NOT_EXISTED_REGION": "Region not exist",
   "NOT_EXISTED_FIELD": "Field not exist",
   "WRONG_OTP": "Wrong OTP",
   "DAY_NOT_AVAILABLE": "Day is not available",

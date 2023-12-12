@@ -175,6 +175,20 @@ export class GlobalService {
     return new Set(datesArrayElements).size !== datesArrayElements.length;
   }
 
+  // jsonToKeyValueString(jsonData) {
+  //   const keyValuePairs = [];
+
+  //   for (const key in jsonData) {
+  //     if (jsonData.hasOwnProperty(key)) {
+
+  //       const value = jsonData[key];
+  //       keyValuePairs.push(`${key} = ${JSON.stringify(value)}`);
+  //     }
+  //   }
+
+  //   return keyValuePairs.join(',');
+  // }
+
   private getFileName(originalname) {
     let splitReturn = originalname.split('.');
 

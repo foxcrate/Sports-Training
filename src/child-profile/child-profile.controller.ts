@@ -15,7 +15,6 @@ import { Request as ExpressRequest } from 'express';
 import { ChildProfileService } from './child-profile.service';
 import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { AddPlayerProfileValidation } from '../player-profile/validations/create.validation';
-import { UpdatePlayerProfileValidation } from '../player-profile/validations/update.validation';
 import { DeleteChildProfileValidation } from '../child-profile/validations/delete.validation';
 import { GetOneChildProfileValidation } from './validations/get-one.validation';
 import { AuthGuard } from 'src/guards/auth.guard';
@@ -46,7 +45,7 @@ export class ChildProfileController {
   @UseGuards(AuthGuard, RoleGuard)
   // @UsePipes(new JoiValidation(UpdateChildProfileValidation))
   async update1(
-    @Body(new JoiValidation(UpdatePlayerProfileValidation)) reqBody,
+    @Body(new JoiValidation(AddPlayerProfileValidation)) reqBody,
     @Param(new JoiValidation(ChildProfileIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {

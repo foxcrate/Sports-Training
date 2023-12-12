@@ -5,12 +5,16 @@ import { ReturnPlayerProfileDto } from './dtos/return.dto';
 import { SportService } from 'src/sport/sport.service';
 import { PlayerProfileCreateDto } from './dtos/create.dto';
 import { ReturnPlayerProfileWithUserAndSportsDto } from './dtos/return-with-user-and-sports.dto';
+import { GlobalService } from 'src/global/global.service';
+import { RegionService } from 'src/region/region.service';
 
 @Injectable()
 export class PlayerProfileModel {
   constructor(
     private prisma: PrismaService,
     private sportService: SportService,
+    private globalService: GlobalService,
+    private regionService: RegionService,
   ) {}
 
   async getOneById(playerProfileId): Promise<ReturnPlayerProfileDto> {
@@ -168,7 +172,49 @@ export class PlayerProfileModel {
       await this.createProfileSports(createData.sports, newPlayerProfile.id);
     }
 
-    // await this.getOneDetailedByUserId(newPlayerProfile.userId);
+    await this.getOneDetailedByUserId(newPlayerProfile.userId);
+  }
+
+  async createIfNotExist(userId): Promise<ReturnPlayerProfileDto> {
+    let foundedPlayerProfile = await this.getOneByUserId(userId);
+
+    if (foundedPlayerProfile) {
+      return foundedPlayerProfile;
+    }
+    await this.prisma.$queryRaw`
+      INSERT INTO PlayerProfile
+      (userId)
+      VALUES
+      (${userId})
+    `;
+
+    return await this.getOneByUserId(userId);
+  }
+
+  async setById(setData: PlayerProfileCreateDto, playerProfileId: number) {
+    if (setData.sports && setData.sports.length > 0) {
+      await this.createProfileSports(setData.sports, playerProfileId);
+    } else if (setData.sports && setData.sports.length == 0) {
+      await this.deletePlayerSports(playerProfileId);
+    }
+    delete setData.sports;
+
+    //check region existance
+    if (setData.regionId) {
+      await this.regionService.checkExistance(setData.regionId);
+    }
+
+    if (Object.keys(setData).length >= 1) {
+      await this.prisma.$queryRaw`
+      UPDATE PlayerProfile
+      SET
+      ${setData.level ? Prisma.sql`level = ${setData.level}` : Prisma.empty}
+      ${setData.level && setData.regionId ? Prisma.sql`,` : Prisma.empty}
+      ${setData.regionId ? Prisma.sql`regionId = ${setData.regionId}` : Prisma.empty}
+      WHERE
+      id = ${playerProfileId};
+      `;
+    }
   }
 
   async updateById(createData: PlayerProfileCreateDto, playerProfileId: number) {
@@ -201,7 +247,7 @@ export class PlayerProfileModel {
 
   async createProfileSports(sportsIds, newPlayerProfileId) {
     //throw an error if a sport id is not exist
-    await this.sportService.checkSportsExistance(sportsIds);
+    await this.sportService.checkExistance(sportsIds);
 
     //array of objects to insert to db
     const profilesAndSports = [];
