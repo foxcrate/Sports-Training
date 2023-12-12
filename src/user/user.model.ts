@@ -82,7 +82,6 @@ export class UserModel {
         lastName = ${data.lastName},
         email = ${data.email},
         profileImage = ${data.profileImage},
-        gender = ${data.gender},
         birthday = ${new Date(data.birthday)}
         WHERE
         id = ${userId};
