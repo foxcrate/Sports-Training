@@ -80,29 +80,57 @@ export class AuthService {
     return 'OTP sent successfully';
   }
 
-  async verifyOTP(data: VerifyOtpDto) {
+  async verifySignupOTP(data: VerifyOtpDto) {
     //account already saved
     await this.userService.findRepeatedMobile(data.mobileNumber);
 
     //throw error if not passed
     await this.checkSavedOTP(data.mobileNumber, data.otp);
 
+    await this.deletePastOTP(data.mobileNumber);
+
     //return token to user
     return await this.signupUserAndReturnToken(data.mobileNumber);
   }
 
+  async verifyChangeMobileOTP(data: VerifyOtpDto, userId: number) {
+    //throw error if not passed
+    await this.checkSavedOTP(data.mobileNumber, data.otp);
+
+    await this.deletePastOTP(data.mobileNumber);
+
+    //return token to user
+    return await this.userModel.updateMobile(userId, data.mobileNumber);
+  }
+
   private async saveOTP(mobileNumber: string, otp: string) {
-    await this.prisma.$queryRaw`
-    INSERT INTO OTP
-    (
-      mobileNumber,
-      OTP
-    )
-    VALUES
-    (
-      ${mobileNumber},
-      ${otp}
-    )`;
+    let foundedNumber = await this.prisma.$queryRaw`
+      SELECT *
+      FROM OTP
+      WHERE mobileNumber = ${mobileNumber}
+    `;
+
+    if (foundedNumber[0]) {
+      await this.prisma.$queryRaw`
+      UPDATE OTP
+      SET
+      otp = ${otp}
+      WHERE
+      mobileNumber = ${mobileNumber}
+    `;
+    } else {
+      await this.prisma.$queryRaw`
+      INSERT INTO OTP
+      (
+        mobileNumber,
+        OTP
+      )
+      VALUES
+      (
+        ${mobileNumber},
+        ${otp}
+      )`;
+    }
   }
 
   private async checkSavedOTP(mobileNumber: string, otp: string): Promise<any> {
@@ -115,12 +143,22 @@ export class AuthService {
     `;
 
     if (!obj[0] || obj[0].otp != otp) {
+      await this.deletePastOTP(mobileNumber);
       throw new NotFoundException(
         this.i18n.t(`errors.WRONG_OTP`, { lang: I18nContext.current().lang }),
       );
     }
 
     return true;
+  }
+
+  private async deletePastOTP(mobileNumber: string): Promise<any> {
+    await this.prisma.$queryRaw`
+      DELETE
+      FROM OTP
+      WHERE
+      mobileNumber = ${mobileNumber}
+    `;
   }
 
   private async signupUserAndReturnToken(mobileNumber: string): Promise<any> {

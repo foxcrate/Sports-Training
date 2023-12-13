@@ -99,6 +99,17 @@ export class UserModel {
      `;
   }
 
+  async updateMobile(userId: number, mobileNumber: string) {
+    //update
+    await this.prisma.$queryRaw`
+       UPDATE User
+       SET
+       mobileNumber = ${mobileNumber}
+       WHERE
+       id = ${userId};
+     `;
+  }
+
   async activateAccount(userId: number) {
     await this.prisma.$queryRaw`
        UPDATE User

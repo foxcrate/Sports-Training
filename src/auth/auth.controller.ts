@@ -46,6 +46,16 @@ export class AuthController {
     return await this.authService.sendOtp(sendOTPData.mobileNumber);
   }
 
+  @Post('user/send-change-mobile-otp')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async sendChangeMobileOtp(
+    @Body(new JoiValidation(SendOTPValidation)) sendOTPData: SendOTPDto,
+  ) {
+    return await this.authService.sendOtp(sendOTPData.mobileNumber);
+  }
+
   @Post('user/create-password')
   @Version('1')
   @Roles('user')
@@ -63,7 +73,18 @@ export class AuthController {
   async verifyOtp1(
     @Body(new JoiValidation(VerifyOtpValidation)) verifyOtpData: VerifyOtpDto,
   ) {
-    return await this.authService.verifyOTP(verifyOtpData);
+    return await this.authService.verifySignupOTP(verifyOtpData);
+  }
+
+  @Post('user/verify-change-mobile-otp')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async verifyChangeMobileOtp1(
+    @Body(new JoiValidation(VerifyOtpValidation)) verifyOtpData: VerifyOtpDto,
+    @Request() req: ExpressRequest,
+  ) {
+    return await this.authService.verifyChangeMobileOTP(verifyOtpData, req['id']);
   }
 
   @Post('user/complete-signup')
