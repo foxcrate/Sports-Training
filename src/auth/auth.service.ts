@@ -169,6 +169,12 @@ export class AuthService {
   async userSignin(signinData: SigninUserDto): Promise<AuthTokensDTO> {
     const user = await this.userService.findByMobile(signinData.mobileNumber);
 
+    if (!user.password) {
+      throw new UnauthorizedException(
+        this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
+      );
+    }
+
     const validPassword = await this.globalService.verifyPassword(
       signinData.password,
       user.password,

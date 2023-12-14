@@ -88,6 +88,22 @@ export class UserModel {
       `;
   }
 
+  async completeSignup(userId: number, data: CompleteSignupUserDto) {
+    //complete profile
+    await this.prisma.$queryRaw`
+        UPDATE User
+        SET
+        firstName = ${data.firstName},
+        lastName = ${data.lastName},
+        email = ${data.email},
+        gender = ${data.gender},
+        profileImage = ${data.profileImage},
+        birthday = ${new Date(data.birthday)}
+        WHERE
+        id = ${userId};
+      `;
+  }
+
   async updatePassword(userId: number, hashedPassword: string) {
     //update
     await this.prisma.$queryRaw`

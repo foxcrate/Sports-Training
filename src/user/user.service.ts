@@ -39,7 +39,7 @@ export class UserService {
     let theUser = await this.userModel.getById(userId);
 
     //complete profile
-    await this.userModel.updateById(userId, completeSignupUserDto);
+    await this.userModel.completeSignup(userId, completeSignupUserDto);
 
     return await this.userModel.getById(theUser.id);
   }
