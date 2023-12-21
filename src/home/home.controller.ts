@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { HomeService } from './home.service';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { RoleGuard } from 'src/guards/role.guard';
@@ -16,16 +16,17 @@ import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 export class HomeController {
   constructor(private homeService: HomeService) {}
 
-  @Get('search')
+  @Post('search')
   async getSearchResults(
-    @Query(new JoiValidation(SearchFiltersValidation)) filters: SearchFiltersDto,
-    @Query('page', PageTransformPipe) page: number,
-    @Query('pageSize', PageSizeTransformPipe) pageSize: number,
+    @Body(new JoiValidation(SearchFiltersValidation)) filters: SearchFiltersDto,
+    @Body('page', PageTransformPipe) page: number,
+    @Body('pageSize', PageSizeTransformPipe) pageSize: number,
   ) /*: SearchResultDto[]*/ {
-    return this.homeService.getSearchResults({
+    const results = await this.homeService.getSearchResults({
       ...filters,
       page,
       pageSize,
     });
+    return results;
   }
 }
