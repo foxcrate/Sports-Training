@@ -13,10 +13,14 @@ export class HomeModel {
   ) {}
 
   async getCoaches(filters: SearchFiltersDto): Promise<CoachResultDto[]> {
+    /**
+     * DISTINCT with 10.4 and earlier versions not supported
+     * JSON_ARRAYAGG(DISTINCT JSON_OBJECT( 'id', s.id, 'name', s.name ))
+     */
     let sql = `
       SELECT
         tp.id AS trainerProfileId,
-        region.name AS region,
+        Region.name AS region,
         ROUND( IFNULL( SUM( r.ratingNumber ) / COUNT( r.id ), 0 ), 1 ) AS actualAverageRating,
         IFNULL( CEIL( SUM( r.ratingNumber ) / COUNT( r.id )), 0 ) AS roundedAverageRating,
       CASE
@@ -25,11 +29,11 @@ export class HomeModel {
           ELSE NULL 
         END AS sports 
       FROM
-        trainerProfile tp
+        TrainerProfile tp
         LEFT JOIN Rate r ON tp.id = r.trainerProfileId AND R.rateableType = '${RATEABLE_TYPES_ENUM.TRAINER}'
-        LEFT JOIN trainerProfileSports tps ON tp.id = tps.trainerProfileId
-        LEFT JOIN sport s ON tps.sportId = s.id
-        LEFT JOIN region ON region.id = tp.regionId
+        LEFT JOIN TrainerProfileSports tps ON tp.id = tps.trainerProfileId
+        LEFT JOIN Sport s ON tps.sportId = s.id
+        LEFT JOIN Region ON Region.id = tp.regionId
       WHERE
         1 = 1 `;
     if (filters.area) {
@@ -68,16 +72,16 @@ export class HomeModel {
         dc.id AS doctorClinicId,
         dc.profileImage AS profileImage,
         dcs.name AS specialization,
-        region.name AS region,
+        Region.name AS region,
         dc.name AS name,
         dc.cost AS cost,
-        ROUND( IFNULL( SUM( R.ratingNumber ) / COUNT( R.id ), 0 ), 2 ) AS ActualAverageRating,
+        ROUND( IFNULL( SUM( R.ratingNumber ) / COUNT( R.id ), 0 ), 1 ) AS ActualAverageRating,
         IFNULL( CEIL( SUM( R.ratingNumber ) / COUNT( R.id )), 0 ) AS RoundedAverageRating
       FROM
-        doctorclinic AS dc
+        DoctorClinic AS dc
         LEFT JOIN Rate R ON dc.id = R.doctorClinicId AND R.rateableType = '${RATEABLE_TYPES_ENUM.DOCTOR_CLINIC}'
-        LEFT JOIN doctorclinicspecialization dcs ON dc.doctorClinicSpecializationId = dcs.id
-        LEFT JOIN region ON region.id = dc.regionId
+        LEFT JOIN DoctorClinicSpecialization dcs ON dc.doctorClinicSpecializationId = dcs.id
+        LEFT JOIN Region ON Region.id = dc.regionId
       WHERE
         1 = 1
     `;
@@ -100,18 +104,17 @@ export class HomeModel {
       SELECT
         f.id AS fieldId,
         f.profileImage AS profileImage,
-        region.name AS region,
+        Region.name AS region,
         f.name AS name,
         f.cost AS cost,
         s.name AS sport,
-        ROUND( IFNULL( SUM( R.ratingNumber ) / COUNT( R.id ), 0 ), 2 ) AS ActualAverageRating,
+        ROUND( IFNULL( SUM( R.ratingNumber ) / COUNT( R.id ), 0 ), 1 ) AS ActualAverageRating,
         IFNULL( CEIL( SUM( R.ratingNumber ) / COUNT( R.id )), 0 ) AS RoundedAverageRating
       FROM
-        field AS f
-        LEFT JOIN Rate R ON f.id = R.fieldId 
-        AND R.rateableType = 'field'
-        LEFT JOIN sport s ON f.sportId = s.id
-        LEFT JOIN region ON region.id = f.regionId
+        Field AS f
+        LEFT JOIN Rate R ON f.id = R.fieldId AND R.rateableType = ${RATEABLE_TYPES_ENUM.FIELD}
+        LEFT JOIN Sport s ON f.sportId = s.id
+        LEFT JOIN Region ON Region.id = f.regionId
       WHERE
         1 = 1
     `;

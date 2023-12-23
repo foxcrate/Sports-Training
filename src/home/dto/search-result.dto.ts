@@ -3,8 +3,8 @@ export interface BasicResultDto {
   profileImage: string;
   coast: number;
   region: string;
-  actualAverageRating: number;
-  roundedAverageRating: number;
+  actualAverageRating: string;
+  roundedAverageRating: string;
 }
 export interface CoachResultDto extends BasicResultDto {
   trainerProfileId: number;
