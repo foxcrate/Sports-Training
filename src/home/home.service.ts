@@ -3,6 +3,7 @@ import { HomeModel } from './home.model';
 import { SearchFiltersDto } from './dto/search-filters.dto';
 import { HOME_SEARCH_TYPES_ENUM } from 'src/utils/enums';
 import { I18nContext, I18nService } from 'nestjs-i18n';
+import { CoachResultDto, DoctorResultDto, FieldResultDto } from './dto/search-result.dto';
 
 @Injectable()
 export class HomeService {
@@ -11,7 +12,9 @@ export class HomeService {
     private readonly i18n: I18nService,
   ) {}
 
-  async getSearchResults(filters: SearchFiltersDto) {
+  async getSearchResults(
+    filters: SearchFiltersDto,
+  ): Promise<CoachResultDto[] | DoctorResultDto[] | FieldResultDto[]> {
     switch (filters.type) {
       case HOME_SEARCH_TYPES_ENUM.COACHES:
         return this.homeModel.getCoaches(filters);

@@ -8,8 +8,9 @@ export const SearchFiltersValidation = Joi.object({
   page: Joi.number().optional().integer().positive(),
   pageSize: Joi.number().optional().integer().positive(),
   area: Joi.number().optional().integer().positive(),
-  sports: Joi.array().optional().items(Joi.number().positive()),
+  sport: Joi.number().optional().integer().positive(),
   rate: Joi.string()
     .optional()
     .valid(...Object.keys(RATES_ENUM)),
+  specialization: Joi.number().optional().integer().positive(),
 });

@@ -13,3 +13,9 @@ export enum HOME_SEARCH_TYPES_ENUM {
   DOCTORS = 'doctors',
   FIELDS = 'fields',
 }
+
+export enum RATEABLE_TYPES_ENUM {
+  TRAINER = 'trainer',
+  FIELD = 'field',
+  DOCTOR_CLINIC = 'doctorClinic',
+}
