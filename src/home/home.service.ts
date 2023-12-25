@@ -3,7 +3,7 @@ import { HomeModel } from './home.model';
 import { SearchFiltersDto } from './dto/search-filters.dto';
 import { HOME_SEARCH_TYPES_ENUM } from 'src/utils/enums';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { CoachResultDto, DoctorResultDto, FieldResultDto } from './dto/search-result.dto';
+import { SearchResultsDto } from './dto/search-result.dto';
 
 @Injectable()
 export class HomeService {
@@ -12,9 +12,7 @@ export class HomeService {
     private readonly i18n: I18nService,
   ) {}
 
-  async getSearchResults(
-    filters: SearchFiltersDto,
-  ): Promise<CoachResultDto[] | DoctorResultDto[] | FieldResultDto[]> {
+  async getSearchResults(filters: SearchFiltersDto): Promise<SearchResultsDto> {
     switch (filters.type) {
       case HOME_SEARCH_TYPES_ENUM.COACHES:
         return this.homeModel.getCoaches(filters);
@@ -22,6 +20,8 @@ export class HomeService {
         return this.homeModel.getDoctors(filters);
       case HOME_SEARCH_TYPES_ENUM.FIELDS:
         return this.homeModel.getFields(filters);
+      case HOME_SEARCH_TYPES_ENUM.ALL:
+        return this.homeModel.getAll(filters);
       default:
         throw new BadRequestException(
           this.i18n.t(`errors.WRONG_FILTER_TYPE`, { lang: I18nContext.current().lang }),

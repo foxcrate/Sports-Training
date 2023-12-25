@@ -8,7 +8,7 @@ export interface BasicResultDto {
 }
 export interface CoachResultDto extends BasicResultDto {
   trainerProfileId: number;
-  sports: { id: number; name: string }[];
+  sports: string[];
 }
 
 export interface DoctorResultDto extends BasicResultDto {
@@ -19,4 +19,24 @@ export interface DoctorResultDto extends BasicResultDto {
 export interface FieldResultDto extends BasicResultDto {
   fieldId: number;
   sport: string;
+}
+
+export interface SearchResultDto {
+  name: string;
+  profileImage: string | null;
+  coast: number;
+  region: string;
+  actualAverageRating: string;
+  roundedAverageRating: string;
+  trainerProfileId: number | null;
+  sports: string[] | null;
+  doctorClinicId: number | null;
+  specialization: string | null;
+  fieldId: number | null;
+  sport: string | null;
+}
+
+export interface SearchResultsDto {
+  searchResults: SearchResultDto[];
+  count: number;
 }

@@ -9,7 +9,7 @@ import { SearchFiltersDto } from './dto/search-filters.dto';
 import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { SearchFiltersValidation } from './validations/search-filters.validations';
 import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
-import { CoachResultDto, DoctorResultDto, FieldResultDto } from './dto/search-result.dto';
+import { SearchResultsDto } from './dto/search-result.dto';
 
 @Roles(AvailableRoles.User)
 @UseGuards(AuthGuard, RoleGuard)
@@ -20,12 +20,12 @@ export class HomeController {
   @Post('search')
   async getSearchResults(
     @Body(new JoiValidation(SearchFiltersValidation)) filters: SearchFiltersDto,
-    @Body('page', PageTransformPipe) offset: number,
+    @Body('page', PageTransformPipe) page: number,
     @Body('pageSize', PageSizeTransformPipe) pageSize: number,
-  ): Promise<CoachResultDto[] | DoctorResultDto[] | FieldResultDto[]> {
+  ): Promise<SearchResultsDto> {
     return this.homeService.getSearchResults({
       ...filters,
-      offset,
+      offset: page * pageSize,
       pageSize,
     });
   }

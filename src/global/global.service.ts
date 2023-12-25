@@ -176,8 +176,8 @@ export class GlobalService {
     return new Set(datesArrayElements).size !== datesArrayElements.length;
   }
 
-  preparePrismaSql(sql: string, ...values): Prisma.Sql {
-    return Prisma.sql([sql], ...values);
+  preparePrismaSql(sql: string): Prisma.Sql {
+    return Prisma.sql([sql]);
   }
 
   safeParse(value) {

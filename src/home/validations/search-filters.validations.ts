@@ -13,4 +13,5 @@ export const SearchFiltersValidation = Joi.object({
     .optional()
     .valid(...Object.keys(RATES_ENUM)),
   specialization: Joi.number().optional().integer().positive(),
+  name: Joi.string().optional(),
 });
