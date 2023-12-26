@@ -44,6 +44,16 @@ export class DoctorClinicController {
     );
   }
 
+  @Get('/:id/available-upcoming-week')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async doctorClinicAvailableUpcomingWeek1(
+    @Param(new JoiValidation(DoctorClinicIdValidation)) params,
+  ) {
+    return await this.doctorClinicService.availableUpcomingWeek(params.id);
+  }
+
   @Post()
   @Version('1')
   @Roles('user')

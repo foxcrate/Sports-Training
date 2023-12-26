@@ -8,6 +8,7 @@ export class DoctorClinicCreateDto {
   latitude: number;
   profileImage: string;
   regionId: number;
+  doctorClinicSpecializationId: number;
   availableWeekDays: string;
   startTime: string;
   endTime: string;

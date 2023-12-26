@@ -332,10 +332,23 @@ model Rate{
   updatedAt           DateTime                @default(now())
 }
 
+model Picture{
+  id                    Int                   @id @default(autoincrement())
+
+  imageLink             String
+
+  doctorClinic          DoctorClinic?         @relation(fields: [doctorClinicId], references: [id],onDelete: Cascade)
+  doctorClinicId        Int?
+
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @default(now())
+}
+
 model DoctorClinic{
   id                  Int                     @id @default(autoincrement())
   name                String
   description         String?
+  qualifications      String?
   cost                Int?
   slotDuration        Int?
   address             String?
@@ -347,7 +360,9 @@ model DoctorClinic{
 
   availableDayHours   Json?   
 
-  rates        Rate[]
+  rates               Rate[]
+
+  pictures            Picture[]
 
   addedByUserId             Int?
   addedByUser               User?             @relation(fields: [addedByUserId], references: [id],onDelete: Cascade)

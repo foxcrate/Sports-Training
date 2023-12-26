@@ -12,6 +12,7 @@ export const UpdateDoctorClinicValidation = Joi.object({
   latitude: Joi.number().required(),
   profileImage: Joi.string(),
   regionId: Joi.number().required(),
+  doctorClinicSpecializationId: Joi.number().required(),
   availableWeekDays: Joi.array()
     .items(
       Joi.string().valid(
