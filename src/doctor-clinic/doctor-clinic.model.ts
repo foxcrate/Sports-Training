@@ -25,7 +25,12 @@ export class DoctorClinicModel {
         SELECT
           dc.id,
           dc.name,
+          dc.profileImage,
+          dc.cost,
           dc.acceptanceStatus,
+          dc.doctorClinicSpecializationId,
+          dc.qualifications,
+          dc.regionId,
           dc.availableWeekDays AS availableWeekDays,
           dc.availableDayHours AS availableDayHours,
           CASE
@@ -49,7 +54,11 @@ export class DoctorClinicModel {
       SELECT
         dcdwbh.id,
         dcdwbh.name,
+        dcdwbh.cost,
         dcdwbh.acceptanceStatus,
+        dcdwbh.doctorClinicSpecializationId,
+        dcdwbh.qualifications,
+        dcdwbh.profileImage,
         -- each clinic average
         (
           SELECT
@@ -77,12 +86,24 @@ export class DoctorClinicModel {
           'id',dcnad.id,
           'dayDate', dcnad.dayDate
           ))
-        END AS doctorClinicNotAvailableDays
+        END AS doctorClinicNotAvailableDays,
+        CASE
+        WHEN COUNT(dcs.id ) = 0 THEN null
+        ELSE
+        JSON_OBJECT(
+          'id',dcs.id,
+          'name', dcs.name
+          )
+        END AS doctorClinicSpecialization
       FROM DoctorClinicDetailsWithBookedHours AS dcdwbh
       LEFT JOIN
       DoctorClinicNotAvailableDays AS dcnad
       ON
       dcdwbh.id = dcnad.doctorClinicId
+      LEFT JOIN
+      DoctorClinicSpecialization AS dcs
+      ON
+      dcdwbh.doctorClinicSpecializationId = dcs.id
       GROUP BY  dcdwbh.id
       `;
 
@@ -97,10 +118,23 @@ export class DoctorClinicModel {
         FROM Rate
         WHERE doctorClinicId = ${id}
       ),
+      PicturesTable AS (
+        SELECT doctorClinicId,
+        CASE WHEN COUNT(id) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(JSON_OBJECT(
+          'id',p.id,
+          'imageLink', p.imageLink
+          ))
+        END AS gallery
+        FROM Picture as p
+        WHERE doctorClinicId = ${id}
+        GROUP BY doctorClinicId
+      ),
       Last5Feedbacks AS (
         SELECT doctorClinicId, feedback
         FROM Rate
-        WHERE doctorClinicId = ${id}
+        WHERE doctorClinicId = ${id} && feedback IS NOT NULL
         LIMIT 5
       ),
       NotAvailableDays AS (
@@ -117,7 +151,7 @@ export class DoctorClinicModel {
         GROUP BY doctorClinicId
       ),
       ClinicWithBookedHours AS (
-        SELECT dc.id, dc.name, dc.acceptanceStatus, dc.availableWeekDays AS availableWeekDays, dc.availableDayHours AS availableDayHours,
+        SELECT dc.id, dc.name, dc.cost, dc.doctorClinicSpecializationId, dc.profileImage, dc.description, dc.qualifications, dc.regionId, dc.acceptanceStatus, dc.availableWeekDays AS availableWeekDays, dc.availableDayHours AS availableDayHours,
         CASE WHEN COUNT(dcbh.id ) = 0 THEN null
         ELSE
         JSON_ARRAYAGG(JSON_OBJECT(
@@ -133,7 +167,7 @@ export class DoctorClinicModel {
         GROUP BY dc.id
       ),
       ClinicWithBookedHoursAndFeedbacks AS (
-        SELECT cwbh.id, cwbh.name, cwbh.acceptanceStatus,
+        SELECT cwbh.id, cwbh.name, cwbh.cost, cwbh.doctorClinicSpecializationId, cwbh.profileImage, cwbh.description, cwbh.qualifications, cwbh.regionId, cwbh.acceptanceStatus,
           CASE WHEN COUNT(l5f.doctorClinicId ) = 0 THEN null
           ELSE
           JSON_ARRAYAGG(l5f.feedback)
@@ -148,8 +182,13 @@ export class DoctorClinicModel {
         GROUP BY cwbh.id
       ),
       ClinicWithBookedHoursAndFeedbacksAndAvg AS(
-      SELECT cwbhaf.id, cwbhaf.name, cwbhaf.acceptanceStatus,
-        AVG(rav.RatingNumber) AS RatingNumber,
+      SELECT cwbhaf.id, cwbhaf.name, cwbhaf.cost, cwbhaf.doctorClinicSpecializationId, cwbhaf.profileImage, cwbhaf.description,cwbhaf.qualifications, cwbhaf.regionId, cwbhaf.acceptanceStatus,
+        -- AVG(rav.RatingNumber) AS RatingNumber,
+        CASE WHEN AVG(rav.RatingNumber) IS NULL THEN 5
+          ELSE
+          AVG(rav.RatingNumber)
+          END 
+          AS RatingNumber,
         cwbhaf.feedbacks,
         cwbhaf.availableWeekDays AS availableWeekDays,
         cwbhaf.availableDayHours AS availableDayHours,
@@ -158,18 +197,52 @@ export class DoctorClinicModel {
       LEFT JOIN RatingAvgTable AS rav
       ON cwbhaf.id = rav.doctorClinicId
       GROUP BY cwbhaf.id
-      )
-      SELECT cwbhafaa.id, cwbhafaa.name, cwbhafaa.acceptanceStatus,
+      ),
+      ClinicWithBookedHoursAndFeedbacksAndAvgAndGallery AS(
+        SELECT cwbhafaa.id, cwbhafaa.name, cwbhafaa.cost, cwbhafaa.doctorClinicSpecializationId, cwbhafaa.profileImage, cwbhafaa.description,cwbhafaa.qualifications, cwbhafaa.regionId, cwbhafaa.acceptanceStatus,
         cwbhafaa.RatingNumber AS RatingNumber,
         cwbhafaa.feedbacks,
         cwbhafaa.availableWeekDays AS availableWeekDays,
         cwbhafaa.availableDayHours AS availableDayHours,
-        nad.doctorClinicNotAvailableDays AS DoctorClinicNotAvailableDays,
-        cwbhafaa.doctorClinicBookedHours AS doctorClinicBookedHours
-      FROM ClinicWithBookedHoursAndFeedbacksAndAvg as cwbhafaa
+        cwbhafaa.doctorClinicBookedHours AS doctorClinicBookedHours,
+        ps.gallery AS gallery
+      FROM ClinicWithBookedHoursAndFeedbacksAndAvg AS cwbhafaa
+      LEFT JOIN PicturesTable AS ps
+      ON cwbhafaa.id = ps.doctorClinicId
+      GROUP BY cwbhafaa.id,ps.gallery
+      )
+      SELECT cwbhafaaag.id, cwbhafaaag.name, cwbhafaaag.cost, cwbhafaaag.profileImage, cwbhafaaag.description,cwbhafaaag.qualifications, cwbhafaaag.acceptanceStatus,
+        cwbhafaaag.RatingNumber AS RatingNumber,
+        cwbhafaaag.feedbacks,
+        cwbhafaaag.availableWeekDays AS availableWeekDays,
+        cwbhafaaag.availableDayHours AS availableDayHours,
+        nad.doctorClinicNotAvailableDays AS doctorClinicNotAvailableDays,
+        cwbhafaaag.doctorClinicBookedHours AS doctorClinicBookedHours,
+        cwbhafaaag.gallery AS gallery,
+        CASE 
+        WHEN count(r.id) = 0 THEN null
+        ELSE
+        JSON_OBJECT(
+          'id',r.id,
+          'name', r.name)
+        END AS region,
+        CASE
+        WHEN COUNT(dcs.id ) = 0 THEN null
+        ELSE
+        JSON_OBJECT(
+          'id',dcs.id,
+          'name', dcs.name
+          )
+        END AS doctorClinicSpecialization
+      FROM ClinicWithBookedHoursAndFeedbacksAndAvgAndGallery as cwbhafaaag
       LEFT JOIN NotAvailableDays as nad
-      ON nad.doctorClinicId = cwbhafaa.id
-      GROUP BY cwbhafaa.id,nad.doctorClinicId
+      ON nad.doctorClinicId = cwbhafaaag.id
+      LEFT JOIN Region AS r ON cwbhafaaag.regionId = r.id
+      LEFT JOIN
+      DoctorClinicSpecialization AS dcs
+      ON
+      cwbhafaaag.doctorClinicSpecializationId = dcs.id
+      GROUP BY cwbhafaaag.id, nad.doctorClinicId,cwbhafaaag.gallery
       `;
 
     if (!DoctorClinic[0]) {
@@ -195,6 +268,19 @@ export class DoctorClinicModel {
       FROM Rate as r
       WHERE doctorClinicId = (SELECT DoctorClinicId FROM GetDoctorClinicIdCTE)
     ),
+    PicturesTable AS (
+        SELECT doctorClinicId,
+        CASE WHEN COUNT(id) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(JSON_OBJECT(
+          'id',p.id,
+          'imageLink', p.imageLink
+          ))
+        END AS gallery
+        FROM Picture as p
+        WHERE doctorClinicId = (SELECT DoctorClinicId FROM GetDoctorClinicIdCTE)
+        GROUP BY doctorClinicId
+      ),
   Last5Feedbacks AS (
       SELECT doctorClinicId,feedback
       FROM Rate
@@ -259,18 +345,32 @@ export class DoctorClinicModel {
     LEFT JOIN RatingAvgTable as rav
     ON cwbhaf.id = rav.doctorClinicId
     GROUP BY cwbhaf.id
-    )
-    SELECT cwbhafaa.id, cwbhafaa.name, cwbhafaa.acceptanceStatus,
-      cwbhafaa.RatingNumber AS RatingNumber,
-      cwbhafaa.feedbacks,
-      cwbhafaa.availableWeekDays AS availableWeekDays,
-      cwbhafaa.availableDayHours AS availableDayHours,
-      nad.doctorClinicNotAvailableDays AS DoctorClinicNotAvailableDays,
-      cwbhafaa.doctorClinicBookedHours AS doctorClinicBookedHours
-    FROM ClinicWithBookedHoursAndFeedbacksAndAvg as cwbhafaa
-    LEFT JOIN NotAvailableDays as nad
-    ON nad.doctorClinicId = cwbhafaa.id
-    GROUP BY cwbhafaa.id,nad.doctorClinicId
+    ),
+    ClinicWithBookedHoursAndFeedbacksAndAvgAndGallery AS(
+        SELECT cwbhafaa.id, cwbhafaa.name, cwbhafaa.acceptanceStatus,
+        cwbhafaa.RatingNumber AS RatingNumber,
+        cwbhafaa.feedbacks,
+        cwbhafaa.availableWeekDays AS availableWeekDays,
+        cwbhafaa.availableDayHours AS availableDayHours,
+        cwbhafaa.doctorClinicBookedHours AS doctorClinicBookedHours,
+        ps.gallery AS gallery
+      FROM ClinicWithBookedHoursAndFeedbacksAndAvg AS cwbhafaa
+      LEFT JOIN PicturesTable AS ps
+      ON cwbhafaa.id = ps.doctorClinicId
+      GROUP BY cwbhafaa.id,ps.gallery
+      )
+      SELECT cwbhafaaag.id, cwbhafaaag.name, cwbhafaaag.acceptanceStatus,
+        cwbhafaaag.RatingNumber AS RatingNumber,
+        cwbhafaaag.feedbacks,
+        cwbhafaaag.availableWeekDays AS availableWeekDays,
+        cwbhafaaag.availableDayHours AS availableDayHours,
+        nad.doctorClinicNotAvailableDays AS doctorClinicNotAvailableDays,
+        cwbhafaaag.doctorClinicBookedHours AS doctorClinicBookedHours,
+        cwbhafaaag.gallery AS gallery
+      FROM ClinicWithBookedHoursAndFeedbacksAndAvgAndGallery as cwbhafaaag
+      LEFT JOIN NotAvailableDays as nad
+      ON nad.doctorClinicId = cwbhafaaag.id
+      GROUP BY cwbhafaaag.id, nad.doctorClinicId,cwbhafaaag.gallery
     `;
 
     return DoctorClinic[0];
@@ -292,8 +392,9 @@ export class DoctorClinicModel {
             profileImage,
             acceptanceStatus,
             regionId,
+            doctorClinicSpecializationId,
             availableWeekDays,
-            availableDayHours,
+            availableDayHours
           )
           VALUES
         (
@@ -307,8 +408,9 @@ export class DoctorClinicModel {
           ${reqBody.profileImage},
           ${DoctorClinicAcceptanceStatusDto.Accepted},
           ${reqBody.regionId},
+          ${reqBody.doctorClinicSpecializationId},
           ${reqBody.availableWeekDays},
-          ${{ from: reqBody.startTime, to: reqBody.endTime }},
+          ${{ from: reqBody.startTime, to: reqBody.endTime }}
         );`,
         this.prisma.$queryRaw`
           SELECT
@@ -343,6 +445,7 @@ export class DoctorClinicModel {
             latitude,
             profileImage,
             regionId,
+            doctorClinicSpecializationId,
             availableWeekDays,
             availableDayHours,
             addedByUserId
@@ -358,6 +461,7 @@ export class DoctorClinicModel {
           ${reqBody.latitude},
           ${reqBody.profileImage},
           ${reqBody.regionId},
+          ${reqBody.doctorClinicSpecializationId},
           ${reqBody.availableWeekDays},
           ${{ from: reqBody.startTime, to: reqBody.endTime }},
           ${userId}
@@ -395,6 +499,7 @@ export class DoctorClinicModel {
             latitude = ${reqBody.latitude},
             profileImage = ${reqBody.profileImage},
             regionId = ${reqBody.regionId},
+            doctorClinicSpecializationId = ${reqBody.doctorClinicSpecializationId},
             availableWeekDays = ${reqBody.availableWeekDays},
             availableDayHours = ${{ from: reqBody.startTime, to: reqBody.endTime }}
           WHERE
