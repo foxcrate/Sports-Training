@@ -392,7 +392,7 @@ export class DoctorClinicModel {
             regionId,
             doctorClinicSpecializationId,
             availableWeekDays,
-            availableDayHours,
+            availableDayHours
           )
           VALUES
         (
@@ -408,7 +408,7 @@ export class DoctorClinicModel {
           ${reqBody.regionId},
           ${reqBody.doctorClinicSpecializationId},
           ${reqBody.availableWeekDays},
-          ${{ from: reqBody.startTime, to: reqBody.endTime }},
+          ${{ from: reqBody.startTime, to: reqBody.endTime }}
         );`,
         this.prisma.$queryRaw`
           SELECT
