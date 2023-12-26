@@ -16,6 +16,7 @@ interface DoctorClinicBookedHours {
 export class DoctorClinicBookingDetailsDTO {
   id: number;
   name: string;
+  cost: number;
   acceptanceStatus: DoctorClinicAcceptanceStatusDto;
   availableWeekDays: string[];
   availableDayHours: AvaiableDayHour;
