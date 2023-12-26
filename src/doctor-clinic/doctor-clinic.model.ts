@@ -26,6 +26,7 @@ export class DoctorClinicModel {
           dc.id,
           dc.name,
           dc.profileImage,
+          dc.cost,
           dc.acceptanceStatus,
           dc.doctorClinicSpecializationId,
           dc.qualifications,
@@ -53,6 +54,7 @@ export class DoctorClinicModel {
       SELECT
         dcdwbh.id,
         dcdwbh.name,
+        dcdwbh.cost,
         dcdwbh.acceptanceStatus,
         dcdwbh.doctorClinicSpecializationId,
         dcdwbh.qualifications,
@@ -149,7 +151,7 @@ export class DoctorClinicModel {
         GROUP BY doctorClinicId
       ),
       ClinicWithBookedHours AS (
-        SELECT dc.id, dc.name, dc.doctorClinicSpecializationId, dc.profileImage, dc.description, dc.qualifications, dc.regionId, dc.acceptanceStatus, dc.availableWeekDays AS availableWeekDays, dc.availableDayHours AS availableDayHours,
+        SELECT dc.id, dc.name, dc.cost, dc.doctorClinicSpecializationId, dc.profileImage, dc.description, dc.qualifications, dc.regionId, dc.acceptanceStatus, dc.availableWeekDays AS availableWeekDays, dc.availableDayHours AS availableDayHours,
         CASE WHEN COUNT(dcbh.id ) = 0 THEN null
         ELSE
         JSON_ARRAYAGG(JSON_OBJECT(
@@ -165,7 +167,7 @@ export class DoctorClinicModel {
         GROUP BY dc.id
       ),
       ClinicWithBookedHoursAndFeedbacks AS (
-        SELECT cwbh.id, cwbh.name, cwbh.doctorClinicSpecializationId, cwbh.profileImage, cwbh.description, cwbh.qualifications, cwbh.regionId, cwbh.acceptanceStatus,
+        SELECT cwbh.id, cwbh.name, cwbh.cost, cwbh.doctorClinicSpecializationId, cwbh.profileImage, cwbh.description, cwbh.qualifications, cwbh.regionId, cwbh.acceptanceStatus,
           CASE WHEN COUNT(l5f.doctorClinicId ) = 0 THEN null
           ELSE
           JSON_ARRAYAGG(l5f.feedback)
@@ -180,7 +182,7 @@ export class DoctorClinicModel {
         GROUP BY cwbh.id
       ),
       ClinicWithBookedHoursAndFeedbacksAndAvg AS(
-      SELECT cwbhaf.id, cwbhaf.name, cwbhaf.doctorClinicSpecializationId, cwbhaf.profileImage, cwbhaf.description,cwbhaf.qualifications, cwbhaf.regionId, cwbhaf.acceptanceStatus,
+      SELECT cwbhaf.id, cwbhaf.name, cwbhaf.cost, cwbhaf.doctorClinicSpecializationId, cwbhaf.profileImage, cwbhaf.description,cwbhaf.qualifications, cwbhaf.regionId, cwbhaf.acceptanceStatus,
         -- AVG(rav.RatingNumber) AS RatingNumber,
         CASE WHEN AVG(rav.RatingNumber) IS NULL THEN 5
           ELSE
@@ -197,7 +199,7 @@ export class DoctorClinicModel {
       GROUP BY cwbhaf.id
       ),
       ClinicWithBookedHoursAndFeedbacksAndAvgAndGallery AS(
-        SELECT cwbhafaa.id, cwbhafaa.name, cwbhafaa.doctorClinicSpecializationId, cwbhafaa.profileImage, cwbhafaa.description,cwbhafaa.qualifications, cwbhafaa.regionId, cwbhafaa.acceptanceStatus,
+        SELECT cwbhafaa.id, cwbhafaa.name, cwbhafaa.cost, cwbhafaa.doctorClinicSpecializationId, cwbhafaa.profileImage, cwbhafaa.description,cwbhafaa.qualifications, cwbhafaa.regionId, cwbhafaa.acceptanceStatus,
         cwbhafaa.RatingNumber AS RatingNumber,
         cwbhafaa.feedbacks,
         cwbhafaa.availableWeekDays AS availableWeekDays,
@@ -209,7 +211,7 @@ export class DoctorClinicModel {
       ON cwbhafaa.id = ps.doctorClinicId
       GROUP BY cwbhafaa.id,ps.gallery
       )
-      SELECT cwbhafaaag.id, cwbhafaaag.name, cwbhafaaag.profileImage, cwbhafaaag.description,cwbhafaaag.qualifications, cwbhafaaag.acceptanceStatus,
+      SELECT cwbhafaaag.id, cwbhafaaag.name, cwbhafaaag.cost, cwbhafaaag.profileImage, cwbhafaaag.description,cwbhafaaag.qualifications, cwbhafaaag.acceptanceStatus,
         cwbhafaaag.RatingNumber AS RatingNumber,
         cwbhafaaag.feedbacks,
         cwbhafaaag.availableWeekDays AS availableWeekDays,
