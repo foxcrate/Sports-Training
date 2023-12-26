@@ -52,7 +52,7 @@ export class DoctorClinicService {
     // check for repeated name;
     let repeatedDoctorClinic = await this.doctorClinicModel.getByName(reqBody.name);
 
-    if (repeatedDoctorClinic && repeatedDoctorClinic.id == id) {
+    if (repeatedDoctorClinic && repeatedDoctorClinic.id != id) {
       throw new BadRequestException(
         this.i18n.t(`errors.REPEATED_DOCTOR_CLINIC`, {
           lang: I18nContext.current().lang,
@@ -125,8 +125,42 @@ export class DoctorClinicService {
     return availableHours;
   }
 
+  async availableUpcomingWeek(id: number) {
+    let theDoctorClinic = await this.doctorClinicModel.getByID(id);
+    let availableDays = [];
+
+    let endDate = moment().endOf('week');
+
+    let toDay = moment();
+
+    while (toDay < endDate) {
+      let dayName = toDay.format('dddd');
+
+      if (theDoctorClinic.availableWeekDays.includes(dayName)) {
+        availableDays.push(moment(toDay).format('YYYY-MM-DD'));
+      }
+
+      toDay.add(1, 'days');
+    }
+
+    if (theDoctorClinic.doctorClinicNotAvailableDays) {
+      let arrayOfNotAvailableDays = theDoctorClinic.doctorClinicNotAvailableDays.map(
+        (i) => {
+          return moment(i.dayDate).format('YYYY-MM-DD');
+        },
+      );
+
+      availableDays = this.getClinicRealAvailableDays(
+        availableDays,
+        arrayOfNotAvailableDays,
+      );
+    }
+
+    return availableDays;
+  }
+
   async reserveSlot(doctorClinicId: number, userId: number, reqBody): Promise<string> {
-    let doctorClinicExist = await this.doctorClinicModel.getByID(doctorClinicId);
+    await this.doctorClinicModel.getByID(doctorClinicId);
     let dayDate = moment(reqBody.dayDate);
     let dateOnly = this.globalSerice.getDate(dayDate);
     let dayTimesArray = reqBody.dayTimes;
@@ -199,6 +233,21 @@ export class DoctorClinicService {
     }
 
     return 'done';
+  }
+
+  // comparing clinic-available-days with clinic-not-available-days
+  private getClinicRealAvailableDays(
+    clinicAvailableDays: string[],
+    clinicNotAvailableDays: string[],
+  ): string[] {
+    let updatedAvailableDays = [];
+
+    clinicAvailableDays.forEach((element) => {
+      if (!clinicNotAvailableDays.includes(element)) {
+        updatedAvailableDays.push(element);
+      }
+    });
+    return updatedAvailableDays;
   }
 
   private checkWeekDayIsAvailable(doctorClinicAvailableWeekDays, dayName) {

@@ -46,7 +46,7 @@ export class AdminDoctorClinicService {
     // check for repeated name;
     let repeatedDoctorClinic = await this.doctorClinicModel.getByName(reqBody.name);
 
-    if (repeatedDoctorClinic && repeatedDoctorClinic.id == id) {
+    if (repeatedDoctorClinic && repeatedDoctorClinic.id != id) {
       throw new BadRequestException(
         this.i18n.t(`errors.REPEATED_DOCTOR_CLINIC`, {
           lang: I18nContext.current().lang,

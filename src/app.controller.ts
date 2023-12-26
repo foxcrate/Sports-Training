@@ -55,10 +55,62 @@ export class AppController {
     // return this.appService.getHello();
     // let x = 2;
     // return this.globalSerice.getDayNameByNumber(x);
+    let status = false;
+    let currentDate = moment();
+    let startDate = moment().startOf('week');
+    let endDate = moment().endOf('week');
+    status = currentDate.isBetween(startDate, endDate);
+    let x = moment().format('dddd');
+    return x;
+    return { currentDate, startDate, endDate, status };
   }
 
   @Get('/testFirebase')
-  testFirebase() {}
+  async testFirebase() {
+    let id = 4;
+    let doctorClinic = await this.prisma.$queryRaw`
+    WITH
+      ClinicWithBookedHours AS (
+      SELECT dc.id, dc.name, dc.acceptanceStatus, dc.availableWeekDays AS availableWeekDays, dc.availableDayHours AS availableDayHours,
+      CASE WHEN COUNT(dcbh.id ) = 0 THEN null
+      ELSE
+      JSON_ARRAYAGG(JSON_OBJECT(
+        'id',dcbh.id,
+        'fromDateTime', dcbh.fromDateTime,
+        'userId',dcbh.userId
+        ))
+      END AS doctorClinicBookedHours
+      FROM DoctorClinic AS dc
+      LEFT JOIN DoctorClinicsBookedHours AS dcbh
+      ON dc.id = dcbh.doctorClinicId
+      WHERE dc.id = ${id}
+      GROUP BY dc.id
+    ),
+    PicturesTable AS (
+        SELECT doctorClinicId,
+        CASE WHEN COUNT(p.id) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(JSON_OBJECT(
+          'id',p.id,
+          'imageLink', p.imageLink
+          ))
+        END AS gallery
+        FROM Picture as p
+        WHERE doctorClinicId = ${id}
+        GROUP BY p.doctorClinicId
+      )
+      SELECT cwbh.id, cwbh.name, cwbh.acceptanceStatus,
+        cwbh.availableWeekDays AS availableWeekDays,
+        cwbh.availableDayHours AS availableDayHours,
+        cwbh.doctorClinicBookedHours AS doctorClinicBookedHours,
+        ps.gallery AS gallery
+      FROM ClinicWithBookedHours AS cwbh
+      LEFT JOIN PicturesTable AS ps
+      ON cwbh.id = ps.doctorClinicId
+      GROUP BY cwbh.id,ps.gallery
+    `;
+    return doctorClinic;
+  }
 
   async testSQL2() {
     let id = 2;

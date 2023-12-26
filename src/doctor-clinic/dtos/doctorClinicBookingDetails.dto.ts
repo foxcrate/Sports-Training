@@ -1,4 +1,6 @@
+import { PictureDTO } from 'src/global/dtos/picture.dto';
 import { DoctorClinicAcceptanceStatusDto } from './doctor-clinic-acceptance-status.dto';
+import { AvailableDayDTO } from 'src/global/dtos/available-day.dto';
 
 interface AvaiableDayHour {
   from: string;
@@ -18,5 +20,6 @@ export class DoctorClinicBookingDetailsDTO {
   availableWeekDays: string[];
   availableDayHours: AvaiableDayHour;
   doctorClinicBookedHours: DoctorClinicBookedHours[];
-  doctorClinicNotAvailableDays: string;
+  doctorClinicNotAvailableDays: AvailableDayDTO[];
+  gallery: PictureDTO[];
 }
