@@ -80,7 +80,7 @@ export class DoctorClinicService {
     doctorClinicId: number,
     day: string,
   ): Promise<FreeSlots[]> {
-    let doctorClinicExist = await this.doctorClinicModel.getByID(doctorClinicId);
+    await this.doctorClinicModel.getByID(doctorClinicId);
     let dayDate = moment(day);
 
     let dateString = this.globalSerice.getDate(dayDate);
@@ -159,14 +159,14 @@ export class DoctorClinicService {
     return availableDays;
   }
 
-  async reserveSlot(doctorClinicId: number, userId: number, reqBody): Promise<string> {
+  async reserveSlot(doctorClinicId: number, userId: number, reqBody): Promise<any> {
     await this.doctorClinicModel.getByID(doctorClinicId);
     let dayDate = moment(reqBody.dayDate);
     let dateOnly = this.globalSerice.getDate(dayDate);
     let dayTimesArray = reqBody.dayTimes;
 
     let localDayTimes = dayTimesArray.map((i) =>
-      moment(`${dateOnly}T${this.globalSerice.timeTo24(i)}`).format('HH:mm:ss'),
+      moment(`${dateOnly}T${this.globalSerice.timeTo24(i)}`).format('HH:mm'),
     );
 
     let dateString = this.globalSerice.getDate(dayDate);
@@ -200,7 +200,7 @@ export class DoctorClinicService {
       : [];
 
     let mappedDoctorClinicBookedHours = doctorClinicBookedHours.map((i) => {
-      return moment(i.fromDateTime).format('HH:mm:ss');
+      return moment(i.fromDateTime).format('HH:mm');
     });
 
     for (let i = 0; i < localDayTimes.length; i++) {
@@ -224,15 +224,22 @@ export class DoctorClinicService {
           }),
         );
       }
+
       let dateTime = `${dateString} ${localDayTimes[i]}`;
       await this.doctorClinicModel.insertDoctorClinicBookedHour(
         doctorClinicId,
         userId,
         dateTime,
       );
-    }
 
-    return 'done';
+      let bookedSession = await this.doctorClinicModel.getDoctorClinicBookedHour(
+        doctorClinicId,
+        userId,
+        dateTime,
+      );
+
+      return bookedSession;
+    }
   }
 
   // comparing clinic-available-days with clinic-not-available-days
@@ -313,7 +320,7 @@ export class DoctorClinicService {
       let endOfSlot = moment(startTimeDate);
       endOfSlot.add(1, 'hours');
 
-      availableHours.push(startTimeDate.format('HH:mm:ss'));
+      availableHours.push(startTimeDate.format('HH:mm'));
 
       startTimeDate.add(1, 'hours');
     }
