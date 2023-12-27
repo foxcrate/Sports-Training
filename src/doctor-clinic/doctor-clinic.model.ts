@@ -707,7 +707,8 @@ export class DoctorClinicModel {
     let formatedDateTime = moment(dateTime).format('YYYY-MM-DD HH:mm:ss');
 
     let bookedSession = await this.prisma.$queryRaw`
-      SELECT dc.name doctorName,
+      SELECT dc.name AS doctorClinicName,
+      dc.profileImage AS doctorClinicProfileImage,
       dcs.name AS specializationName,
       dcbh.fromDateTime AS sessionStartDateTime,
       dc.cost AS sessionCost
@@ -726,7 +727,8 @@ export class DoctorClinicModel {
     }
 
     let cardFormat = {
-      doctorName: bookedSession[0].doctorName,
+      doctorClinicName: bookedSession[0].doctorClinicName,
+      doctorClinicProfileImage: bookedSession[0].doctorClinicProfileImage,
       specializationName: bookedSession[0].specializationName,
       cost: bookedSession[0].sessionCost,
       date: moment(bookedSession[0].sessionStartDateTime).format('YYYY-MM-DD'),
