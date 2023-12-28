@@ -80,7 +80,7 @@ export class HomeModel {
         )`;
     }
     let selectQuery = `${selectSqlPrefix} ${sql} GROUP BY tp.id`;
-    let countQuery = `${countSqlPrefix} ${sql} GROUP BY tp.id `;
+    let countQuery = `${countSqlPrefix} ${sql} `;
     if (filters.rate) {
       selectQuery += ` HAVING RoundedAverageRating = ${filters.rate} `;
       countQuery = `
@@ -137,7 +137,7 @@ export class HomeModel {
       sql += ` AND dc.doctorClinicSpecializationId = ${filters.specialization} `;
     }
     let selectQuery = `${selectSqlPrefix} ${sql} GROUP BY dc.id`;
-    let countQuery = `${countSqlPrefix} ${sql} GROUP BY dc.id `;
+    let countQuery = `${countSqlPrefix} ${sql} `;
     if (filters.rate) {
       selectQuery += ` HAVING RoundedAverageRating = ${filters.rate} `;
       countQuery = `
@@ -194,7 +194,7 @@ export class HomeModel {
       sql += ` AND f.sportId = ${filters.sport} `;
     }
     let selectQuery = `${selectSqlPrefix} ${sql} GROUP BY f.id`;
-    let countQuery = `${countSqlPrefix} ${sql} GROUP BY f.id `;
+    let countQuery = `${countSqlPrefix} ${sql} `;
     if (filters.rate) {
       selectQuery += ` HAVING RoundedAverageRating = ${filters.rate} `;
       countQuery = `
