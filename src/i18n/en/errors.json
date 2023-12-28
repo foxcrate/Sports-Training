@@ -35,5 +35,8 @@
   "WEEK_DAY_NOT_AVAILABLE": "Week day is not available",
   "BOOKED_SLOT": "This slot is already booked",
   "NOT_EXISTED_SLOT": "This slot is not exist",
-  "SERVER_ERROR": "Server problem, it will be fixed soon"
+  "SERVER_ERROR": "Server problem, it will be fixed soon",
+  "WRONG_PAGE_ERROR": "Invalid page value, Must be a positive integer greater than 0",
+  "WRONG_PAGE_SIZE_ERROR": "Invalid page size value, Must be one of the allowed values",
+  "WRONG_FILTER_TYPE": "Unknown filter type"
 }
