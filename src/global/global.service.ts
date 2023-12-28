@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import * as moment from 'moment-timezone';
 import * as AWS from 'aws-sdk';
 import * as admin from 'firebase-admin';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class GlobalService {
@@ -173,6 +174,19 @@ export class GlobalService {
     let datesArrayElements = datesArray.map((i) => moment(i).format('YYYY-MM-DD'));
 
     return new Set(datesArrayElements).size !== datesArrayElements.length;
+  }
+
+  preparePrismaSql(sql: string): Prisma.Sql {
+    return Prisma.sql([sql]);
+  }
+
+  safeParse(value) {
+    try {
+      const parsedValue = JSON.parse(value);
+      return parsedValue;
+    } catch (error) {
+      return value;
+    }
   }
 
   // jsonToKeyValueString(jsonData) {
