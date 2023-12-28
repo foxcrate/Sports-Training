@@ -14,10 +14,11 @@ export class ReturnTrainerProfileDetailsDto {
   id: number;
   level: Level;
   ageGroup: AgeGroup;
+  cost: number;
   sessionDescription: String;
   region: {};
-  sports: Number[];
-  fields: Number[];
+  sports: number[];
+  fields: number[];
   userId: number;
   createdAt: number;
 }

@@ -41,6 +41,14 @@ export class FieldController {
     return await this.fieldService.fieldDayAvailableHours(params.id, params.date);
   }
 
+  @Get('/:id/available-upcoming-week')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async fieldAvailableUpcomingWeek1(@Param(new JoiValidation(FieldIdValidation)) params) {
+    return await this.fieldService.availableUpcomingWeek(params.id);
+  }
+
   @Post()
   @Version('1')
   @Roles('user')

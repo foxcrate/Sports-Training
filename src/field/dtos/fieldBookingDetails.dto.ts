@@ -1,3 +1,4 @@
+import { AvailableDayDTO } from 'src/global/dtos/available-day.dto';
 import { FieldAcceptanceStatusDto } from './field-acceptance-status.dto';
 
 interface AvaiableDayHour {
@@ -14,9 +15,13 @@ interface FieldBookedHours {
 export class FieldBookingDetailsDTO {
   id: number;
   name: string;
+  profileImage: string;
+  description: string;
+  ratingNumber: string;
+  cost: number;
   acceptanceStatus: FieldAcceptanceStatusDto;
   availableWeekDays: string[];
   availableDayHours: AvaiableDayHour;
   fieldBookedHours: FieldBookedHours[];
-  fieldNotAvailableDays: string;
+  fieldNotAvailableDays: AvailableDayDTO[];
 }

@@ -3,6 +3,7 @@ import { TrainerProfileCreateDto } from 'src/trainer-profile/dtos/create.dto';
 import { ReturnTrainerProfileDto } from './dtos/return.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { TrainerProfileModel } from './trainer-profile.model';
+import { ReturnTrainerProfileDetailsDto } from './dtos/details-return.dto';
 
 @Injectable()
 export class TrainerProfileService {
@@ -11,7 +12,7 @@ export class TrainerProfileService {
     private readonly i18n: I18nService,
   ) {}
 
-  async getOne(userId): Promise<ReturnTrainerProfileDto> {
+  async getOne(userId): Promise<ReturnTrainerProfileDetailsDto> {
     let trainerProfileWithSports = await this.trainerProfileModel.getOneDetailed(userId);
     if (!trainerProfileWithSports) {
       throw new NotFoundException(
@@ -34,7 +35,7 @@ export class TrainerProfileService {
   async update(
     createData: TrainerProfileCreateDto,
     userId,
-  ): Promise<ReturnTrainerProfileDto> {
+  ): Promise<ReturnTrainerProfileDetailsDto> {
     //check profile existence
     let trainerProfile = await this.trainerProfileModel.getByUserId(userId);
     if (!trainerProfile) {
