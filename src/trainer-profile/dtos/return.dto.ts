@@ -14,6 +14,7 @@ export class ReturnTrainerProfileDto {
   id: number;
   level: Level;
   ageGroup: AgeGroup;
+  cost: number;
   sessionDescription: String;
   userId: number;
   createdAt: number;

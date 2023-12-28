@@ -110,7 +110,39 @@ export class FieldService {
     return availableHours;
   }
 
-  async reserveSlot(fieldId: number, userId: number, reqBody): Promise<string> {
+  async availableUpcomingWeek(id: number) {
+    let theField = await this.fieldModel.getByID(id);
+    let availableDays = [];
+
+    let endDate = moment().endOf('week');
+
+    let toDay = moment();
+
+    while (toDay < endDate) {
+      let dayName = toDay.format('dddd');
+
+      if (theField.availableWeekDays.includes(dayName)) {
+        availableDays.push(moment(toDay).format('YYYY-MM-DD'));
+      }
+
+      toDay.add(1, 'days');
+    }
+
+    if (theField.fieldNotAvailableDays) {
+      let arrayOfNotAvailableDays = theField.fieldNotAvailableDays.map((i) => {
+        return moment(i.dayDate).format('YYYY-MM-DD');
+      });
+
+      availableDays = this.getFieldRealAvailableDays(
+        availableDays,
+        arrayOfNotAvailableDays,
+      );
+    }
+
+    return availableDays;
+  }
+
+  async reserveSlot(fieldId: number, userId: number, reqBody): Promise<any> {
     let fieldExist = await this.fieldModel.getByID(fieldId);
     let dayDate = moment(reqBody.dayDate);
     let dateOnly = this.globalSerice.getDate(dayDate);
@@ -171,9 +203,30 @@ export class FieldService {
       }
       let dateTime = `${dateString} ${localDayTimes[i]}`;
       await this.fieldModel.insertFieldBookedHour(fieldId, userId, dateTime);
-    }
 
-    return 'done';
+      let bookedSession = await this.fieldModel.getFieldBookedHour(
+        fieldId,
+        userId,
+        dateTime,
+      );
+
+      return bookedSession;
+    }
+  }
+
+  // comparing field-available-days with field-not-available-days
+  private getFieldRealAvailableDays(
+    fieldAvailableDays: string[],
+    fieldNotAvailableDays: string[],
+  ): string[] {
+    let updatedAvailableDays = [];
+
+    fieldAvailableDays.forEach((element) => {
+      if (!fieldNotAvailableDays.includes(element)) {
+        updatedAvailableDays.push(element);
+      }
+    });
+    return updatedAvailableDays;
   }
 
   private checkWeekDayIsAvailable(fieldAvailableWeekDays, dayName) {

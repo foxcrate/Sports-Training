@@ -9,6 +9,7 @@ import { DoctorClinicCreateDto } from './dtos/create.dto';
 import { Prisma } from '@prisma/client';
 import { DoctorClinicAcceptanceStatusDto } from './dtos/doctor-clinic-acceptance-status.dto';
 import { DoctorClinicUpdateDto } from './dtos/update.dto';
+import * as moment from 'moment-timezone';
 
 @Injectable()
 export class DoctorClinicModel {
@@ -186,7 +187,7 @@ export class DoctorClinicModel {
         -- AVG(rav.RatingNumber) AS RatingNumber,
         CASE WHEN AVG(rav.RatingNumber) IS NULL THEN 5
           ELSE
-          AVG(rav.RatingNumber)
+          ROUND(AVG(rav.RatingNumber),1)
           END 
           AS RatingNumber,
         cwbhaf.feedbacks,
@@ -679,7 +680,11 @@ export class DoctorClinicModel {
     return theDoctorClinic[0];
   }
 
-  async insertDoctorClinicBookedHour(doctorClinicId: number, userId, dateTime: string) {
+  async insertDoctorClinicBookedHour(
+    doctorClinicId: number,
+    userId: number,
+    dateTime: string,
+  ) {
     await this.prisma.$queryRaw`
       INSERT INTO DoctorClinicsBookedHours
         (fromDateTime,
@@ -692,8 +697,50 @@ export class DoctorClinicModel {
       ${this.config.get('GMT')},
       ${userId},
       ${doctorClinicId})`;
+  }
 
-    // console.log('dateTime after insert:', this.globalSerice.getLocalDateTime(new Date()));
+  async getDoctorClinicBookedHour(
+    doctorClinicId: number,
+    userId: number,
+    dateTime: string,
+  ) {
+    let formatedDateTime = moment(dateTime).format('YYYY-MM-DD HH:mm:ss');
+
+    let bookedSession = await this.prisma.$queryRaw`
+      SELECT dc.name AS doctorClinicName,
+      dc.profileImage AS doctorClinicProfileImage,
+      dcs.name AS specializationName,
+      dcbh.fromDateTime AS sessionStartDateTime,
+      dc.cost AS sessionCost
+      FROM DoctorClinicsBookedHours AS dcbh
+      LEFT JOIN DoctorClinic AS dc ON dc.id = dcbh.doctorClinicId
+      LEFT JOIN DoctorClinicSpecialization AS dcs ON dc.doctorClinicSpecializationId = dcs.id
+      WHERE dcbh.doctorClinicId = ${doctorClinicId}
+      AND dcbh.userId = ${userId}
+      AND dcbh.fromDateTime = ${formatedDateTime}
+      `;
+
+    if (!bookedSession[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
+    }
+
+    let cardFormat = {
+      doctorClinicName: bookedSession[0].doctorClinicName,
+      doctorClinicProfileImage: bookedSession[0].doctorClinicProfileImage,
+      specializationName: bookedSession[0].specializationName,
+      cost: bookedSession[0].sessionCost,
+      date: moment(bookedSession[0].sessionStartDateTime).format('YYYY-MM-DD'),
+      startTime: moment(bookedSession[0].sessionStartDateTime)
+        .tz('Europe/London')
+        .format('hh:mm A'),
+      endTime: moment(bookedSession[0].sessionStartDateTime)
+        .add(1, 'hours')
+        .tz('Europe/London')
+        .format('hh:mm A'),
+    };
+    return cardFormat;
   }
 
   async insertNotAvailableDays(

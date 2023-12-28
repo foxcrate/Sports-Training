@@ -149,7 +149,7 @@ export class GlobalService {
   }
 
   getLocalTime12(dateTime: moment.Moment): string {
-    return dateTime.format('hh:mm:ss A');
+    return dateTime.format('hh:mm A');
   }
 
   getLocalTime24(dateTime: moment.Moment): string {
