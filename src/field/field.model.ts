@@ -9,6 +9,7 @@ import { FieldUpdateDto } from './dtos/update.dto';
 import { FieldAcceptanceStatusDto } from './dtos/field-acceptance-status.dto';
 import { FieldReturnDto } from './dtos/return.dto';
 import { GlobalService } from 'src/global/global.service';
+import * as moment from 'moment-timezone';
 
 @Injectable()
 export class FieldModel {
@@ -26,7 +27,11 @@ export class FieldModel {
         f.id,
         f.name,
         f.acceptanceStatus,
-        AVG(r.ratingNumber) AS rate,
+        CASE WHEN AVG(r.ratingNumber) IS NULL THEN 5
+          ELSE
+          ROUND(AVG(r.ratingNumber),1)
+          END 
+          AS RatingNumber,
         f.availableWeekDays AS availableWeekDays,
         f.availableDayHours AS availableDayHours,
         CASE
@@ -55,7 +60,7 @@ export class FieldModel {
       fdwbh.id,
       fdwbh.name,
       fdwbh.acceptanceStatus,
-      fdwbh.rate,
+      fdwbh.ratingNumber,
       fdwbh.availableWeekDays AS availableWeekDays,
       fdwbh.availableDayHours AS availableDayHours,
       fdwbh.fieldBookedHours AS fieldBookedHours,
@@ -84,8 +89,31 @@ export class FieldModel {
       SELECT
         f.id,
         f.name,
+        f.profileImage,
+        f.description,
+        f.cost,
+        CASE
+        WHEN COUNT(s.id ) = 0 THEN null
+        ELSE
+        JSON_OBJECT(
+          'id',s.id,
+          'name', s.name
+          )
+        END AS sport,
+        CASE
+        WHEN COUNT(region.id ) = 0 THEN null
+        ELSE
+        JSON_OBJECT(
+          'id',region.id,
+          'name', region.name
+          )
+        END AS region,
         f.acceptanceStatus,
-        AVG(r.ratingNumber) AS rate,
+        CASE WHEN AVG(r.ratingNumber) IS NULL THEN 5
+          ELSE
+          ROUND(AVG(r.ratingNumber),1)
+          END 
+          AS ratingNumber,
         f.availableWeekDays AS availableWeekDays,
         f.availableDayHours AS availableDayHours,
         CASE
@@ -106,15 +134,49 @@ export class FieldModel {
       Rate AS r
       ON
       f.id = r.fieldId
+      LEFT JOIN
+      Sport AS s
+      ON
+      f.sportId = s.id
+      LEFT JOIN
+      Region AS region
+      ON
+      f.regionId = region.id
       WHERE
       f.id = ${id}
       GROUP BY f.id
+    ),
+    TrainersProfilesIdsInField AS (
+      SELECT tpf.trainerProfileId AS trainerProfileIds
+      FROM TrainerProfileFields AS tpf
+      where fieldId = ${id}
+    ),
+    TrainersTable AS (
+        SELECT JSON_ARRAYAGG(JSON_OBJECT(
+          'trainerProfileId',tp.id,
+          'trainerFirstName', u.firstName,
+          'trainerLastName', u.lastName,
+          'trainerProfileImage', u.profileImage,
+          'cost', tp.cost
+          )) AS trainerProfile
+        FROM TrainerProfile AS tp
+        LEFT JOIN User AS u ON tp.userId = u.id
+        WHERE tp.id IN (
+          SELECT trainerProfileIds
+          FROM TrainersProfilesIdsInField
+        )
     )
     SELECT 
       fdwbh.id,
       fdwbh.name,
+      fdwbh.profileImage,
+      fdwbh.description,
+      fdwbh.cost,
+      ( SELECT * FROM TrainersTable ) AS trainerProfiles,
+      fdwbh.sport,
+      fdwbh.region,
       fdwbh.acceptanceStatus,
-      fdwbh.rate,
+      fdwbh.ratingNumber,
       fdwbh.availableWeekDays AS availableWeekDays,
       fdwbh.availableDayHours AS availableDayHours,
       fdwbh.fieldBookedHours AS fieldBookedHours,
@@ -150,7 +212,11 @@ export class FieldModel {
         f.id,
         f.name,
         f.acceptanceStatus,
-        AVG(r.ratingNumber) AS rate,
+        CASE WHEN AVG(r.ratingNumber) IS NULL THEN 5
+          ELSE
+          ROUND(AVG(r.ratingNumber),1)
+          END 
+          AS RatingNumber,
         f.availableWeekDays AS availableWeekDays,
         f.availableDayHours AS availableDayHours,
         CASE
@@ -179,7 +245,7 @@ export class FieldModel {
       fdwbh.id,
       fdwbh.name,
       fdwbh.acceptanceStatus,
-      fdwbh.rate,
+      fdwbh.ratingNumber,
       fdwbh.availableWeekDays AS availableWeekDays,
       fdwbh.availableDayHours AS availableDayHours,
       fdwbh.fieldBookedHours AS fieldBookedHours,
@@ -200,6 +266,70 @@ export class FieldModel {
     `;
 
     return theField[0];
+  }
+
+  async getFieldBookedHour(fieldId: number, userId: number, dateTime: string) {
+    let formatedDateTime = moment(dateTime).format('YYYY-MM-DD HH:mm:ss');
+
+    let bookedSession = await this.prisma.$queryRaw`
+    WITH FieldTable AS (
+      SELECT regionId, sportId
+      FROM Field
+      WHERE id = ${fieldId}
+    ),
+    FieldSportTable AS (
+      SELECT
+      JSON_OBJECT(
+        'id',s.id,
+        'name', s.name
+      ) AS sportInfo
+      FROM Sport AS s
+      WHERE id = ( select sportId FROM FieldTable )
+    ),
+    FieldRegionTable AS (
+      SELECT
+      JSON_OBJECT(
+        'id',r.id,
+        'name', r.name
+      ) AS regionInfo
+      FROM Region AS r
+      WHERE id = ( select regionId FROM FieldTable )
+    )
+      SELECT f.name AS fieldName,
+      f.profileImage AS fieldProfileImage,
+      fbh.fromDateTime AS sessionStartDateTime,
+      (SELECT sportInfo FROM FieldSportTable) AS sport,
+      (SELECT regionInfo FROM FieldRegionTable) AS region,
+      f.cost AS sessionCost
+      FROM FieldsBookedHours AS fbh
+      LEFT JOIN Field AS f ON f.id = fbh.fieldId
+      WHERE fbh.fieldId = ${fieldId}
+      AND fbh.userId = ${userId}
+      AND fbh.fromDateTime = ${formatedDateTime}
+      `;
+
+    if (!bookedSession[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
+    }
+
+    let cardFormat = {
+      fieldName: bookedSession[0].fieldName,
+      fieldProfileImage: bookedSession[0].fieldProfileImage,
+      cost: bookedSession[0].sessionCost,
+      date: moment(bookedSession[0].sessionStartDateTime).format('YYYY-MM-DD'),
+      sport: bookedSession[0].sport,
+      region: bookedSession[0].region,
+      startTime: moment(bookedSession[0].sessionStartDateTime)
+        .tz('Europe/London')
+        .format('hh:mm A'),
+      endTime: moment(bookedSession[0].sessionStartDateTime)
+        .add(1, 'hours')
+        .tz('Europe/London')
+        .format('hh:mm A'),
+    };
+    return cardFormat;
   }
 
   async create(reqBody: FieldCreateDto): Promise<FieldReturnDto> {
@@ -466,7 +596,11 @@ export class FieldModel {
         f.id,
         f.name,
         f.acceptanceStatus,
-        AVG(r.ratingNumber) AS rate,
+        CASE WHEN AVG(r.ratingNumber) IS NULL THEN 5
+          ELSE
+          ROUND(AVG(r.ratingNumber),1)
+          END 
+          AS RatingNumber,
         f.availableWeekDays AS availableWeekDays,
         f.availableDayHours AS availableDayHours,
         CASE
@@ -497,7 +631,7 @@ export class FieldModel {
       fdwbh.id,
       fdwbh.name,
       fdwbh.acceptanceStatus,
-      fdwbh.rate,
+      fdwbh.ratingNumber,
       fdwbh.availableWeekDays AS availableWeekDays,
       fdwbh.availableDayHours AS availableDayHours,
       fdwbh.fieldBookedHours AS fieldBookedHours,
@@ -532,7 +666,11 @@ export class FieldModel {
         f.id,
         f.name,
         f.acceptanceStatus,
-        AVG(r.ratingNumber) AS rate,
+        CASE WHEN AVG(r.ratingNumber) IS NULL THEN 5
+          ELSE
+          ROUND(AVG(r.ratingNumber),1)
+          END 
+          AS RatingNumber,
         f.availableWeekDays AS availableWeekDays,
         f.availableDayHours AS availableDayHours,
         CASE
@@ -561,7 +699,7 @@ export class FieldModel {
       fdwbh.id,
       fdwbh.name,
       fdwbh.acceptanceStatus,
-      fdwbh.rate,
+      fdwbh.ratingNumber,
       fdwbh.availableWeekDays AS availableWeekDays,
       fdwbh.availableDayHours AS availableDayHours,
       fdwbh.fieldBookedHours AS fieldBookedHours,

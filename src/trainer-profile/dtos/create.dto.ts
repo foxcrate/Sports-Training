@@ -14,6 +14,7 @@ export class TrainerProfileCreateDto {
   level: Level;
   ageGroup: AgeGroup;
   sessionDescription: String;
+  cost: Number;
   regionId: Number;
   sports: Number[];
   fields: Number[];

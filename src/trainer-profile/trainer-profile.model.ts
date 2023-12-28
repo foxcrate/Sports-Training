@@ -28,6 +28,7 @@ export class TrainerProfileModel {
       id,
       level,
       ageGroup,
+      cost,
       sessionDescription,
       userId,
       createdAt
@@ -76,6 +77,7 @@ export class TrainerProfileModel {
     tp.id AS trainerProfileId,
     tp.level AS level,
     tp.ageGroup AS ageGroup,
+    tp.cost AS cost,
     tp.sessionDescription AS sessionDescription,
     tp.regionId AS regionId,
     tp.userId AS userId,
@@ -96,6 +98,7 @@ export class TrainerProfileModel {
     SELECT
     tpws.trainerProfileId AS id,
     tpws.level AS level,
+    tpws.cost AS cost,
     tpws.ageGroup AS ageGroup,
     tpws.sessionDescription AS sessionDescription,
     CASE 
@@ -152,6 +155,7 @@ export class TrainerProfileModel {
       level,
       ageGroup,
       sessionDescription,
+      cost,
       regionId,
       userId
     )
@@ -160,6 +164,7 @@ export class TrainerProfileModel {
       ${createData.level},
       ${createData.ageGroup},
       ${createData.sessionDescription},
+      ${createData.cost},
       ${createData.regionId},
       ${userId}
     )
@@ -181,7 +186,7 @@ export class TrainerProfileModel {
   async update(
     createData: TrainerProfileCreateDto,
     userId,
-  ): Promise<ReturnTrainerProfileDto> {
+  ): Promise<ReturnTrainerProfileDetailsDto> {
     let theTrainerProfile = await this.getByUserId(userId);
     //update
     await this.prisma.$queryRaw`
@@ -190,6 +195,7 @@ export class TrainerProfileModel {
       level = ${createData.level},
       ageGroup = ${createData.ageGroup},
       sessionDescription = ${createData.sessionDescription},
+      cost = ${createData.cost},
       regionId = ${createData.regionId}
       WHERE
       userId = ${userId};

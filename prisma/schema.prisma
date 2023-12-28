@@ -145,6 +145,8 @@ model TrainerProfile{
 
   sessionDescription  String?
 
+  cost                Int?
+
 
   sports              TrainerProfileSports[]
 
