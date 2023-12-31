@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { DatesCountTypeFilter } from './dto/dates-count-filters.dto';
 import { GlobalService } from 'src/global/global.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { HOME_SEARCH_TYPES_ENUM } from 'src/utils/enums';
+import { DatesCountTypeFilter } from './dto/dates-count-filters.dto';
+import { HOME_SEARCH_TYPES_ENUM } from 'src/global/enums';
 import { DatesCountResultDto } from './dto/dates-count-result.dto';
 
 @Injectable()
-export class ScheduleModel {
+export class CalendarModel {
   constructor(
     private prisma: PrismaService,
     private globalService: GlobalService,

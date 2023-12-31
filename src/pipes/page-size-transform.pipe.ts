@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { ALLOWED_PAGE_SIZES } from 'src/utils/enums';
+import { ALLOWED_PAGE_SIZES } from 'src/global/enums';
 
 @Injectable()
 export default class PageSizeTransformPipe implements PipeTransform<string, number> {

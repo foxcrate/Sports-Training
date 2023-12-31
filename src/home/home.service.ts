@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { HomeModel } from './home.model';
 import { SearchFiltersDto } from './dto/search-filters.dto';
-import { HOME_SEARCH_TYPES_ENUM } from 'src/utils/enums';
+import { HOME_SEARCH_TYPES_ENUM } from 'src/global/enums';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { SearchResultsDto } from './dto/search-result.dto';
 

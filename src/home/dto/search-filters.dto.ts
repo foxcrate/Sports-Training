@@ -1,4 +1,4 @@
-import { HOME_SEARCH_TYPES_ENUM } from 'src/utils/enums';
+import { HOME_SEARCH_TYPES_ENUM } from 'src/global/enums';
 
 export interface SearchFiltersDto {
   page: number;
