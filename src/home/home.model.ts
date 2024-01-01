@@ -88,7 +88,7 @@ export class HomeModel {
       `;
     }
     const selectSql = this.globalService.preparePrismaSql(
-      `${selectQuery} LIMIT ${filters.pageSize} OFFSET ${filters.offset};`,
+      `${selectQuery} LIMIT ${filters.limit} OFFSET ${filters.offset};`,
     );
     // const selectSqlWithoutLimit = this.globalService.preparePrismaSql(`${selectQuery};`);
     const countSql = this.globalService.preparePrismaSql(`${countQuery};`);
@@ -145,7 +145,7 @@ export class HomeModel {
       `;
     }
     const selectSql = this.globalService.preparePrismaSql(
-      `${selectQuery} LIMIT ${filters.pageSize} OFFSET ${filters.offset};`,
+      `${selectQuery} LIMIT ${filters.limit} OFFSET ${filters.offset};`,
     );
     // const selectSqlWithoutLimit = this.globalService.preparePrismaSql(`${selectQuery};`);
     const countSql = this.globalService.preparePrismaSql(`${countQuery};`);
@@ -203,7 +203,7 @@ export class HomeModel {
     }
     // const selectSqlWithoutLimit = this.globalService.preparePrismaSql(`${selectQuery};`);
     const selectSql = this.globalService.preparePrismaSql(
-      `${selectQuery} LIMIT ${filters.pageSize} OFFSET ${filters.offset};`,
+      `${selectQuery} LIMIT ${filters.limit} OFFSET ${filters.offset};`,
     );
     const countSql = this.globalService.preparePrismaSql(`${countQuery};`);
     return {
@@ -274,11 +274,11 @@ export class HomeModel {
       // this.generateCoachesQuery(filters),
     ];
     // const unionSelectQuery = this.globalService.preparePrismaSql(
-    //   `SELECT * from (${doctorQuery} UNION ALL ${fieldQuery} UNION ALL ${coachQuery}) AS result ORDER BY createdAt LIMIT ${filters.pageSize} OFFSET ${filters.offset};`,
+    //   `SELECT * from (${doctorQuery} UNION ALL ${fieldQuery} UNION ALL ${coachQuery}) AS result ORDER BY createdAt LIMIT ${filters.limit} OFFSET ${filters.offset};`,
     // );
     // Without Coaches
     const unionSelectQuery = this.globalService.preparePrismaSql(
-      `SELECT * from (${doctorQuery} UNION ALL ${fieldQuery}) AS result ORDER BY createdAt LIMIT ${filters.pageSize} OFFSET ${filters.offset};`,
+      `SELECT * from (${doctorQuery} UNION ALL ${fieldQuery}) AS result ORDER BY createdAt LIMIT ${filters.limit} OFFSET ${filters.offset};`,
     );
     // const unionCountQuery = this.globalService.preparePrismaSql(
     //   `SELECT SUM(count) AS count from (${doctorCountRawSql} UNION ALL ${fieldCountRawSql} UNION ALL ${coachCountRawSql}) AS countResult;`,
