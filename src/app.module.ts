@@ -25,6 +25,7 @@ import { TrainerProfileModule } from './trainer-profile/trainer-profile.module';
 import { TimezoneMiddleware } from './middlewares/timezone.middleware';
 import { ChildProfileModule } from './child-profile/child-profile.module';
 import { ChildModule } from './child/child.module';
+import { CalendarModule } from './calendar/calendar.module';
 import { HomeModule } from './home/home.module';
 
 @Module({
@@ -61,6 +62,7 @@ import { HomeModule } from './home/home.module';
     TrainerProfileModule,
     ChildProfileModule,
     ChildModule,
+    CalendarModule,
     HomeModule,
   ],
   controllers: [AppController],

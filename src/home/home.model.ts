@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SearchFiltersDto } from './dto/search-filters.dto';
 import { GlobalService } from 'src/global/global.service';
-import { ACCEPTANCE_STATUSES_ENUM, RATEABLE_TYPES_ENUM } from 'src/utils/enums';
+import { ACCEPTANCE_STATUSES_ENUM, RATEABLE_TYPES_ENUM } from 'src/global/enums';
 import { SearchResultDto, SearchResultsDto } from './dto/search-result.dto';
 
 @Injectable()
@@ -48,11 +48,11 @@ export class HomeModel {
           JSON_ARRAYAGG(s.name)
           ELSE NULL 
         END AS sports,
-        ROUND( IFNULL( SUM( r.ratingNumber ) / COUNT( r.id ), 0 ), 1 ) AS actualAverageRating,
-        IFNULL( CEIL( SUM( r.ratingNumber ) / COUNT( r.id )), 0 ) AS roundedAverageRating,
+        ROUND( IFNULL( SUM( r.ratingNumber ) / COUNT( r.id ), 5 ), 1 ) AS actualAverageRating,
+        IFNULL( CEIL( SUM( r.ratingNumber ) / COUNT( r.id )), 5 ) AS roundedAverageRating,
         tp.createdAt AS createdAt  
     `;
-    const countSqlPrefix = `SELECT COUNT(DISTINCT tp.id) AS count, IFNULL( CEIL( SUM( R.ratingNumber ) / COUNT( R.id )), 0 ) AS RoundedAverageRating `;
+    const countSqlPrefix = `SELECT COUNT(DISTINCT tp.id) AS count, IFNULL( CEIL( SUM( R.ratingNumber ) / COUNT( R.id )), 5 ) AS RoundedAverageRating `;
     let sql = `
       FROM
         TrainerProfile tp
@@ -88,7 +88,7 @@ export class HomeModel {
       `;
     }
     const selectSql = this.globalService.preparePrismaSql(
-      `${selectQuery} LIMIT ${filters.pageSize} OFFSET ${filters.offset};`,
+      `${selectQuery} LIMIT ${filters.limit} OFFSET ${filters.offset};`,
     );
     // const selectSqlWithoutLimit = this.globalService.preparePrismaSql(`${selectQuery};`);
     const countSql = this.globalService.preparePrismaSql(`${countQuery};`);
@@ -103,21 +103,21 @@ export class HomeModel {
   generateDoctorQuery(filters: SearchFiltersDto) {
     const selectSqlPrefix = `
       SELECT
-      dc.id AS doctorClinicId,
-      NULL AS fieldId,
-      NULL AS trainerProfileId,
-      dc.profileImage AS profileImage,
-      dcs.name AS specialization,
-      Region.name AS region,
-      dc.name AS name,
-      dc.cost AS cost,
-      NULL AS sport,
-      NULL AS sports,
-      ROUND( IFNULL( SUM( R.ratingNumber ) / COUNT( R.id ), 0 ), 1 ) AS ActualAverageRating,
-      IFNULL( CEIL( SUM( R.ratingNumber ) / COUNT( R.id )), 0 ) AS RoundedAverageRating,
-      dc.createdAt AS createdAt 
+        dc.id AS doctorClinicId,
+        NULL AS fieldId,
+        NULL AS trainerProfileId,
+        dc.profileImage AS profileImage,
+        dcs.name AS specialization,
+        Region.name AS region,
+        dc.name AS name,
+        dc.cost AS cost,
+        NULL AS sport,
+        NULL AS sports,
+        ROUND( IFNULL( SUM( R.ratingNumber ) / COUNT( R.id ), 5 ), 1 ) AS ActualAverageRating,
+        IFNULL( CEIL( SUM( R.ratingNumber ) / COUNT( R.id )), 5 ) AS RoundedAverageRating,
+        dc.createdAt AS createdAt 
     `;
-    const countSqlPrefix = `SELECT COUNT(DISTINCT dc.id) AS count, IFNULL( CEIL( SUM( R.ratingNumber ) / COUNT( R.id )), 0 ) AS RoundedAverageRating `;
+    const countSqlPrefix = `SELECT COUNT(DISTINCT dc.id) AS count, IFNULL( CEIL( SUM( R.ratingNumber ) / COUNT( R.id )), 5 ) AS RoundedAverageRating `;
     let sql = `
       FROM
         DoctorClinic AS dc
@@ -145,7 +145,7 @@ export class HomeModel {
       `;
     }
     const selectSql = this.globalService.preparePrismaSql(
-      `${selectQuery} LIMIT ${filters.pageSize} OFFSET ${filters.offset};`,
+      `${selectQuery} LIMIT ${filters.limit} OFFSET ${filters.offset};`,
     );
     // const selectSqlWithoutLimit = this.globalService.preparePrismaSql(`${selectQuery};`);
     const countSql = this.globalService.preparePrismaSql(`${countQuery};`);
@@ -160,21 +160,21 @@ export class HomeModel {
   generateFieldsQuery(filters: SearchFiltersDto) {
     const selectSqlPrefix = `
       SELECT
-      NULL AS doctorClinicId,
-      f.id AS fieldId,
-      NULL AS trainerProfileId,
-      f.profileImage AS profileImage,
-      NULL AS specialization,
-      Region.name AS region,
-      f.name AS name,
-      f.cost AS cost,
-      s.name AS sport,
-      NULL AS sports,
-      ROUND( IFNULL( SUM( R.ratingNumber ) / COUNT( R.id ), 0 ), 1 ) AS ActualAverageRating,
-      IFNULL( CEIL( SUM( R.ratingNumber ) / COUNT( R.id )), 0 ) AS RoundedAverageRating,
-      f.createdAt AS createdAt 
+        NULL AS doctorClinicId,
+        f.id AS fieldId,
+        NULL AS trainerProfileId,
+        f.profileImage AS profileImage,
+        NULL AS specialization,
+        Region.name AS region,
+        f.name AS name,
+        f.cost AS cost,
+        s.name AS sport,
+        NULL AS sports,
+        ROUND( IFNULL( SUM( R.ratingNumber ) / COUNT( R.id ), 5 ), 1 ) AS ActualAverageRating,
+        IFNULL( CEIL( SUM( R.ratingNumber ) / COUNT( R.id )), 5 ) AS RoundedAverageRating,
+        f.createdAt AS createdAt 
     `;
-    const countSqlPrefix = `SELECT COUNT(DISTINCT f.id) AS count, IFNULL( CEIL( SUM( R.ratingNumber ) / COUNT( R.id )), 0 ) AS RoundedAverageRating `;
+    const countSqlPrefix = `SELECT COUNT(DISTINCT f.id) AS count, IFNULL( CEIL( SUM( R.ratingNumber ) / COUNT( R.id )), 5 ) AS RoundedAverageRating `;
     let sql = `
       FROM
         Field AS f
@@ -203,7 +203,7 @@ export class HomeModel {
     }
     // const selectSqlWithoutLimit = this.globalService.preparePrismaSql(`${selectQuery};`);
     const selectSql = this.globalService.preparePrismaSql(
-      `${selectQuery} LIMIT ${filters.pageSize} OFFSET ${filters.offset};`,
+      `${selectQuery} LIMIT ${filters.limit} OFFSET ${filters.offset};`,
     );
     const countSql = this.globalService.preparePrismaSql(`${countQuery};`);
     return {
@@ -274,11 +274,11 @@ export class HomeModel {
       // this.generateCoachesQuery(filters),
     ];
     // const unionSelectQuery = this.globalService.preparePrismaSql(
-    //   `SELECT * from (${doctorQuery} UNION ALL ${fieldQuery} UNION ALL ${coachQuery}) AS result ORDER BY createdAt LIMIT ${filters.pageSize} OFFSET ${filters.offset};`,
+    //   `SELECT * from (${doctorQuery} UNION ALL ${fieldQuery} UNION ALL ${coachQuery}) AS result ORDER BY createdAt LIMIT ${filters.limit} OFFSET ${filters.offset};`,
     // );
     // Without Coaches
     const unionSelectQuery = this.globalService.preparePrismaSql(
-      `SELECT * from (${doctorQuery} UNION ALL ${fieldQuery}) AS result ORDER BY createdAt LIMIT ${filters.pageSize} OFFSET ${filters.offset};`,
+      `SELECT * from (${doctorQuery} UNION ALL ${fieldQuery}) AS result ORDER BY createdAt LIMIT ${filters.limit} OFFSET ${filters.offset};`,
     );
     // const unionCountQuery = this.globalService.preparePrismaSql(
     //   `SELECT SUM(count) AS count from (${doctorCountRawSql} UNION ALL ${fieldCountRawSql} UNION ALL ${coachCountRawSql}) AS countResult;`,
