@@ -93,10 +93,10 @@ export class CalendarModel {
             r.name AS region,
             s.name AS specialization 
           FROM
-            doctorclinicsbookedhours dbh
-            JOIN doctorclinic dc ON dbh.doctorclinicId = dc.id
-            LEFT JOIN region r ON dc.regionId = r.id
-            LEFT JOIN doctorclinicspecialization s ON dc.doctorClinicSpecializationId = s.id 
+            DoctorClinicsBookedHours dbh
+            JOIN DoctorClinic dc ON dbh.doctorClinicId = dc.id
+            LEFT JOIN Region r ON dc.regionId = r.id
+            LEFT JOIN DoctorClinicSpecialization s ON dc.doctorClinicSpecializationId = s.id 
           WHERE
             dbh.userId = ${userId} 
             AND DATE( dbh.fromDateTime ) = '${date}' 
@@ -116,10 +116,10 @@ export class CalendarModel {
             r.name AS region,
             s.name AS sport 
           FROM
-            fieldsbookedhours fbh
-            JOIN field f ON fbh.fieldId = f.id
-            LEFT JOIN region r ON f.regionId = r.id
-            LEFT JOIN sport s ON f.sportId = s.id 
+            FieldsBookedHours fbh
+            JOIN Field f ON fbh.fieldId = f.id
+            LEFT JOIN Region r ON f.regionId = r.id
+            LEFT JOIN Sport s ON f.sportId = s.id 
           WHERE
             fbh.userId = ${userId} 
             AND DATE( fbh.fromDateTime ) = '${date}' 
