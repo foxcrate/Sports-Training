@@ -189,6 +189,10 @@ export class GlobalService {
     }
   }
 
+  isValidDateFormat(dateString: string, format: string = 'YYYY-MM-DD'): boolean {
+    return moment(dateString, format, true).isValid();
+  }
+
   // jsonToKeyValueString(jsonData) {
   //   const keyValuePairs = [];
 

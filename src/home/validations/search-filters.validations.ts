@@ -1,5 +1,5 @@
 import * as Joi from 'joi';
-import { HOME_SEARCH_TYPES_ENUM, RATES_ENUM } from 'src/utils/enums';
+import { HOME_SEARCH_TYPES_ENUM, RATES_ENUM } from 'src/global/enums';
 
 export const SearchFiltersValidation = Joi.object({
   type: Joi.string()
@@ -7,6 +7,8 @@ export const SearchFiltersValidation = Joi.object({
     .valid(...Object.values(HOME_SEARCH_TYPES_ENUM)),
   page: Joi.number().optional().integer().positive(),
   pageSize: Joi.number().optional().integer().positive(),
+  offset: Joi.number().optional().integer(),
+  limit: Joi.number().optional().integer().positive(),
   area: Joi.number().optional().integer().positive().allow(null),
   sport: Joi.number().optional().integer().positive().allow(null),
   rate: Joi.string()
