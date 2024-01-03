@@ -7,4 +7,5 @@ export type DatesCountTypeFilter =
 
 export interface DatesCountFiltersDto {
   type: DatesCountTypeFilter;
+  startDate?: string;
 }

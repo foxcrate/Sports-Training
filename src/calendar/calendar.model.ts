@@ -17,6 +17,7 @@ export class CalendarModel {
     userId: number,
     startDate: string,
     endDate: string,
+    addOrderBy: boolean = false,
   ) {
     let sql = `
       SELECT
@@ -42,17 +43,22 @@ export class CalendarModel {
         AND DATE( fromDateTime ) BETWEEN '${startDate}' 
         AND '${endDate}' 
       GROUP BY
-        DATE( fromDateTime ) 
-      ORDER BY
-        bookingDate;
+        DATE( fromDateTime )
     `;
-    return this.globalService.preparePrismaSql(sql);
+    if (addOrderBy) {
+      sql += ' ORDER BY bookingDate ';
+    }
+    return {
+      preparedSql: this.globalService.preparePrismaSql(sql),
+      rawSql: sql,
+    };
   }
 
   private generateDateSessionsQuery(
     type: DatesCountTypeFilter,
     userId: number,
     date: string,
+    addGroupBy: boolean = false,
   ) {
     let sql = null;
     switch (type) {
@@ -60,6 +66,8 @@ export class CalendarModel {
         sql = `
           SELECT
             cbh.id AS coachBookedHoursId,
+            NULL AS doctorBookedHoursId,
+            NULL AS fieldBookedHoursId,
             cbh.fromDateTime AS bookedHour,
             cbh.gmt AS gmt,
             tp.name AS name,
@@ -68,7 +76,9 @@ export class CalendarModel {
             CASE
               WHEN COUNT( tps.sportId ) > 0 THEN
               JSON_ARRAYAGG(s.name) ELSE NULL 
-            END AS sports 
+            END AS sports,
+            NULL AS sport,
+            NULL AS specialization 
           FROM
             TrainerProfileBookedHours cbh
             JOIN TrainerProfile tp ON cbh.trainerProfileId = tp.id
@@ -76,21 +86,28 @@ export class CalendarModel {
             LEFT JOIN TrainerProfileSports tps ON tp.id = tps.trainerProfileId
             LEFT JOIN Sport s ON tps.sportId = s.id 
           WHERE
-            cbh.userId = ${userId}
-            AND DATE( cbh.fromDateTime ) = '${date}' 
-          GROUP BY
-            cbh.id;
+            cbh.userId = ${userId} 
         `;
+        if (date) {
+          sql += ` AND DATE( cbh.fromDateTime ) = '${date}' `;
+        }
+        if (addGroupBy) {
+          sql += ` GROUP BY cbh.fromDateTime `;
+        }
         break;
       case HOME_SEARCH_TYPES_ENUM.DOCTORS:
         sql = `
           SELECT
+            NULL AS coachBookedHoursId,
             dbh.id AS doctorBookedHoursId,
+            NULL AS fieldBookedHoursId,
             dbh.fromDateTime AS bookedHour,
             dbh.gmt AS gmt,
             dc.name AS name,
             dc.profileImage AS profileImage,
             r.name AS region,
+            NULL AS sports,
+            NULL AS sport,
             s.name AS specialization 
           FROM
             DoctorClinicsBookedHours dbh
@@ -99,22 +116,29 @@ export class CalendarModel {
             LEFT JOIN DoctorClinicSpecialization s ON dc.doctorClinicSpecializationId = s.id 
           WHERE
             dbh.userId = ${userId} 
-            AND DATE( dbh.fromDateTime ) = '${date}' 
-          GROUP BY
-            dbh.id;
         `;
+        if (date) {
+          sql += ` AND DATE( dbh.fromDateTime ) = '${date}' `;
+        }
+        if (addGroupBy) {
+          sql += ` GROUP BY dbh.fromDateTime `;
+        }
         break;
       default:
         // Fields as default
         sql = `
           SELECT
+            NULL AS coachBookedHoursId,
+            NULL AS doctorBookedHoursId,
             fbh.id AS fieldBookedHoursId,
             fbh.fromDateTime AS bookedHour,
             fbh.gmt AS gmt,
             f.name AS name,
             f.profileImage AS profileImage,
             r.name AS region,
-            s.name AS sport 
+            NULL AS sports,
+            s.name AS sport,
+            NULL AS specialization 
           FROM
             FieldsBookedHours fbh
             JOIN Field f ON fbh.fieldId = f.id
@@ -122,57 +146,113 @@ export class CalendarModel {
             LEFT JOIN Sport s ON f.sportId = s.id 
           WHERE
             fbh.userId = ${userId} 
-            AND DATE( fbh.fromDateTime ) = '${date}' 
-          GROUP BY
-            fbh.id;
         `;
+        if (date) {
+          sql += ` AND DATE( fbh.fromDateTime ) = '${date}' `;
+        }
+        if (addGroupBy) {
+          sql += ` GROUP BY fbh.fromDateTime `;
+        }
         break;
     }
-    return this.globalService.preparePrismaSql(sql);
+    return {
+      preparedSql: this.globalService.preparePrismaSql(sql),
+      rawSql: sql,
+    };
   }
 
-  async getDoctorClinicDatesCount(
+  async getAllDatesCount(userId: number, startDate: string, endDate: string) {
+    const [
+      { rawSql: doctorCountRawSql },
+      { rawSql: fieldCountRawSql },
+      // { rawSql: coachCountRawSql },
+    ] = [
+      this.generateDatesCountQuery(
+        HOME_SEARCH_TYPES_ENUM.DOCTORS,
+        userId,
+        startDate,
+        endDate,
+      ),
+      this.generateDatesCountQuery(
+        HOME_SEARCH_TYPES_ENUM.FIELDS,
+        userId,
+        startDate,
+        endDate,
+      ),
+      // this.generateDatesCountQuery(
+      //   HOME_SEARCH_TYPES_ENUM.COACHES,
+      //   userId,
+      //   startDate,
+      //   endDate,
+      // ),
+    ];
+    // const unionCountQuery = this.globalService.preparePrismaSql(
+    //   `
+    //     SELECT
+    //       bookingDate, SUM(bookedHoursCount) AS bookedHoursCount
+    //     FROM
+    //       (${doctorCountRawSql} UNION ALL ${fieldCountRawSql} UNION ALL ${coachCountRawSql}) AS countResult
+    //     GROUP BY
+    //       bookingDate
+    //     ORDER BY
+    //       bookingDate;
+    //   `,
+    // );
+    // Count Without Coaches
+    const unionCountQuery = this.globalService.preparePrismaSql(
+      `
+        SELECT
+          bookingDate, SUM(bookedHoursCount) AS bookedHoursCount
+        FROM 
+          (${doctorCountRawSql} UNION ALL ${fieldCountRawSql}) AS countResult
+        GROUP BY
+          bookingDate
+        ORDER BY
+          bookingDate;
+      `,
+    );
+    return this.prisma.$queryRaw(unionCountQuery);
+  }
+
+  async getMultiDateSessions(
+    types: DatesCountTypeFilter[] | undefined,
     userId: number,
-    startDate: string,
-    endDate: string,
+    date: string,
+    limit: number,
   ): Promise<DatesCountResultDto[]> {
-    const preparedSql = this.generateDatesCountQuery(
-      HOME_SEARCH_TYPES_ENUM.DOCTORS,
-      userId,
-      startDate,
-      endDate,
-    );
-    return this.prisma.$queryRaw(preparedSql);
-  }
-
-  async getFieldsDatesCount(userId: number, startDate: string, endDate: string) {
-    const preparedSql = this.generateDatesCountQuery(
-      HOME_SEARCH_TYPES_ENUM.FIELDS,
-      userId,
-      startDate,
-      endDate,
-    );
-    return this.prisma.$queryRaw(preparedSql);
-  }
-
-  async getCoachesDatesCount(userId: number, startDate: string, endDate: string) {
-    const preparedSql = this.generateDatesCountQuery(
-      HOME_SEARCH_TYPES_ENUM.COACHES,
-      userId,
-      startDate,
-      endDate,
-    );
-    return this.prisma.$queryRaw(preparedSql);
+    if (!types) {
+      types = Object.values(HOME_SEARCH_TYPES_ENUM).filter(
+        (homeSearchType) => homeSearchType !== HOME_SEARCH_TYPES_ENUM.ALL,
+      ) as DatesCountTypeFilter[];
+    }
+    const selectRawSqlQueries = [];
+    types.forEach((type: DatesCountTypeFilter) => {
+      const { rawSql } = this.generateDateSessionsQuery(type, userId, date);
+      selectRawSqlQueries.push(rawSql);
+    });
+    const selectRawSqlQueriesLength = selectRawSqlQueries.length - 1;
+    let unionSelectQuery = `SELECT * from (
+        ${selectRawSqlQueries
+          .map((query, index) =>
+            index === selectRawSqlQueriesLength ? query : `${query} UNION ALL `,
+          )
+          .join(' ')}
+      ) AS result ORDER BY bookedHour `;
+    if (!date) {
+      unionSelectQuery += ` LIMIT ${limit} `;
+    }
+    return this.prisma.$queryRaw(this.globalService.preparePrismaSql(unionSelectQuery));
   }
 
   async getDoctorClinicDateSessions(
     userId: number,
     date: string,
   ): Promise<DatesCountResultDto[]> {
-    const preparedSql = this.generateDateSessionsQuery(
+    const { preparedSql } = this.generateDateSessionsQuery(
       HOME_SEARCH_TYPES_ENUM.DOCTORS,
       userId,
       date,
+      true,
     );
     return this.prisma.$queryRaw(preparedSql);
   }
@@ -181,10 +261,11 @@ export class CalendarModel {
     userId: number,
     date: string,
   ): Promise<DatesCountResultDto[]> {
-    const preparedSql = this.generateDateSessionsQuery(
+    const { preparedSql } = this.generateDateSessionsQuery(
       HOME_SEARCH_TYPES_ENUM.COACHES,
       userId,
       date,
+      true,
     );
     return this.prisma.$queryRaw(preparedSql);
   }
@@ -193,10 +274,11 @@ export class CalendarModel {
     userId: number,
     date: string,
   ): Promise<DatesCountResultDto[]> {
-    const preparedSql = this.generateDateSessionsQuery(
+    const { preparedSql } = this.generateDateSessionsQuery(
       HOME_SEARCH_TYPES_ENUM.FIELDS,
       userId,
       date,
+      true,
     );
     return this.prisma.$queryRaw(preparedSql);
   }
