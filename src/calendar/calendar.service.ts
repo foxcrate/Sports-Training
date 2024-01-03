@@ -11,6 +11,7 @@ import { HOME_SEARCH_TYPES_ENUM } from 'src/global/enums';
 @Injectable()
 export class CalendarService {
   private readonly toBeAddedMonths = 3;
+  private DEFAULT_LIMIT_MULTI_RESULTS = 10;
 
   constructor(
     private calendarModel: CalendarModel,
@@ -29,78 +30,75 @@ export class CalendarService {
   }
 
   private formateDateSessionsResults(results): DateSessionsResultDto {
-    return (results || []).map(({ gmt, ...result }) => ({
-      ...result,
-      sports: result.sports && this.globalService.safeParse(result.sports),
-      startTime: this.globalService.getLocalTime12(moment.utc(result.bookedHour)),
-    }));
+    return (results || []).map(({ gmt, ...result }) => {
+      let sports = result.sports && this.globalService.safeParse(result.sports);
+      if (Array.isArray(sports) && sports.length) {
+        sports = sports.filter((sport) => sport);
+      }
+      return {
+        ...result,
+        sports,
+        startTime: this.globalService.getLocalTime12(moment.utc(result.bookedHour)),
+      };
+    });
   }
 
   async getDatesCount(
     userId: number,
-    type: DatesCountTypeFilter,
+    reqStartDate: string | undefined = undefined,
   ): Promise<DatesCountResultDto[]> {
-    const startDate = moment().clone().format('YYYY-MM-DD');
-    const endDate = moment()
+    if (reqStartDate && !this.globalService.isValidDateFormat(reqStartDate)) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.WRONG_DATE_FORMAT`, { lang: I18nContext.current().lang }),
+      );
+    }
+    const startDate = reqStartDate ?? moment().clone().format('YYYY-MM-DD');
+    const endDate = moment(startDate)
       .clone()
       .add(this.toBeAddedMonths, 'months')
       .format('YYYY-MM-DD');
-    let results = null;
-    switch (type) {
-      case HOME_SEARCH_TYPES_ENUM.COACHES:
-        results = await this.calendarModel.getCoachesDatesCount(
-          userId,
-          startDate,
-          endDate,
-        );
-        break;
-      case HOME_SEARCH_TYPES_ENUM.DOCTORS:
-        results = await this.calendarModel.getDoctorClinicDatesCount(
-          userId,
-          startDate,
-          endDate,
-        );
-        break;
-      case HOME_SEARCH_TYPES_ENUM.FIELDS:
-        results = await this.calendarModel.getFieldsDatesCount(
-          userId,
-          startDate,
-          endDate,
-        );
-        break;
-      default:
-        throw new BadRequestException(
-          this.i18n.t(`errors.WRONG_FILTER_TYPE`, { lang: I18nContext.current().lang }),
-        );
-    }
+    const results = await this.calendarModel.getAllDatesCount(userId, startDate, endDate);
     return this.formateDatesCountResults(results);
   }
 
   async getDateSessions(
     userId: number,
-    type: DatesCountTypeFilter,
+    type: string,
     date: string,
+    pageSize: number,
   ): Promise<DateSessionsResultDto> {
-    if (!this.globalService.isValidDateFormat(date)) {
+    if (date && !this.globalService.isValidDateFormat(date)) {
       throw new BadRequestException(
         this.i18n.t(`errors.WRONG_DATE_FORMAT`, { lang: I18nContext.current().lang }),
       );
     }
     let results = null;
-    switch (type) {
-      case HOME_SEARCH_TYPES_ENUM.COACHES:
-        results = await this.calendarModel.getTrainerProfileDateSessions(userId, date);
-        break;
-      case HOME_SEARCH_TYPES_ENUM.DOCTORS:
-        results = await this.calendarModel.getDoctorClinicDateSessions(userId, date);
-        break;
-      case HOME_SEARCH_TYPES_ENUM.FIELDS:
-        results = await this.calendarModel.getFieldsDateSessions(userId, date);
-        break;
-      default:
-        throw new BadRequestException(
-          this.i18n.t(`errors.WRONG_FILTER_TYPE`, { lang: I18nContext.current().lang }),
-        );
+    const convertedType: DatesCountTypeFilter[] | undefined = type
+      ?.split(',')
+      .map((type) => type.trim()) as DatesCountTypeFilter[];
+    if (!convertedType || convertedType.length !== 1) {
+      results = await this.calendarModel.getMultiDateSessions(
+        convertedType,
+        userId,
+        date,
+        pageSize || this.DEFAULT_LIMIT_MULTI_RESULTS,
+      );
+    } else {
+      switch (convertedType[0]) {
+        case HOME_SEARCH_TYPES_ENUM.COACHES:
+          results = await this.calendarModel.getTrainerProfileDateSessions(userId, date);
+          break;
+        case HOME_SEARCH_TYPES_ENUM.DOCTORS:
+          results = await this.calendarModel.getDoctorClinicDateSessions(userId, date);
+          break;
+        case HOME_SEARCH_TYPES_ENUM.FIELDS:
+          results = await this.calendarModel.getFieldsDateSessions(userId, date);
+          break;
+        default:
+          throw new BadRequestException(
+            this.i18n.t(`errors.WRONG_FILTER_TYPE`, { lang: I18nContext.current().lang }),
+          );
+      }
     }
     return this.formateDateSessionsResults(results);
   }

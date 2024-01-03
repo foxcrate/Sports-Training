@@ -6,6 +6,7 @@ export type DatesCountTypeFilter =
   | HOME_SEARCH_TYPES_ENUM.FIELDS;
 
 export interface SessionsFiltersDto {
-  type: DatesCountTypeFilter;
+  type: string;
   date: string;
+  pageSize?: string;
 }

@@ -1,31 +1,15 @@
-export type DoctorResultDto = {
-  doctorBookedHoursId: string;
+export type AllTypesResultDto = {
+  coachBookedHoursId: string | null;
+  doctorBookedHoursId: string | null;
+  fieldBookedHoursId: string | null;
   bookedHour: string;
   name: string;
   profileImage: string;
   region: string;
-  specialization: string;
+  sports: string[] | null;
+  sport: string | null;
+  specialization: string | null;
+  startTime: string;
 };
 
-export type FieldResultDto = {
-  fieldBookedHoursId: string;
-  bookedHour: string;
-  name: string;
-  profileImage: string;
-  region: string;
-  sport: string;
-};
-
-export type CoachResultDto = {
-  coachBookedHoursId: string;
-  bookedHour: string;
-  name: string;
-  profileImage: string;
-  region: string;
-  sports: string[];
-};
-
-export type DateSessionsResultDto =
-  | CoachResultDto[]
-  | DoctorResultDto[]
-  | FieldResultDto[];
+export type DateSessionsResultDto = AllTypesResultDto[];
