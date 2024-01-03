@@ -24,7 +24,7 @@ export class CalendarController {
     @Query(new JoiValidation(DatesCountFiltersValidation)) filters: DatesCountFiltersDto,
     @UserId() userId: number,
   ): Promise<DatesCountResultDto[]> {
-    return this.calenderService.getDatesCount(userId, filters.type);
+    return this.calenderService.getDatesCount(userId, filters?.startDate);
   }
 
   @Get('date-sessions')
@@ -32,6 +32,11 @@ export class CalendarController {
     @Query(new JoiValidation(SessionsFiltersValidation)) filters: SessionsFiltersDto,
     @UserId() userId: number,
   ): Promise<DateSessionsResultDto> {
-    return this.calenderService.getDateSessions(userId, filters.type, filters.date);
+    return this.calenderService.getDateSessions(
+      userId,
+      filters.type,
+      filters.date,
+      parseInt(filters.pageSize || '0', 10),
+    );
   }
 }
