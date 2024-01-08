@@ -58,7 +58,7 @@ export class CalendarModel {
     type: DatesCountTypeFilter,
     userId: number,
     date: string,
-    addGroupBy: boolean = false,
+    addOrderBy: boolean = false,
   ) {
     let sql = null;
     switch (type) {
@@ -91,8 +91,8 @@ export class CalendarModel {
         if (date) {
           sql += ` AND DATE( cbh.fromDateTime ) = '${date}' `;
         }
-        if (addGroupBy) {
-          sql += ` GROUP BY cbh.fromDateTime `;
+        if (addOrderBy) {
+          sql += ` ORDER BY bookedHour `;
         }
         break;
       case HOME_SEARCH_TYPES_ENUM.DOCTORS:
@@ -120,8 +120,8 @@ export class CalendarModel {
         if (date) {
           sql += ` AND DATE( dbh.fromDateTime ) = '${date}' `;
         }
-        if (addGroupBy) {
-          sql += ` GROUP BY dbh.fromDateTime `;
+        if (addOrderBy) {
+          sql += ` ORDER BY bookedHour `;
         }
         break;
       default:
@@ -150,8 +150,8 @@ export class CalendarModel {
         if (date) {
           sql += ` AND DATE( fbh.fromDateTime ) = '${date}' `;
         }
-        if (addGroupBy) {
-          sql += ` GROUP BY fbh.fromDateTime `;
+        if (addOrderBy) {
+          sql += ` ORDER BY bookedHour `;
         }
         break;
     }
