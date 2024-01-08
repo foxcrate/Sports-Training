@@ -27,3 +27,9 @@ export enum ACCEPTANCE_STATUSES_ENUM {
   PENDING = 'pending',
   DECLINED = 'declined',
 }
+
+export enum PROFILE_TYPES_ENUM {
+  PLAYER = 'player',
+  TRAINER = 'trainer',
+  CHILD = 'child',
+}
