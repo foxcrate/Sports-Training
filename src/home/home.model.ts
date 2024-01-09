@@ -12,35 +12,16 @@ export class HomeModel {
     private globalService: GlobalService,
   ) {}
 
-  // For testing purpose until finishing coaches
-  private readonly coachesMockResult = [
-    {
-      doctorClinicId: null,
-      fieldId: null,
-      trainerProfileId: 2,
-      profileImage: null,
-      specialization: null,
-      region: 'Monira',
-      name: 'trainer 1',
-      cost: null,
-      sport: null,
-      sports: ['football', 'basketball'],
-      actualAverageRating: '2',
-      roundedAverageRating: '2',
-      createdAt: '2023-12-09T14:41:57.798Z',
-    },
-  ];
-
   generateCoachesQuery(filters: SearchFiltersDto) {
     const selectSqlPrefix = `
       SELECT
         NULL AS doctorClinicId,
         NULL AS fieldId,
         tp.id AS trainerProfileId,
-        tp.profileImage AS profileImage,
+        u.profileImage AS profileImage,
         NULL AS specialization,
         Region.name AS region,
-        tp.name AS name,
+        u.firstName AS name,
         tp.cost AS cost,
         NULL AS sport,
         CASE
@@ -52,17 +33,23 @@ export class HomeModel {
         IFNULL( CEIL( SUM( r.ratingNumber ) / COUNT( r.id )), 5 ) AS roundedAverageRating,
         tp.createdAt AS createdAt  
     `;
-    const countSqlPrefix = `SELECT COUNT(DISTINCT tp.id) AS count, IFNULL( CEIL( SUM( R.ratingNumber ) / COUNT( R.id )), 5 ) AS RoundedAverageRating `;
+    const countSqlPrefix = `SELECT COUNT(DISTINCT tp.id) AS count, IFNULL( CEIL( SUM( r.ratingNumber ) / COUNT( r.id )), 5 ) AS RoundedAverageRating `;
     let sql = `
       FROM
         TrainerProfile tp
-        LEFT JOIN Rate r ON tp.id = r.trainerProfileId AND R.rateableType = '${RATEABLE_TYPES_ENUM.TRAINER}'
+        LEFT JOIN Rate r ON tp.id = r.trainerProfileId AND r.rateableType = '${RATEABLE_TYPES_ENUM.TRAINER}'
         LEFT JOIN TrainerProfileSports tps ON tp.id = tps.trainerProfileId
         LEFT JOIN Sport s ON tps.sportId = s.id
         LEFT JOIN Region ON Region.id = tp.regionId
+        LEFT JOIN User u ON u.id = tp.userId
       WHERE
-        tp.acceptanceStatus = '${ACCEPTANCE_STATUSES_ENUM.ACCEPTED}'
+        1 = 1
     `;
+    /**
+     * There is no field in trainerProfile added called `acceptanceStatus` as in doctor and field
+     * WHERE
+        tp.acceptanceStatus = '${ACCEPTANCE_STATUSES_ENUM.ACCEPTED}'
+     */
     if (filters.name) {
       sql += ` AND tp.name LIKE '%${filters.name}%' `;
     }
@@ -214,24 +201,26 @@ export class HomeModel {
     };
   }
 
-  async getCoaches(filters: SearchFiltersDto): Promise</*SearchResultsDto*/ any> {
-    // const { selectSql, countSql } = this.generateCoachesQuery(filters);
-    // const [searchResults, countResult] = await Promise.all([
-    //   this.prisma.$queryRaw(selectSql),
-    //   this.prisma.$queryRaw(countSql),
-    // ]);
-    // const { count } =
-    //   Array.isArray(countResult) && countResult.length ? countResult[0] : { count: 0 };
-    // return {
-    //   searchResults: (searchResults as SearchResultDto[]).map((coach) => ({
-    //     ...coach,
-    //     sports: coach.sports && this.globalService.safeParse(coach.sports),
-    //   })),
-    //   count: parseInt(count) as number,
-    // };
+  async getCoaches(filters: SearchFiltersDto): Promise<SearchResultsDto> {
+    const { selectSql, countSql } = this.generateCoachesQuery(filters);
+    const [searchResults, countResult] = await Promise.all([
+      this.prisma.$queryRaw(selectSql),
+      this.prisma.$queryRaw(countSql),
+    ]);
+    const { count } =
+      Array.isArray(countResult) && countResult.length ? countResult[0] : { count: 0 };
     return {
-      searchResults: this.coachesMockResult,
-      count: this.coachesMockResult.length,
+      searchResults: (searchResults as SearchResultDto[]).map((coach) => {
+        let sports = coach.sports && this.globalService.safeParse(coach.sports);
+        if (Array.isArray(sports) && sports.length) {
+          sports = [...new Set(sports)];
+        }
+        return {
+          ...coach,
+          sports,
+        };
+      }),
+      count: parseInt(count) as number,
     };
   }
 
@@ -267,25 +256,17 @@ export class HomeModel {
     const [
       { selectSqlWithoutLimit: doctorQuery, countRawSql: doctorCountRawSql },
       { selectSqlWithoutLimit: fieldQuery, countRawSql: fieldCountRawSql },
-      // { selectSqlWithoutLimit: coachQuery, countRawSql: coachCountRawSql },
+      { selectSqlWithoutLimit: coachQuery, countRawSql: coachCountRawSql },
     ] = [
       this.generateDoctorQuery(filters),
       this.generateFieldsQuery(filters),
-      // this.generateCoachesQuery(filters),
+      this.generateCoachesQuery(filters),
     ];
-    // const unionSelectQuery = this.globalService.preparePrismaSql(
-    //   `SELECT * from (${doctorQuery} UNION ALL ${fieldQuery} UNION ALL ${coachQuery}) AS result ORDER BY createdAt LIMIT ${filters.limit} OFFSET ${filters.offset};`,
-    // );
-    // Without Coaches
     const unionSelectQuery = this.globalService.preparePrismaSql(
-      `SELECT * from (${doctorQuery} UNION ALL ${fieldQuery}) AS result ORDER BY createdAt LIMIT ${filters.limit} OFFSET ${filters.offset};`,
+      `SELECT * from (${doctorQuery} UNION ALL ${fieldQuery} UNION ALL ${coachQuery}) AS result ORDER BY createdAt LIMIT ${filters.limit} OFFSET ${filters.offset};`,
     );
-    // const unionCountQuery = this.globalService.preparePrismaSql(
-    //   `SELECT SUM(count) AS count from (${doctorCountRawSql} UNION ALL ${fieldCountRawSql} UNION ALL ${coachCountRawSql}) AS countResult;`,
-    // );
-    // Without Coaches
     const unionCountQuery = this.globalService.preparePrismaSql(
-      `SELECT SUM(count) AS count from (${doctorCountRawSql} UNION ALL ${fieldCountRawSql}) AS countResult;`,
+      `SELECT SUM(count) AS count from (${doctorCountRawSql} UNION ALL ${fieldCountRawSql} UNION ALL ${coachCountRawSql}) AS countResult;`,
     );
     const [searchResults, countResult] = await Promise.all([
       this.prisma.$queryRaw(unionSelectQuery),
@@ -294,10 +275,16 @@ export class HomeModel {
     const { count } =
       Array.isArray(countResult) && countResult.length ? countResult[0] : { count: 0 };
     return {
-      searchResults: (searchResults as SearchResultDto[]).map((result) => ({
-        ...result,
-        sports: result.sports && this.globalService.safeParse(result.sports),
-      })),
+      searchResults: (searchResults as SearchResultDto[]).map((result) => {
+        let sports = result.sports && this.globalService.safeParse(result.sports);
+        if (Array.isArray(sports) && sports.length) {
+          sports = [...new Set(sports)];
+        }
+        return {
+          ...result,
+          sports,
+        };
+      }),
       count: parseInt(count || 0) as number,
     };
   }
