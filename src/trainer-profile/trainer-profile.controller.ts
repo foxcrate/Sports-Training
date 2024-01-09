@@ -17,6 +17,7 @@ import { AddTrainerProfileValidation } from 'src/trainer-profile/validations/cre
 import { AuthGuard } from 'src/guards/auth.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/guards/role.guard';
+import { NotAvailableDatesValidation } from 'src/field/validations/not-available-dates.valdiaiton';
 
 @Controller('trainer-profile')
 export class TrainerProfileController {
@@ -56,11 +57,17 @@ export class TrainerProfileController {
     return await this.trainerProfileService.delete(req['id']);
   }
 
-  @Get('testHesham')
+  @Post('/add-not-available-days')
   @Version('1')
-  // @Roles('user')
-  // @UseGuards(AuthGuard, RoleGuard)
-  async testHesham(@Request() req: ExpressRequest) {
-    // return this.trainerProfileService.testHesham();
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async addNotAvailableDays1(
+    @Body(new JoiValidation(NotAvailableDatesValidation)) reqBody,
+    @Request() req: ExpressRequest,
+  ) {
+    return await this.trainerProfileService.addNotAvailableDays(
+      req['id'],
+      reqBody.notAvailableDays,
+    );
   }
 }

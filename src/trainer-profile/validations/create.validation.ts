@@ -8,4 +8,5 @@ export const AddTrainerProfileValidation = Joi.object({
   regionId: Joi.number(),
   sports: Joi.array().items(Joi.number()),
   fields: Joi.array().items(Joi.number()),
+  images: Joi.array().items(Joi.string()),
 });

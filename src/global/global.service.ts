@@ -9,7 +9,15 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class GlobalService {
-  weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Saturday'];
+  weekDays = [
+    'Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+  ];
 
   constructor(
     private config: ConfigService,

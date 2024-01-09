@@ -20,8 +20,13 @@ import { Request as ExpressRequest } from 'express';
 import { ScheduleIdValidation } from './validations/scheduleId.validation';
 import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { AddScheduleValidation } from './validations/create.validation';
+import { NotAvailableDatesValidation } from 'src/field/validations/not-available-dates.valdiaiton';
+import { TrainerProfileIdValidation } from '../trainer-profile/validations/trainer-profile-id.validation';
+import { FieldSlotsValidation } from './validations/field-slots.validation';
+import { TrainerDayFieldSlotsValidation } from './validations/trainer-day-field-slots.validation';
+import { BookTrainerSessionValidation } from './validations/book-trainer-session.validation';
 
-@Controller('trainer/schedule')
+@Controller('trainer-schedule')
 export class ScheduleController {
   constructor(private scheduleService: ScheduleService) {}
 
@@ -82,5 +87,56 @@ export class ScheduleController {
     @Request() req: ExpressRequest,
   ) {
     return await this.scheduleService.getOne(req['timezone'], req['id'], params.id);
+  }
+
+  @Get('/:trainerProfileId/fields')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async getTrainerFields1(@Param(new JoiValidation(TrainerProfileIdValidation)) params) {
+    return await this.scheduleService.getTrainerFields(params.trainerProfileId);
+  }
+
+  @Get('/:trainerProfileId/available-upcoming-week/:fieldId')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async getTrainerFieldSlotsForThisWeek1(
+    @Param(new JoiValidation(FieldSlotsValidation)) params,
+  ) {
+    return await this.scheduleService.getTrainerFieldDaysForThisWeek(
+      params.trainerProfileId,
+      params.fieldId,
+    );
+  }
+
+  @Get('/:trainerProfileId/day-field-slots/:fieldId/:dayDate')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async getTrainerDaySlots1(
+    @Param(new JoiValidation(TrainerDayFieldSlotsValidation)) params,
+  ) {
+    return await this.scheduleService.getTrainerDayFieldSlots(
+      params.trainerProfileId,
+      params.fieldId,
+      params.dayDate,
+    );
+  }
+
+  @Post('/book-session')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async bookTrainerSession(
+    @Body(new JoiValidation(BookTrainerSessionValidation)) reqBody,
+    @Request() req: ExpressRequest,
+  ) {
+    return await this.scheduleService.bookTrainerSession(
+      req['id'],
+      reqBody.trainerProfileId,
+      reqBody.dayDate,
+      reqBody.slotId,
+    );
   }
 }

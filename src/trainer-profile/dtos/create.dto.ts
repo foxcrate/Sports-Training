@@ -18,4 +18,5 @@ export class TrainerProfileCreateDto {
   regionId: Number;
   sports: Number[];
   fields: Number[];
+  images: String[];
 }
