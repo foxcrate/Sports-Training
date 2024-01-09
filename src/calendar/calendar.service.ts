@@ -30,7 +30,7 @@ export class CalendarService {
   }
 
   private formateDateSessionsResults(results): DateSessionsResultDto {
-    return (results || []).map(({ gmt, ...result }) => {
+    return (results || []).map(({ gmt, slotDuration, ...result }) => {
       let sports = result.sports && this.globalService.safeParse(result.sports);
       if (Array.isArray(sports) && sports.length) {
         sports = sports.filter((sport) => sport);
@@ -39,6 +39,12 @@ export class CalendarService {
         ...result,
         sports,
         startTime: this.globalService.getLocalTime12(moment.utc(result.bookedHour)),
+        endTime: this.globalService.getLocalTime12(
+          moment
+            .utc(result.bookedHour)
+            .clone()
+            .add(parseInt(slotDuration || 60, 10), 'minutes'),
+        ),
       };
     });
   }

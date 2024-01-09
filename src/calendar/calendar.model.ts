@@ -78,7 +78,9 @@ export class CalendarModel {
               JSON_ARRAYAGG(s.name) ELSE NULL 
             END AS sports,
             NULL AS sport,
-            NULL AS specialization 
+            NULL AS specialization,
+            '${HOME_SEARCH_TYPES_ENUM.COACHES}' AS type,
+            NULL AS slotDuration 
           FROM
             TrainerProfileBookedHours cbh
             JOIN TrainerProfile tp ON cbh.trainerProfileId = tp.id
@@ -108,7 +110,9 @@ export class CalendarModel {
             r.name AS region,
             NULL AS sports,
             NULL AS sport,
-            s.name AS specialization 
+            s.name AS specialization,
+            '${HOME_SEARCH_TYPES_ENUM.DOCTORS}' AS type,
+            dc.slotDuration AS slotDuration 
           FROM
             DoctorClinicsBookedHours dbh
             JOIN DoctorClinic dc ON dbh.doctorClinicId = dc.id
@@ -138,7 +142,9 @@ export class CalendarModel {
             r.name AS region,
             NULL AS sports,
             s.name AS sport,
-            NULL AS specialization 
+            NULL AS specialization,
+            '${HOME_SEARCH_TYPES_ENUM.FIELDS}' AS type,
+            f.slotDuration AS slotDuration 
           FROM
             FieldsBookedHours fbh
             JOIN Field f ON fbh.fieldId = f.id
