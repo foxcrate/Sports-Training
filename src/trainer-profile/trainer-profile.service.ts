@@ -63,6 +63,9 @@ export class TrainerProfileService {
     Promise.all([
       await this.trainerProfileModel.deletePastTrainerSports(deletedTrainerProfile.id),
       await this.trainerProfileModel.deletePastTrainerFields(deletedTrainerProfile.id),
+      await this.trainerProfileModel.deletePastTrainerImages(deletedTrainerProfile.id),
+      await this.trainerProfileModel.deletePastSchedules(deletedTrainerProfile.id),
+      await this.trainerProfileModel.deletePastNotAvailableDays(deletedTrainerProfile.id),
     ]);
     // await this.trainerProfileModel.deletePastTrainerSports(deletedTrainerProfile.id);
     // await this.trainerProfileModel.deletePastTrainerFields(deletedTrainerProfile.id);
@@ -73,5 +76,13 @@ export class TrainerProfileService {
     await this.trainerProfileModel.deleteByUserId(userId);
 
     return deletedTrainerProfile;
+  }
+
+  async addNotAvailableDays(userId: number, datesArray: string[]) {
+    let theTrainerProfile = await this.trainerProfileModel.getByUserId(userId);
+    return await this.trainerProfileModel.insertNotAvailableDays(
+      theTrainerProfile.id,
+      datesArray,
+    );
   }
 }

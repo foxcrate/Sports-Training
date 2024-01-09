@@ -11,6 +11,7 @@ import { Prisma } from '@prisma/client';
 import { FieldReturnDto } from 'src/field/dtos/return.dto';
 import { RegionService } from 'src/region/region.service';
 import { SportService } from 'src/sport/sport.service';
+import { ScheduleModel } from 'src/schedule/schedule.model';
 
 @Injectable()
 export class TrainerProfileModel {
@@ -19,8 +20,36 @@ export class TrainerProfileModel {
     private config: ConfigService,
     private readonly i18n: I18nService,
     private sportService: SportService,
+    private scheduleModel: ScheduleModel,
+    private globalService: GlobalService,
     private regionService: RegionService,
   ) {}
+
+  async getByID(id: number): Promise<ReturnTrainerProfileDto> {
+    let trainerProfile = await this.prisma.$queryRaw`
+    SELECT
+      id,
+      level,
+      ageGroup,
+      cost,
+      sessionDescription,
+      userId,
+      createdAt
+    FROM TrainerProfile AS tp
+    WHERE tp.id = ${id}
+    LIMIT 1
+    ;`;
+
+    if (!trainerProfile[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.TRAINER_PROFILE_NOT_FOUND`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
+    return trainerProfile[0];
+  }
 
   async getByUserId(userId: number): Promise<ReturnTrainerProfileDto> {
     let trainerProfile = await this.prisma.$queryRaw`
@@ -56,6 +85,37 @@ export class TrainerProfileModel {
       FROM User
       WHERE id = ${userId}
     ),
+    TrainerPictures AS (
+        SELECT trainerProfileId,
+        CASE WHEN COUNT(id) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(JSON_OBJECT(
+          'id',p.id,
+          'imageLink', p.imageLink
+          ))
+        END AS pictures
+        FROM Picture as p
+        WHERE trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
+        GROUP BY trainerProfileId
+      ),
+      RatingAvgTable AS (
+        SELECT r.trainerProfileId AS trainerProfileId,
+        CASE WHEN AVG(r.ratingNumber) IS NULL THEN 5
+        ELSE
+        ROUND(AVG(r.ratingNumber),1)
+        END AS ratingNumber
+        FROM Rate AS r
+        WHERE r.trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
+        GROUP BY r.trainerProfileId
+      ),
+      Last5Feedbacks AS (
+        SELECT
+        feedback
+        FROM Rate
+        WHERE trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
+        && feedback IS NOT NULL
+        LIMIT 5
+      ),
     trainerProfileFields AS (
       SELECT
       tp.id AS trainerProfileId,
@@ -118,6 +178,9 @@ export class TrainerProfileModel {
       'gender', ud.gender,
       'birthday',ud.birthday
       ) AS user,
+    (SELECT pictures FROM TrainerPictures ) AS gallery,
+    (SELECT ratingNumber FROM RatingAvgTable) AS ratingNumber,
+    (SELECT JSON_ARRAYAGG(feedback) FROM Last5Feedbacks) AS feedbacks,
     tpws.sports AS sports,
     tpf.fields AS fields
     FROM
@@ -143,6 +206,25 @@ export class TrainerProfileModel {
     let schedulesIdsArray = schedulesIds[0].ids;
 
     return schedulesIdsArray;
+  }
+
+  async getTrainerFields(trainerProfileId: number) {
+    await this.getByID(trainerProfileId);
+    let trainerProfileFields = await this.prisma.$queryRaw`
+      SELECT 
+      CASE 
+      WHEN count(Field.id) = 0 THEN null
+      ELSE 
+      JSON_ARRAYAGG(JSON_OBJECT(
+        'id',Field.id,
+        'name',Field.name
+      ))
+      END AS fields
+      FROM TrainerProfileFields
+      LEFT JOIN Field ON Field.id = TrainerProfileFields.fieldId
+      WHERE trainerProfileId = ${trainerProfileId}
+    `;
+    return trainerProfileFields[0];
   }
 
   async create(
@@ -180,7 +262,13 @@ export class TrainerProfileModel {
       await this.createProfileFields(createData.fields, newTrainerProfile.id);
     }
 
-    return newTrainerProfile;
+    if (createData.images && createData.images.length > 0) {
+      await this.createProfileImages(createData.images, newTrainerProfile.id);
+    }
+
+    let newTrainerProfileDetailed = await this.getOneDetailed(userId);
+
+    return newTrainerProfileDetailed;
   }
 
   async update(
@@ -216,9 +304,52 @@ export class TrainerProfileModel {
       await this.deletePastTrainerFields(theTrainerProfile.id);
     }
 
+    if (createData.images && createData.images.length > 0) {
+      await this.createProfileImages(createData.images, theTrainerProfile.id);
+    } else if (createData.images && createData.images.length == 0) {
+      await this.deletePastTrainerImages(theTrainerProfile.id);
+    }
+
     let updatedTrainerProfile = await this.getOneDetailed(userId);
 
     return updatedTrainerProfile;
+  }
+
+  async insertNotAvailableDays(
+    trainerProfileId: number,
+    datesArray: string[],
+  ): Promise<ReturnTrainerProfileDto> {
+    if (this.globalService.checkRepeatedDates(datesArray)) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.REPEATED_DATES`, { lang: I18nContext.current().lang }),
+      );
+    }
+
+    await this.deleteNotAvailableDays(trainerProfileId);
+    if (datesArray.length == 0) {
+      return await this.getByID(trainerProfileId);
+    }
+    let newDatesArray = [];
+    for (let i = 0; i < datesArray.length; i++) {
+      newDatesArray.push([new Date(datesArray[i]), trainerProfileId]);
+    }
+    await this.prisma.$executeRaw`
+    INSERT INTO
+    TrainerProfileNotAvailableDays
+    (dayDate, trainerProfileId)
+    VALUES
+    ${Prisma.join(newDatesArray.map((row) => Prisma.sql`(${Prisma.join(row)})`))}
+    `;
+
+    return await this.getByID(trainerProfileId);
+  }
+
+  async deleteNotAvailableDays(trainerProfileId: number) {
+    await this.prisma.$queryRaw`
+      DELETE
+      FROM TrainerProfileNotAvailableDays
+      WHERE trainerProfileId = ${trainerProfileId}
+    `;
   }
 
   async findRepeated(userId): Promise<boolean> {
@@ -236,6 +367,71 @@ export class TrainerProfileModel {
       );
     }
     return false;
+  }
+
+  async deletePastTrainerFields(trainerProfileId: number) {
+    await this.prisma.$queryRaw`
+      DELETE
+      FROM TrainerProfileFields
+      WHERE trainerProfileId = ${trainerProfileId}
+    `;
+  }
+
+  async deletePastTrainerSports(trainerProfileId: number) {
+    await this.prisma.$queryRaw`
+      DELETE
+      FROM TrainerProfileSports
+      WHERE trainerProfileId = ${trainerProfileId}
+    `;
+  }
+
+  async deletePastTrainerImages(trainerProfileId: number) {
+    await this.prisma.$queryRaw`
+      DELETE
+      FROM Picture
+      WHERE trainerProfileId = ${trainerProfileId}
+    `;
+  }
+
+  async deletePastNotAvailableDays(trainerProfileId: number) {
+    await this.prisma.$queryRaw`
+    DELETE
+    FROM TrainerProfileNotAvailableDays
+    WHERE trainerProfileId = ${trainerProfileId}
+  `;
+  }
+
+  // async deletePastBookedSession(trainerProfileId: number) {
+
+  // }
+
+  async deletePastSchedules(trainerProfileId: number) {
+    await this.scheduleModel.deleteByTrainerProfileId(trainerProfileId);
+  }
+
+  async deleteByUserId(userId) {
+    await this.prisma.$queryRaw`
+    DELETE FROM
+    TrainerProfile
+    WHERE
+    userId = ${userId};
+  `;
+  }
+
+  private async createProfileImages(imagesArray, newTrainerProfileId) {
+    //array of objects to insert to db
+    const profilesAndImages = [];
+    for (let i = 0; i < imagesArray.length; i++) {
+      profilesAndImages.push({
+        trainerProfileId: newTrainerProfileId,
+        imageLink: imagesArray[i],
+      });
+    }
+
+    //delete past PlayerProfileImages
+    await this.deletePastTrainerImages(newTrainerProfileId);
+
+    await this.prisma.picture.createMany({ data: profilesAndImages });
   }
 
   private async createProfileSports(sportsIds, newTrainerProfileId) {
@@ -289,30 +485,5 @@ export class TrainerProfileModel {
       );
     }
     return true;
-  }
-
-  async deletePastTrainerFields(trainerProfileId: number) {
-    await this.prisma.$queryRaw`
-      DELETE
-      FROM TrainerProfileFields
-      WHERE trainerProfileId = ${trainerProfileId}
-    `;
-  }
-
-  async deletePastTrainerSports(trainerProfileId: number) {
-    await this.prisma.$queryRaw`
-      DELETE
-      FROM TrainerProfileSports
-      WHERE trainerProfileId = ${trainerProfileId}
-    `;
-  }
-
-  async deleteByUserId(userId) {
-    await this.prisma.$queryRaw`
-    DELETE FROM
-    TrainerProfile
-    WHERE
-    userId = ${userId};
-  `;
   }
 }
