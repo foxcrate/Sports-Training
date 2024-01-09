@@ -9,6 +9,7 @@ import {
   Put,
   Delete,
   Get,
+  Param,
 } from '@nestjs/common';
 import { Request as ExpressRequest } from 'express';
 import { TrainerProfileService } from './trainer-profile.service';
@@ -18,6 +19,7 @@ import { AuthGuard } from 'src/guards/auth.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/guards/role.guard';
 import { NotAvailableDatesValidation } from 'src/field/validations/not-available-dates.valdiaiton';
+import { TrainerProfileIdValidation } from './validations/trainer-profile-id.validation';
 
 @Controller('trainer-profile')
 export class TrainerProfileController {
@@ -29,6 +31,14 @@ export class TrainerProfileController {
   @UseGuards(AuthGuard, RoleGuard)
   async getOne1(@Body() reqBody, @Request() req: ExpressRequest) {
     return await this.trainerProfileService.getOne(req['id']);
+  }
+
+  @Get('get-trainer/:trainerProfileId')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async playerGetOne1(@Param(new JoiValidation(TrainerProfileIdValidation)) params) {
+    return await this.trainerProfileService.playerGetOne(params.trainerProfileId);
   }
 
   @Post()
