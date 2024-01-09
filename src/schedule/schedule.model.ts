@@ -8,6 +8,8 @@ import { ScheduleCreateDto } from './dtos/create.dto';
 import { ReturnScheduleDto } from './dtos/return.dto';
 import * as moment from 'moment-timezone';
 import { SlotDetailsDto } from './dtos/slot-details.dto';
+import { FieldReturnDto } from 'src/field/dtos/return.dto';
+import { ReturnTrainerProfileDto } from 'src/trainer-profile/dtos/return.dto';
 
 @Injectable()
 export class ScheduleModel {
@@ -165,9 +167,6 @@ export class ScheduleModel {
       await this.deleteScheduleMonths(id),
     ]);
 
-    // await this.deleteScheduleSlots(id);
-    // await this.deleteScheduleMonths(id);
-
     // delete schedule
     await this.prisma.$queryRaw`
     DELETE
@@ -175,6 +174,22 @@ export class ScheduleModel {
     WHERE id = ${id}
   `;
     return deletedSchedle;
+  }
+
+  async deleteByTrainerProfileId(trainerProfileId: number) {
+    let allTrainerProfileSchedules: ScheduleSlotsDetailsDTO[] = await this.prisma
+      .$queryRaw`
+      SELECT 
+      *
+      FROM
+      Schedule
+      WHERE
+      trainerProfileId = ${trainerProfileId}
+    `;
+
+    for (let index = 0; index < allTrainerProfileSchedules.length; index++) {
+      await this.deleteByID(null, allTrainerProfileSchedules[index].id);
+    }
   }
 
   async allTrainerSchedulesMonths(trainerProfileId: number): Promise<number[]> {
@@ -213,6 +228,226 @@ export class ScheduleModel {
     return allSchedulesMonths[0].months;
   }
 
+  async getTrainerFieldSlots(trainerProfileId: number, fieldId: number) {
+    await this.checkTrainerProfileExistence(trainerProfileId);
+    await this.checkFieldExistence(fieldId);
+    let trainerFieldSlots = await this.prisma.$queryRaw`
+    WITH TrainerNotAvailableDays AS (
+      SELECT trainerProfileId,
+      JSON_ARRAYAGG(DATE(dayDate)) AS dates
+      FROM TrainerProfileNotAvailableDays
+      WHERE trainerProfileId = ${trainerProfileId}
+      GROUP BY trainerProfileId
+    ),
+    SchedulesMonths AS (
+      SELECT Schedule.id AS scheduleId,
+      Schedule.trainerProfileId AS trainerProfileId,
+      CASE
+      WHEN COUNT(Month.id ) = 0 THEN null
+      ELSE
+      JSON_ARRAYAGG(JSON_OBJECT(
+        'name',Month.monthName,
+        'number', Month.monthNumber
+        ))
+      END AS months
+      FROM Schedule
+      LEFT JOIN SchedulesMonths ON SchedulesMonths.scheduleId = Schedule.id
+      LEFT JOIN Month ON Month.id = SchedulesMonths.monthId
+      WHERE Schedule.trainerProfileId = ${trainerProfileId}
+      GROUP BY Schedule.id
+    ),
+    ScheduleWithSlots AS (
+    SELECT
+    Schedule.id AS scheduleId,
+      Schedule.trainerProfileId AS trainerProfileId,
+      SchedulesMonths.months AS months,
+      CASE
+      WHEN COUNT(Slot.id ) = 0 THEN null
+      ELSE
+      JSON_ARRAYAGG(JSON_OBJECT(
+        'id',Slot.id,
+        'name',Slot.name,
+        'fromTime', Slot.fromTime,
+        'toTime', Slot.toTime,
+        'cost', Slot.cost,
+        'fieldId', Slot.fieldId,
+        'weekDayNumber', Slot.weekDayNumber,
+        'weekDayName', Slot.weekDayName
+        ))
+      END AS slots
+      FROM Schedule
+      LEFT JOIN Slot ON Slot.scheduleId = Schedule.id
+      LEFT JOIN SchedulesMonths ON SchedulesMonths.scheduleId = Schedule.id
+      WHERE Schedule.trainerProfileId = ${trainerProfileId}
+      AND Slot.fieldId = ${fieldId}
+      GROUP BY Schedule.id
+    )
+    SELECT
+    TrainerNotAvailableDays.trainerProfileId,
+    TrainerNotAvailableDays.dates AS notAvailableDays,
+    CASE
+      WHEN COUNT(ScheduleWithSlots.scheduleId ) = 0 THEN null
+      ELSE
+      JSON_ARRAYAGG(JSON_OBJECT(
+        'scheduleId',ScheduleWithSlots.scheduleId,
+        'months',ScheduleWithSlots.months,
+        'slots', ScheduleWithSlots.slots
+        ))
+      END AS scheduleSlots
+    FROM 
+    TrainerNotAvailableDays
+    LEFT JOIN ScheduleWithSlots ON ScheduleWithSlots.trainerProfileId = TrainerNotAvailableDays.trainerProfileId
+    GROUP BY trainerProfileId
+    `;
+    return trainerFieldSlots[0];
+  }
+
+  async getSlotById(slotId): Promise<SlotDetailsDto> {
+    let theSlot = await this.prisma.$queryRaw`
+      SELECT *
+      FROM Slot
+      WHERE id = ${slotId}
+    `;
+    if (!theSlot[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.NOT_EXISTED_SLOT`, { lang: I18nContext.current().lang }),
+      );
+    }
+    return theSlot[0];
+  }
+
+  async getBookedSlot(slotId: number, dayDate: string) {
+    let TheBookedSlot = await this.prisma.$queryRaw`
+      SELECT *
+      FROM TrainerBookedSession
+      WHERE slotId = ${slotId}
+      AND date = ${dayDate}
+      AND status = 'active'
+    `;
+    return TheBookedSlot[0];
+  }
+
+  async createTrainerBookedSession(
+    userId: number,
+    dayDate: string,
+    trainerProfileId: number,
+    slotId: number,
+  ) {
+    let createdTrainerBookedSession: any = await this.prisma.$transaction(
+      [
+        this.prisma.$queryRaw`
+        INSERT INTO TrainerBookedSession
+        (
+          userId,
+          date,
+          trainerProfileId,
+          slotId,
+          status
+        )
+        VALUES
+      (
+        ${userId},
+        ${dayDate},
+        ${trainerProfileId},
+        ${slotId},
+        'active'
+      )`,
+        this.prisma.$queryRaw`
+        SELECT
+          *
+        FROM TrainerBookedSession
+        WHERE
+        id = LAST_INSERT_ID()
+        `,
+      ],
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+      },
+    );
+    return createdTrainerBookedSession[1][0];
+  }
+
+  async createNewSessionRequest(trainerBookedSessionId: number) {
+    await this.prisma.$queryRaw`
+    INSERT INTO SessionRequest
+    (
+      trainerBookedSessionId,
+      status
+    )
+    VALUES
+  (
+    ${trainerBookedSessionId},
+    'accepted'
+  )`;
+  }
+
+  async getTrainerBookedSessionCard(trainerBookedSessionId: number) {
+    let theCard = await this.prisma.$queryRaw`
+    WITH TrainerSessionData AS ( 
+      SELECT
+      TrainerBookedSession.id AS id,
+      TrainerBookedSession.userId AS userId,
+      TrainerBookedSession.date AS date,
+      Slot.fromTime AS fromTime,
+      Slot.toTime AS toTime,
+      Slot.cost AS cost
+      FROM TrainerBookedSession
+      LEFT JOIN Slot ON Slot.id = TrainerBookedSession.slotId
+      WHERE TrainerBookedSession.id = ${trainerBookedSessionId}
+    )
+      SELECT
+      User.firstName AS firstName,
+      User.lastName AS lastName,
+      User.profileImage AS profileImage,
+      TrainerSessionData.date AS date,
+      TrainerSessionData.fromTime AS fromTime,
+      TrainerSessionData.toTime AS toTime,
+      TrainerSessionData.cost AS cost
+      FROM TrainerSessionData
+      LEFT JOIN User ON TrainerSessionData.userId = User.id
+    `;
+
+    if (!theCard[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
+    }
+
+    return theCard[0];
+  }
+
+  private async checkTrainerProfileExistence(trainerProfileId: number) {
+    let foundedTrainerProfile: ReturnTrainerProfileDto = await this.prisma.$queryRaw`
+    SELECT *
+    FROM TrainerProfile
+    WHERE id = ${trainerProfileId};
+    `;
+
+    if (!foundedTrainerProfile[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.NOT_EXISTED_TRAINER_PROFILE`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+    return true;
+  }
+
+  private async checkFieldExistence(fieldId: number) {
+    let foundedField: FieldReturnDto = await this.prisma.$queryRaw`
+    SELECT *
+    FROM Field
+    WHERE id = ${fieldId};
+    `;
+
+    if (!foundedField[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.NOT_EXISTED_FIELD`, { lang: I18nContext.current().lang }),
+      );
+    }
+    return true;
+  }
+
   private async savingNewScheduleMonths(scheduleId: number, monthsArray: number[]) {
     if (monthsArray.length == 0) {
       return;
@@ -245,7 +480,7 @@ export class ScheduleModel {
         slotsArray[i].cost,
         slotsArray[i].weekDayNumber,
         // slotsArray[i].weekDayName,
-        this.globalSerice.getDayNameByNumber(parseInt(slotsArray[i].weekDayNumber)),
+        this.globalSerice.getDayNameByNumber(slotsArray[i].weekDayNumber),
         slotsArray[i].fieldId,
         scheduleId,
       ]);
@@ -283,6 +518,9 @@ export class ScheduleModel {
   }
 
   private timezonedSlots(timezone, scheduleSlots: []) {
+    if (timezone == null) {
+      timezone = 'Africa/Cairo';
+    }
     if (!scheduleSlots || scheduleSlots.length == 0) {
       return [];
     }

@@ -55,14 +55,15 @@ export class AppController {
     // return this.appService.getHello();
     // let x = 2;
     // return this.globalSerice.getDayNameByNumber(x);
-    let status = false;
-    let currentDate = moment();
-    let startDate = moment().startOf('week');
-    let endDate = moment().endOf('week');
-    status = currentDate.isBetween(startDate, endDate);
-    let x = moment().format('dddd');
+    // let status = false;
+    // let currentDate = moment();
+    // let startDate = moment().startOf('week');
+    // let endDate = moment().endOf('week');
+    // status = currentDate.isBetween(startDate, endDate);
+    // let x = moment().format('dddd');
+    let x = moment().format('MMMM');
     return x;
-    return { currentDate, startDate, endDate, status };
+    // return { currentDate, startDate, endDate, status };
   }
 
   @Get('/testFirebase')
