@@ -23,6 +23,20 @@ export class TrainerProfileService {
     return trainerProfileWithSports;
   }
 
+  async playerGetOne(trainerProfileId: number): Promise<ReturnTrainerProfileDetailsDto> {
+    let trainerProfile = await this.trainerProfileModel.getByID(trainerProfileId);
+    let trainerProfileWithSports = await this.trainerProfileModel.getOneDetailed(
+      trainerProfile.userId,
+    );
+    if (!trainerProfileWithSports) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
+    }
+
+    return trainerProfileWithSports;
+  }
+
   async create(createData: TrainerProfileCreateDto, userId): Promise<any> {
     // console.log(createData);
     // return createData;
