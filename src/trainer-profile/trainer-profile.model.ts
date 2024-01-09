@@ -85,18 +85,25 @@ export class TrainerProfileModel {
       FROM User
       WHERE id = ${userId}
     ),
-    TrainerPictures AS (
-        SELECT trainerProfileId,
-        CASE WHEN COUNT(id) = 0 THEN null
+      TrainerPictures AS(
+        SELECT fivePictures.trainerProfileId,
+        CASE WHEN COUNT(fivePictures.id) = 0 THEN null
         ELSE
         JSON_ARRAYAGG(JSON_OBJECT(
-          'id',p.id,
-          'imageLink', p.imageLink
+          'id',fivePictures.id,
+          'imageLink', fivePictures.imageLink
           ))
         END AS pictures
-        FROM Picture as p
-        WHERE trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
-        GROUP BY trainerProfileId
+        From (
+          SELECT
+          Picture.id AS id,
+          Picture.trainerProfileId AS trainerProfileId,
+          Picture.imageLink AS imageLink
+          FROM Picture
+          WHERE trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
+          LIMIT 5
+        ) AS fivePictures
+        GROUP BY fivePictures.trainerProfileId
       ),
       RatingAvgTable AS (
         SELECT r.trainerProfileId AS trainerProfileId,
