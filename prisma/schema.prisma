@@ -51,12 +51,6 @@ enum Level {
   advanced
 }
 
-enum AgeGroup {
-  kids
-  young_adults
-  adults
-}
-
 enum SessionStatus{
   active
   notActive
@@ -163,7 +157,8 @@ model TrainerProfile{
 
   level                     Level?                  @default(beginner)
 
-  ageGroup                  AgeGroup?               @default(young_adults)
+  ageGroup                  AgeGroup?               @relation(fields: [ageGroupId], references: [id])
+  ageGroupId                Int?          
 
   sessionDescription        String?
 
@@ -191,6 +186,17 @@ model TrainerProfile{
   notAvailableDays          TrainerProfileNotAvailableDays[]
 
   trainerBookedSessions     TrainerBookedSession[]
+
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @default(now())
+}
+
+model AgeGroup{
+  id                        Int                     @id @default(autoincrement())
+
+  name                      String
+
+  trainerProfiles           TrainerProfile[]
 
   createdAt                 DateTime                @default(now())
   updatedAt                 DateTime                @default(now())

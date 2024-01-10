@@ -14,6 +14,7 @@
   "RECORD_NOT_FOUND": "Record not found",
   "TRAINER_PROFILE_NOT_FOUND": "Trainer Profile not found",
   "SCHEDULE_NOT_FOUND": "Schedule not found",
+  "AGE_GROUP_NOT_FOUND": "Age Group not found",
   "ACCOUNT_ALREADY_ACTIVATED": "Account already activated",
   "PROFILE_EXISTED": "Profile already exist",
   "REPEATED_REGION": "Region already exist",

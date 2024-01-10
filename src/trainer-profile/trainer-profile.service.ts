@@ -78,6 +78,9 @@ export class TrainerProfileService {
       await this.trainerProfileModel.deletePastTrainerSports(deletedTrainerProfile.id),
       await this.trainerProfileModel.deletePastTrainerFields(deletedTrainerProfile.id),
       await this.trainerProfileModel.deletePastTrainerImages(deletedTrainerProfile.id),
+      await this.trainerProfileModel.deletePastTrainerCertificates(
+        deletedTrainerProfile.id,
+      ),
       await this.trainerProfileModel.deletePastSchedules(deletedTrainerProfile.id),
       await this.trainerProfileModel.deletePastNotAvailableDays(deletedTrainerProfile.id),
     ]);

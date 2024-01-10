@@ -4,16 +4,10 @@ enum Level {
   Advanced = 'advanced',
 }
 
-enum AgeGroup {
-  Kids = 'kids',
-  YoungAdults = 'young_adults',
-  Adults = 'adults',
-}
-
 export class ReturnTrainerProfileDto {
   id: number;
   level: Level;
-  ageGroup: AgeGroup;
+  ageGroupId: number;
   cost: number;
   sessionDescription: String;
   userId: number;

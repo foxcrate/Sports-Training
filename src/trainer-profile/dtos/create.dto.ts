@@ -1,22 +1,19 @@
+import { Certificate } from './certificate.dto';
+
 enum Level {
   Beginner = 'beginner',
   Intermediate = 'intermediate',
   Advanced = 'advanced',
 }
 
-enum AgeGroup {
-  Kids = 'kids',
-  YoungAdults = 'young_adults',
-  Adults = 'adults',
-}
-
 export class TrainerProfileCreateDto {
   level: Level;
-  ageGroup: AgeGroup;
+  ageGroupId: number;
   sessionDescription: String;
-  cost: Number;
-  regionId: Number;
-  sports: Number[];
-  fields: Number[];
+  cost: number;
+  regionId: number;
+  sports: number[];
+  fields: number[];
   images: String[];
+  certificates: Certificate[];
 }
