@@ -6,6 +6,7 @@ import * as moment from 'moment-timezone';
 import * as AWS from 'aws-sdk';
 import * as admin from 'firebase-admin';
 import { Prisma } from '@prisma/client';
+import { GlobalModel } from './global.model';
 
 @Injectable()
 export class GlobalService {
@@ -21,6 +22,7 @@ export class GlobalService {
 
   constructor(
     private config: ConfigService,
+    private globalModel: GlobalModel,
     private readonly i18n: I18nService,
   ) {}
 
@@ -100,6 +102,12 @@ export class GlobalService {
         }),
       );
     }
+  }
+
+  async getAllAgeGroups(): Promise<[]> {
+    let allAgeGroups = await this.globalModel.allAgeGroups();
+
+    return allAgeGroups;
   }
 
   isTimeAvailable(startTime, endTime, targetTime) {

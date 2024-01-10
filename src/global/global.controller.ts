@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   ParseFilePipe,
   Post,
   UploadedFile,
@@ -28,6 +29,14 @@ export class GlobalController {
     file: Express.Multer.File,
   ) {
     return await this.globalService.uploadFile(file);
+  }
+
+  @Get('age-groups')
+  @Roles(AvailableRoles.User)
+  @UseGuards(AuthGuard, RoleGuard)
+  @Version('1')
+  async getAllAgeGroups() {
+    return await this.globalService.getAllAgeGroups();
   }
 }
 

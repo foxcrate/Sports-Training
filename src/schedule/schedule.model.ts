@@ -388,21 +388,37 @@ export class ScheduleModel {
       TrainerBookedSession.id AS id,
       TrainerBookedSession.userId AS userId,
       TrainerBookedSession.date AS date,
+      TrainerBookedSession.trainerProfileId AS trainerProfileId,
       Slot.fromTime AS fromTime,
       Slot.toTime AS toTime,
       Slot.cost AS cost
       FROM TrainerBookedSession
       LEFT JOIN Slot ON Slot.id = TrainerBookedSession.slotId
       WHERE TrainerBookedSession.id = ${trainerBookedSessionId}
+    ),
+    TrainerSports AS(
+      SELECT 
+      CASE 
+      WHEN COUNT(s.id ) = 0 THEN null
+      ELSE
+      JSON_ARRAYAGG(JSON_OBJECT(
+        'id',s.id,
+        'name', s.name)) 
+      END AS sports
+      FROM TrainerProfileSports
+      LEFT JOIN Sport AS s ON TrainerProfileSports.sportId = s.id
+      WHERE TrainerProfileSports.trainerProfileId = (SELECT trainerProfileId FROM TrainerSessionData)
     )
-      SELECT
+    SELECT
       User.firstName AS firstName,
       User.lastName AS lastName,
       User.profileImage AS profileImage,
       TrainerSessionData.date AS date,
+      TrainerSessionData.trainerProfileId AS trainerProfileId,
       TrainerSessionData.fromTime AS fromTime,
       TrainerSessionData.toTime AS toTime,
-      TrainerSessionData.cost AS cost
+      TrainerSessionData.cost AS cost,
+      (SELECT sports FROM TrainerSports) AS sports
       FROM TrainerSessionData
       LEFT JOIN User ON TrainerSessionData.userId = User.id
     `;

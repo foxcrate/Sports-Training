@@ -180,6 +180,7 @@ export class ScheduleService {
         'hh:mm A',
       ),
       cost: trainerBookedSessionCard.cost,
+      sports: trainerBookedSessionCard.sports,
     };
   }
 

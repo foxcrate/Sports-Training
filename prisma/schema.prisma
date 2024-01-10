@@ -51,12 +51,6 @@ enum Level {
   advanced
 }
 
-enum AgeGroup {
-  kids
-  young_adults
-  adults
-}
-
 enum SessionStatus{
   active
   notActive
@@ -163,7 +157,8 @@ model TrainerProfile{
 
   level                     Level?                  @default(beginner)
 
-  ageGroup                  AgeGroup?               @default(young_adults)
+  ageGroup                  AgeGroup?               @relation(fields: [ageGroupId], references: [id])
+  ageGroupId                Int?          
 
   sessionDescription        String?
 
@@ -173,6 +168,8 @@ model TrainerProfile{
   rates                     Rate[]
 
   pictures                  Picture[]
+
+  certificates              Certificate[]
 
   sports                    TrainerProfileSports[]
 
@@ -189,6 +186,17 @@ model TrainerProfile{
   notAvailableDays          TrainerProfileNotAvailableDays[]
 
   trainerBookedSessions     TrainerBookedSession[]
+
+  createdAt                 DateTime                @default(now())
+  updatedAt                 DateTime                @default(now())
+}
+
+model AgeGroup{
+  id                        Int                     @id @default(autoincrement())
+
+  name                      String
+
+  trainerProfiles           TrainerProfile[]
 
   createdAt                 DateTime                @default(now())
   updatedAt                 DateTime                @default(now())
@@ -320,7 +328,7 @@ model TrainerBookedSession{
 model SessionRequest{
   id                        Int                     @id @default(autoincrement())
 
-  trainerBookedSession      TrainerBookedSession    @relation(fields: [trainerBookedSessionId], references: [id])
+  trainerBookedSession      TrainerBookedSession    @relation(fields: [trainerBookedSessionId], references: [id],onDelete: Cascade)
   trainerBookedSessionId    Int                     @unique
 
   type                      SessionRequestType      @default(new)
@@ -411,6 +419,21 @@ model Picture{
 
   doctorClinic          DoctorClinic?         @relation(fields: [doctorClinicId], references: [id],onDelete: Cascade)
   doctorClinicId        Int?
+
+  trainerProfile        TrainerProfile?         @relation(fields: [trainerProfileId], references: [id],onDelete: Cascade)
+  trainerProfileId      Int?
+
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @default(now())
+}
+
+model Certificate{
+  id                    Int                   @id @default(autoincrement())
+
+  name                  String
+  
+  imageLink             String
+
 
   trainerProfile        TrainerProfile?         @relation(fields: [trainerProfileId], references: [id],onDelete: Cascade)
   trainerProfileId      Int?

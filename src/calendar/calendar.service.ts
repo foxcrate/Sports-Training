@@ -30,15 +30,37 @@ export class CalendarService {
   }
 
   private formateDateSessionsResults(results): DateSessionsResultDto {
-    return (results || []).map(({ gmt, ...result }) => {
+    return (results || []).map(({ gmt, slotDuration, fromTime, toTime, ...result }) => {
       let sports = result.sports && this.globalService.safeParse(result.sports);
       if (Array.isArray(sports) && sports.length) {
-        sports = sports.filter((sport) => sport);
+        sports = [...new Set(sports.filter((sport) => sport))];
+      }
+      const startEndTime = {
+        startTime: null,
+        endTime: null,
+      };
+      if (result.type === HOME_SEARCH_TYPES_ENUM.COACHES) {
+        startEndTime.startTime = this.globalService.getLocalTime12(
+          moment.utc(fromTime, 'HH:mmZ'),
+        );
+        startEndTime.endTime = this.globalService.getLocalTime12(
+          moment.utc(toTime, 'HH:mmZ'),
+        );
+      } else {
+        startEndTime.startTime = this.globalService.getLocalTime12(
+          moment.utc(result.bookedHour),
+        );
+        startEndTime.endTime = this.globalService.getLocalTime12(
+          moment
+            .utc(result.bookedHour)
+            .clone()
+            .add(parseInt(slotDuration || 60, 10), 'minutes'),
+        );
       }
       return {
         ...result,
+        ...startEndTime,
         sports,
-        startTime: this.globalService.getLocalTime12(moment.utc(result.bookedHour)),
       };
     });
   }

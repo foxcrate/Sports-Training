@@ -12,6 +12,7 @@ import { FieldReturnDto } from 'src/field/dtos/return.dto';
 import { RegionService } from 'src/region/region.service';
 import { SportService } from 'src/sport/sport.service';
 import { ScheduleModel } from 'src/schedule/schedule.model';
+import { GlobalModel } from 'src/global/global.model';
 
 @Injectable()
 export class TrainerProfileModel {
@@ -22,6 +23,7 @@ export class TrainerProfileModel {
     private sportService: SportService,
     private scheduleModel: ScheduleModel,
     private globalService: GlobalService,
+    private globalModel: GlobalModel,
     private regionService: RegionService,
   ) {}
 
@@ -30,7 +32,7 @@ export class TrainerProfileModel {
     SELECT
       id,
       level,
-      ageGroup,
+      ageGroupId,
       cost,
       sessionDescription,
       userId,
@@ -56,7 +58,7 @@ export class TrainerProfileModel {
     SELECT
       id,
       level,
-      ageGroup,
+      ageGroupId,
       cost,
       sessionDescription,
       userId,
@@ -85,18 +87,47 @@ export class TrainerProfileModel {
       FROM User
       WHERE id = ${userId}
     ),
-    TrainerPictures AS (
-        SELECT trainerProfileId,
-        CASE WHEN COUNT(id) = 0 THEN null
+      TrainerPictures AS(
+        SELECT fivePictures.trainerProfileId,
+        CASE WHEN COUNT(fivePictures.id) = 0 THEN null
         ELSE
         JSON_ARRAYAGG(JSON_OBJECT(
-          'id',p.id,
-          'imageLink', p.imageLink
+          'id',fivePictures.id,
+          'imageLink', fivePictures.imageLink
           ))
         END AS pictures
-        FROM Picture as p
-        WHERE trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
-        GROUP BY trainerProfileId
+        From (
+          SELECT
+          Picture.id AS id,
+          Picture.trainerProfileId AS trainerProfileId,
+          Picture.imageLink AS imageLink
+          FROM Picture
+          WHERE trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
+          LIMIT 5
+        ) AS fivePictures
+        GROUP BY fivePictures.trainerProfileId
+      ),
+      TrainerCertificates AS(
+        SELECT fiveCertificates.trainerProfileId,
+        CASE WHEN COUNT(fiveCertificates.id) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(JSON_OBJECT(
+          'id',fiveCertificates.id,
+          'name',fiveCertificates.name,
+          'imageLink', fiveCertificates.imageLink
+          ))
+        END AS certificates
+        From (
+          SELECT
+          Certificate.id AS id,
+          Certificate.trainerProfileId AS trainerProfileId,
+          Certificate.name AS name,
+          Certificate.imageLink AS imageLink
+          FROM Certificate
+          WHERE trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
+          LIMIT 5
+        ) AS fiveCertificates
+        GROUP BY fiveCertificates.trainerProfileId
       ),
       RatingAvgTable AS (
         SELECT r.trainerProfileId AS trainerProfileId,
@@ -136,7 +167,13 @@ export class TrainerProfileModel {
     SELECT
     tp.id AS trainerProfileId,
     tp.level AS level,
-    tp.ageGroup AS ageGroup,
+    CASE 
+    WHEN COUNT(ag.id ) = 0 THEN null
+    ELSE
+    JSON_OBJECT(
+      'id',ag.id,
+      'name', ag.name)
+    END AS ageGroup,
     tp.cost AS cost,
     tp.sessionDescription AS sessionDescription,
     tp.regionId AS regionId,
@@ -151,6 +188,7 @@ export class TrainerProfileModel {
     FROM TrainerProfile AS tp
     LEFT JOIN TrainerProfileSports AS tps ON tp.id = tps.trainerProfileId
     LEFT JOIN Sport AS s ON tps.sportId = s.id
+    LEFT JOIN AgeGroup AS ag ON tp.ageGroupId = ag.id
     WHERE tp.userId = ${userId}
     GROUP BY tp.id
     LIMIT 1
@@ -179,6 +217,7 @@ export class TrainerProfileModel {
       'birthday',ud.birthday
       ) AS user,
     (SELECT pictures FROM TrainerPictures ) AS gallery,
+    (SELECT certificates FROM TrainerCertificates ) AS certificates,
     (SELECT ratingNumber FROM RatingAvgTable) AS ratingNumber,
     (SELECT JSON_ARRAYAGG(feedback) FROM Last5Feedbacks) AS feedbacks,
     tpws.sports AS sports,
@@ -231,11 +270,16 @@ export class TrainerProfileModel {
     createData: TrainerProfileCreateDto,
     userId,
   ): Promise<ReturnTrainerProfileDto> {
+    // validate age group existance
+    if (createData.ageGroupId) {
+      await this.globalModel.getOneAgeGroup(createData.ageGroupId);
+    }
+
     await this.prisma.$queryRaw`
     INSERT INTO TrainerProfile
     (
       level,
-      ageGroup,
+      ageGroupId,
       sessionDescription,
       cost,
       regionId,
@@ -244,7 +288,7 @@ export class TrainerProfileModel {
       VALUES
     (
       ${createData.level},
-      ${createData.ageGroup},
+      ${createData.ageGroupId},
       ${createData.sessionDescription},
       ${createData.cost},
       ${createData.regionId},
@@ -266,6 +310,10 @@ export class TrainerProfileModel {
       await this.createProfileImages(createData.images, newTrainerProfile.id);
     }
 
+    if (createData.certificates && createData.certificates.length > 0) {
+      await this.createProfileCertificates(createData.certificates, newTrainerProfile.id);
+    }
+
     let newTrainerProfileDetailed = await this.getOneDetailed(userId);
 
     return newTrainerProfileDetailed;
@@ -276,12 +324,17 @@ export class TrainerProfileModel {
     userId,
   ): Promise<ReturnTrainerProfileDetailsDto> {
     let theTrainerProfile = await this.getByUserId(userId);
+    // validate age group existance
+    if (createData.ageGroupId) {
+      await this.globalModel.getOneAgeGroup(createData.ageGroupId);
+    }
+
     //update
     await this.prisma.$queryRaw`
       UPDATE TrainerProfile
       SET
       level = ${createData.level},
-      ageGroup = ${createData.ageGroup},
+      ageGroupId = ${createData.ageGroupId},
       sessionDescription = ${createData.sessionDescription},
       cost = ${createData.cost},
       regionId = ${createData.regionId}
@@ -308,6 +361,12 @@ export class TrainerProfileModel {
       await this.createProfileImages(createData.images, theTrainerProfile.id);
     } else if (createData.images && createData.images.length == 0) {
       await this.deletePastTrainerImages(theTrainerProfile.id);
+    }
+
+    if (createData.certificates && createData.certificates.length > 0) {
+      await this.createProfileCertificates(createData.certificates, theTrainerProfile.id);
+    } else if (createData.certificates && createData.certificates.length == 0) {
+      await this.deletePastTrainerCertificates(theTrainerProfile.id);
     }
 
     let updatedTrainerProfile = await this.getOneDetailed(userId);
@@ -393,6 +452,14 @@ export class TrainerProfileModel {
     `;
   }
 
+  async deletePastTrainerCertificates(trainerProfileId: number) {
+    await this.prisma.$queryRaw`
+      DELETE
+      FROM Certificate
+      WHERE trainerProfileId = ${trainerProfileId}
+    `;
+  }
+
   async deletePastNotAvailableDays(trainerProfileId: number) {
     await this.prisma.$queryRaw`
     DELETE
@@ -407,6 +474,28 @@ export class TrainerProfileModel {
 
   async deletePastSchedules(trainerProfileId: number) {
     await this.scheduleModel.deleteByTrainerProfileId(trainerProfileId);
+  }
+
+  async deletePastBookedSessions(trainerProfileId: number) {
+    // delete booked sessions requests
+    await this.prisma.$queryRaw`
+    DELETE
+    FROM SessionRequest
+    WHERE trainerBookedSessionId IN (
+      SELECT
+      id
+      FROM
+      TrainerBookedSession
+      WHERE id = ${trainerProfileId}
+    )
+  `;
+
+    // delete booked sessions
+    await this.prisma.$queryRaw`
+    DELETE
+    FROM TrainerBookedSession
+    WHERE trainerProfileId = ${trainerProfileId}
+`;
   }
 
   async deleteByUserId(userId) {
@@ -432,6 +521,23 @@ export class TrainerProfileModel {
     await this.deletePastTrainerImages(newTrainerProfileId);
 
     await this.prisma.picture.createMany({ data: profilesAndImages });
+  }
+
+  private async createProfileCertificates(certificatesArray, newTrainerProfileId) {
+    //array of objects to insert to db
+    const profilesAndCertificates = [];
+    for (let i = 0; i < certificatesArray.length; i++) {
+      profilesAndCertificates.push({
+        trainerProfileId: newTrainerProfileId,
+        name: certificatesArray[i].name,
+        imageLink: certificatesArray[i].imageLink,
+      });
+    }
+
+    //delete past PlayerProfileImages
+    await this.deletePastTrainerCertificates(newTrainerProfileId);
+
+    await this.prisma.certificate.createMany({ data: profilesAndCertificates });
   }
 
   private async createProfileSports(sportsIds, newTrainerProfileId) {
