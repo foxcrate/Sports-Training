@@ -17,7 +17,7 @@ export enum HOME_SEARCH_TYPES_ENUM {
 }
 
 export enum RATEABLE_TYPES_ENUM {
-  TRAINER = 'trainer',
+  TRAINER = 'trainerProfile',
   FIELD = 'field',
   DOCTOR_CLINIC = 'doctorClinic',
 }
@@ -26,4 +26,9 @@ export enum ACCEPTANCE_STATUSES_ENUM {
   ACCEPTED = 'accepted',
   PENDING = 'pending',
   DECLINED = 'declined',
+}
+
+export enum SESSIONS_STATUSES_ENUM {
+  ACTIVE = 'active',
+  NOT_ACTIVE = 'notActive',
 }
