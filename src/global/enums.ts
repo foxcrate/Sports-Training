@@ -28,6 +28,12 @@ export enum ACCEPTANCE_STATUSES_ENUM {
   DECLINED = 'declined',
 }
 
+export enum PROFILE_TYPES_ENUM {
+  PLAYER = 'player',
+  TRAINER = 'trainer',
+  CHILD = 'child',
+}
+
 export enum SESSIONS_STATUSES_ENUM {
   ACTIVE = 'active',
   NOT_ACTIVE = 'notActive',
