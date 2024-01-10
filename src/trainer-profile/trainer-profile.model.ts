@@ -364,7 +364,7 @@ export class TrainerProfileModel {
     }
 
     if (createData.certificates && createData.certificates.length > 0) {
-      await this.createProfileCertificates(createData.images, theTrainerProfile.id);
+      await this.createProfileCertificates(createData.certificates, theTrainerProfile.id);
     } else if (createData.certificates && createData.certificates.length == 0) {
       await this.deletePastTrainerCertificates(theTrainerProfile.id);
     }
@@ -474,6 +474,28 @@ export class TrainerProfileModel {
 
   async deletePastSchedules(trainerProfileId: number) {
     await this.scheduleModel.deleteByTrainerProfileId(trainerProfileId);
+  }
+
+  async deletePastBookedSessions(trainerProfileId: number) {
+    // delete booked sessions requests
+    await this.prisma.$queryRaw`
+    DELETE
+    FROM SessionRequest
+    WHERE trainerBookedSessionId IN (
+      SELECT
+      id
+      FROM
+      TrainerBookedSession
+      WHERE id = ${trainerProfileId}
+    )
+  `;
+
+    // delete booked sessions
+    await this.prisma.$queryRaw`
+    DELETE
+    FROM TrainerBookedSession
+    WHERE trainerProfileId = ${trainerProfileId}
+`;
   }
 
   async deleteByUserId(userId) {
