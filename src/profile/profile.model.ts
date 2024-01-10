@@ -20,7 +20,8 @@ export class ProfileModel {
                 'childId', Children.childUserId,
                 'firstName', Children.childFirstName,
                 'lastName', Children.childLastName,
-                'profileImage', Children.profileImage
+                'profileImage', Children.profileImage,
+                'type', '${PROFILE_TYPES_ENUM.CHILD}'
             ))
         END AS children 
     `;
@@ -31,7 +32,8 @@ export class ProfileModel {
               'playerProfileId', PlayerProfile.id,
               'firstName', User.firstName,
               'lastName', User.lastName,
-              'profileImage', User.profileImage
+              'profileImage', User.profileImage,
+              'type', '${PROFILE_TYPES_ENUM.PLAYER}'
             )
         ELSE
           NULL
@@ -45,7 +47,8 @@ export class ProfileModel {
               'trainerProfileId', TrainerProfile.id,
               'firstName', User.firstName,
               'lastName', User.lastName,
-              'profileImage', User.profileImage
+              'profileImage', User.profileImage,
+              'type', '${PROFILE_TYPES_ENUM.TRAINER}'
             )
         ELSE
           NULL
@@ -71,22 +74,26 @@ export class ProfileModel {
           : ''
       }
       LEFT JOIN 
-        (SELECT
-          ParentsChilds.childId AS childUserId,
-          ParentsChilds.parentId AS parentId,
-          User.firstName AS childFirstName,
-          User.lastName AS childLastName,
-          User.profileImage AS profileImage
-        FROM 
-          ParentsChilds
-        INNER JOIN 
-          User ON ParentsChilds.childId = User.id) AS Children ON User.id = Children.parentId
+        (
+          SELECT
+            ParentsChilds.childId AS childUserId,
+            ParentsChilds.parentId AS parentId,
+            User.firstName AS childFirstName,
+            User.lastName AS childLastName,
+            User.profileImage AS profileImage
+          FROM 
+            ParentsChilds
+          INNER JOIN 
+            User ON ParentsChilds.childId = User.id
+          ${
+            type === PROFILE_TYPES_ENUM.CHILD
+              ? 'WHERE ParentsChilds.childId != ' + childId
+              : ' '
+          }
+        ) AS Children ON User.id = Children.parentId
       WHERE 
         User.id = ${userId}
     `;
-    if (type === PROFILE_TYPES_ENUM.CHILD) {
-      sql += ` AND Children.childUserId <> ${childId} `;
-    }
     return this.prisma.$queryRaw(this.globalService.preparePrismaSql(sql));
   }
 }
