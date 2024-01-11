@@ -249,7 +249,8 @@ export class ScheduleService {
     dayDateString: string,
     scheduleSlots: ScheduleSlotsDTO[],
   ): boolean {
-    // check the month and week day
+    // check the month and week day');
+
     let dayDate = moment(dayDateString);
     let dateMonth = dayDate.month() + 1;
     let dateWeekDay = dayDate.weekday();
@@ -259,16 +260,17 @@ export class ScheduleService {
         return i.number;
       });
 
+      // console.log(monthsNumbers);
+
       let weekDaysNumbers = scheduleSlots[i].slots.map((i) => {
         return i.weekDayNumber;
       });
-
-      // console.log(weekDaysNumbers);
 
       if (monthsNumbers.includes(dateMonth)) {
         if (weekDaysNumbers.includes(dateWeekDay)) {
           // console.log('true');
           // console.log(scheduleSlots[i]);
+
           return true;
         }
       }

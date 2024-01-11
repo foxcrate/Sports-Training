@@ -283,8 +283,8 @@ export class ScheduleModel {
       GROUP BY Schedule.id
     )
     SELECT
-    TrainerNotAvailableDays.trainerProfileId,
-    TrainerNotAvailableDays.dates AS notAvailableDays,
+    TrainerProfile.id,
+    (SELECT dates FROM TrainerNotAvailableDays) AS notAvailableDays,
     CASE
       WHEN COUNT(ScheduleWithSlots.scheduleId ) = 0 THEN null
       ELSE
@@ -295,10 +295,12 @@ export class ScheduleModel {
         ))
       END AS scheduleSlots
     FROM 
-    TrainerNotAvailableDays
-    LEFT JOIN ScheduleWithSlots ON ScheduleWithSlots.trainerProfileId = TrainerNotAvailableDays.trainerProfileId
-    GROUP BY trainerProfileId
+    TrainerProfile
+    LEFT JOIN ScheduleWithSlots ON ScheduleWithSlots.trainerProfileId = TrainerProfile.id
+    WHERE TrainerProfile.id = ${trainerProfileId}
+    GROUP BY TrainerProfile.id
     `;
+
     return trainerFieldSlots[0];
   }
 
