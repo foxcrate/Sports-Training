@@ -2,29 +2,24 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { GlobalService } from 'src/global/global.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ConfigService } from '@nestjs/config';
 import { ReturnTrainerProfileDto } from './dtos/return.dto';
 import { ReturnTrainerProfileDetailsDto } from './dtos/details-return.dto';
 import { TrainerProfileCreateDto } from './dtos/create.dto';
-import { ReturnSportDto } from 'src/sport/dtos/return.dto';
 import { Prisma } from '@prisma/client';
 import { FieldReturnDto } from 'src/field/dtos/return.dto';
-import { RegionService } from 'src/region/region.service';
 import { SportService } from 'src/sport/sport.service';
-import { ScheduleModel } from 'src/schedule/schedule.model';
+import { TrainerScheduleModel } from 'src/trainer-schedule/trainer-schedule.model';
 import { GlobalModel } from 'src/global/global.model';
 
 @Injectable()
 export class TrainerProfileModel {
   constructor(
     private prisma: PrismaService,
-    private config: ConfigService,
     private readonly i18n: I18nService,
     private sportService: SportService,
-    private scheduleModel: ScheduleModel,
+    private trainerScheduleModel: TrainerScheduleModel,
     private globalService: GlobalService,
     private globalModel: GlobalModel,
-    private regionService: RegionService,
   ) {}
 
   async getByID(id: number): Promise<ReturnTrainerProfileDto> {
@@ -473,7 +468,7 @@ export class TrainerProfileModel {
   // }
 
   async deletePastSchedules(trainerProfileId: number) {
-    await this.scheduleModel.deleteByTrainerProfileId(trainerProfileId);
+    await this.trainerScheduleModel.deleteByTrainerProfileId(trainerProfileId);
   }
 
   async deletePastBookedSessions(trainerProfileId: number) {

@@ -20,7 +20,7 @@ import { join } from 'path';
 import { FieldModule } from './field/field.module';
 import { DoctorClinicModule } from './doctor-clinic/doctor-clinic.module';
 import { DoctorClinicSpecializationModule } from './doctor-clinic-specialization/doctor-clinic-specialization.module';
-import { ScheduleModule } from './schedule/schedule.module';
+import { TrainerScheduleModule } from './trainer-schedule/trainer-schedule.module';
 import { TrainerProfileModule } from './trainer-profile/trainer-profile.module';
 import { TimezoneMiddleware } from './middlewares/timezone.middleware';
 import { ChildProfileModule } from './child-profile/child-profile.module';
@@ -59,7 +59,7 @@ import { ProfileModule } from './profile/profile.module';
     FieldModule,
     DoctorClinicModule,
     DoctorClinicSpecializationModule,
-    ScheduleModule,
+    TrainerScheduleModule,
     TrainerProfileModule,
     ChildProfileModule,
     ChildModule,

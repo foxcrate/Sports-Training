@@ -28,6 +28,8 @@ enum AcceptanceStatus{
 
 enum RateableType {
   trainerProfile
+  playerProfile
+  session
   field
   doctorClinic
 }
@@ -36,6 +38,11 @@ enum UserType {
   admin
   user
   child
+}
+
+enum ProfileType{
+  player
+  trainer
 }
 
 enum Provider {
@@ -132,12 +139,13 @@ model PlayerProfile{
   region                Region?               @relation(fields: [regionId], references: [id])
 
   sports                PlayerProfileSports[]
+  rates                 Rate[]
 
   userId                Int                   @unique
   user                  User                  @relation(fields: [userId], references: [id],onDelete: Cascade)
 
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @default(now())
 }
 
 model PlayerProfileSports{
@@ -309,6 +317,8 @@ model TrainerBookedSession{
   date                DateTime                @db.Date
 
   sessionRequest      SessionRequest?
+
+  rates               Rate[]
   
   user                User                    @relation(fields: [userId], references: [id])
   userId              Int
@@ -396,6 +406,8 @@ model Rate{
 
   rateableType          RateableType
 
+  profileType           ProfileType           @default(player)
+
   user                  User                  @relation(fields: [userId], references: [id],onDelete: Cascade)
   userId                Int  
   
@@ -406,10 +418,16 @@ model Rate{
   doctorClinicId        Int?
 
   trainerProfile        TrainerProfile?         @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
-  trainerProfileId        Int?
+  trainerProfileId      Int?
 
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
+  playerProfile         PlayerProfile?         @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  playerProfileId       Int?
+
+  trainerBookedSession          TrainerBookedSession?         @relation(fields: [trainerBookedSessionId], references: [id], onDelete: Cascade)
+  trainerBookedSessionId        Int?
+
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @default(now())
 }
 
 model Picture{
