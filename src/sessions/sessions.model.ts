@@ -103,6 +103,15 @@ export class SessionsModel {
     `;
   }
 
+  async getCancellingReasons() {
+    return this.prisma.$queryRaw`
+      SELECT
+        *
+      FROM
+        CancellationReasons
+    `;
+  }
+
   async updateCoachSessionStatus(
     bookedSessionId,
     bookedSessionStatus,

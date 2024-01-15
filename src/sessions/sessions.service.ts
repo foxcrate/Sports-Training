@@ -15,6 +15,7 @@ import {
   TrainingSessionResultDto,
 } from './dto/training-session-result.dto';
 import { CoachSessionDataDto } from './dto/coach-session-data.dto';
+import { CancellingReasonDto } from './dto/cancelling-reason.dto';
 
 @Injectable()
 export class SessionsService {
@@ -166,6 +167,18 @@ export class SessionsService {
     const validCoachSession = this.validateSessionExistence(coachSession);
     this.validateSessionViewUserRights(userId, validCoachSession.coachUserId);
     return this.formatCoachTrainingSession(validCoachSession);
+  }
+
+  formatCancellingReasons(cancellingReasons) {
+    return (cancellingReasons || []).map((reason) => ({
+      id: reason.id,
+      name: reason.name,
+    }));
+  }
+
+  async getCancellingReasons(): Promise<CancellingReasonDto[]> {
+    const cancellingReasons = await this.sessionsModel.getCancellingReasons();
+    return this.formatCancellingReasons(cancellingReasons);
   }
 
   validateSessionAcceptance(userId, sessionData) {

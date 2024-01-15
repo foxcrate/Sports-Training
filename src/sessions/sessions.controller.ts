@@ -10,6 +10,7 @@ import { SessionIdParamValidations } from './validations/session-id.validations'
 import { SessionTypeValidations } from './validations/session-type.validations';
 import { TrainingSessionParamsDto } from './dto/training-session-params.dto';
 import { TrainingSessionResultDto } from './dto/training-session-result.dto';
+import { CancellingReasonDto } from './dto/cancelling-reason.dto';
 
 @Roles(AvailableRoles.User)
 @UseGuards(AuthGuard, RoleGuard)
@@ -43,5 +44,10 @@ export class SessionsController {
     @UserId() userId: number,
   ): Promise<TrainingSessionResultDto> {
     return this.sessionsService.coachApproveSession(userId, sessionId);
+  }
+
+  @Get('cancelling-reasons')
+  async getCancellingReasons(): Promise<CancellingReasonDto[]> {
+    return this.sessionsService.getCancellingReasons();
   }
 }
