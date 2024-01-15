@@ -4,12 +4,12 @@ import { TrainerProfileService } from './trainer-profile.service';
 import { TrainerProfileModel } from './trainer-profile.model';
 import { SportModule } from 'src/sport/sport.module';
 import { RegionModule } from 'src/region/region.module';
-import { ScheduleModule } from 'src/schedule/schedule.module';
+import { TrainerScheduleModule } from 'src/trainer-schedule/trainer-schedule.module';
 
 @Module({
   controllers: [TrainerProfileController],
   providers: [TrainerProfileService, TrainerProfileModel],
-  imports: [SportModule, RegionModule, forwardRef(() => ScheduleModule)],
+  imports: [SportModule, RegionModule, forwardRef(() => TrainerScheduleModule)],
   exports: [TrainerProfileModel],
 })
 export class TrainerProfileModule {}

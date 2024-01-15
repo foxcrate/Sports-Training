@@ -1,18 +1,19 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { GlobalService } from 'src/global/global.service';
-import { ScheduleModel } from './schedule.model';
+import { TrainerScheduleModel } from './trainer-schedule.model';
 import { ScheduleSlotsDetailsDTO } from './dtos/schedule-slots-details';
 import { TrainerProfileModel } from 'src/trainer-profile/trainer-profile.model';
 import { ScheduleCreateDto } from './dtos/create.dto';
 import { SlotDetailsDto } from './dtos/slot-details.dto';
 import * as moment from 'moment-timezone';
 import { ScheduleSlotsDTO } from './dtos/schedule-slots';
+import { RateSessionDto } from './dtos/rate-session.dto';
 
 @Injectable()
-export class ScheduleService {
+export class TrainerScheduleService {
   constructor(
-    private scheduleModel: ScheduleModel,
+    private scheduleModel: TrainerScheduleModel,
     private globalService: GlobalService,
     private readonly i18n: I18nService,
     private trainerProfileModel: TrainerProfileModel,
@@ -88,7 +89,6 @@ export class ScheduleService {
 
       if (this.checkNotAvailableDays(newDay, trainerFieldSlots?.notAvailableDays)) {
         if (this.checkWeekDayAvailability(newDay, trainerFieldSlots?.scheduleSlots)) {
-          // return this.getDaySlots(newDay, trainerFieldSlots.scheduleSlots);
           weekDays.push(newDay);
         }
       }
@@ -97,11 +97,6 @@ export class ScheduleService {
     }
 
     return weekDays;
-
-    //-----------
-    //check the slot
-    //check if its booked
-    // Finally return the slots
   }
 
   async getTrainerDayFieldSlots(
@@ -184,7 +179,41 @@ export class ScheduleService {
     };
   }
 
+  async trainerRateSession(userId: number, reqBody: RateSessionDto) {
+    // throw an error if trainerProfile don't exist
+    let theTrainerProfile = await this.trainerProfileModel.getByUserId(userId);
+
+    // throw error if session don't exist
+    let theSession = await this.scheduleModel.getBookedSessionById(reqBody.sessionId);
+
+    await this.validateTrainerRatingSession(
+      theTrainerProfile.id,
+      theSession.trainerProfileId,
+    );
+    await this.scheduleModel.saveTrainerSessionRating(
+      theTrainerProfile.userId,
+      theSession.id,
+      reqBody.ratingNumber,
+      reqBody.feedback,
+    );
+    return true;
+  }
+
   // // private // //
+
+  async validateTrainerRatingSession(
+    theTrainerProfileId: number,
+    sessionTrainerProfileId: number,
+  ) {
+    //check if this session is done by this trainer
+    if (sessionTrainerProfileId != theTrainerProfileId) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.WRONG_TRAINER_SESSION_MIX`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+  }
 
   private async validateBookingTrainerSession(
     trainerProfileId: number,
@@ -228,7 +257,7 @@ export class ScheduleService {
   }
 
   private async checkBookedSlot(slotId: number, dayDate: string): Promise<boolean> {
-    let bookedSlot = await this.scheduleModel.getBookedSlot(slotId, dayDate);
+    let bookedSlot = await this.scheduleModel.getBookedSessionBySlotId(slotId, dayDate);
 
     if (bookedSlot) {
       return true;
@@ -249,7 +278,8 @@ export class ScheduleService {
     dayDateString: string,
     scheduleSlots: ScheduleSlotsDTO[],
   ): boolean {
-    // check the month and week day
+    // check the month and week day');
+
     let dayDate = moment(dayDateString);
     let dateMonth = dayDate.month() + 1;
     let dateWeekDay = dayDate.weekday();
@@ -259,16 +289,17 @@ export class ScheduleService {
         return i.number;
       });
 
+      // console.log(monthsNumbers);
+
       let weekDaysNumbers = scheduleSlots[i].slots.map((i) => {
         return i.weekDayNumber;
       });
-
-      // console.log(weekDaysNumbers);
 
       if (monthsNumbers.includes(dateMonth)) {
         if (weekDaysNumbers.includes(dateWeekDay)) {
           // console.log('true');
           // console.log(scheduleSlots[i]);
+
           return true;
         }
       }

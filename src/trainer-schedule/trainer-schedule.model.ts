@@ -10,9 +10,10 @@ import * as moment from 'moment-timezone';
 import { SlotDetailsDto } from './dtos/slot-details.dto';
 import { FieldReturnDto } from 'src/field/dtos/return.dto';
 import { ReturnTrainerProfileDto } from 'src/trainer-profile/dtos/return.dto';
+import { BookedSessionDTO } from './dtos/booked-session.dto';
 
 @Injectable()
-export class ScheduleModel {
+export class TrainerScheduleModel {
   constructor(
     private prisma: PrismaService,
     private readonly i18n: I18nService,
@@ -130,31 +131,23 @@ export class ScheduleModel {
       await this.savingNewScheduleSlots(newSchedule.id, reqBody.slots),
     ]);
 
-    // await this.savingNewScheduleMonths(newSchedule.id, reqBody.months);
-    // await this.savingNewScheduleSlots(newSchedule.id, reqBody.slots);
-
     return await this.getByID(timezone, newSchedule.id);
   }
 
   async update(timezone, scheduleId: number, reqBody: ScheduleCreateDto) {
     let theSchedule = await this.getByID(timezone, scheduleId);
 
-    //delete past scheduleMonths
-    //delete past scheduleSlots
-
     Promise.all([
+      //delete past scheduleMonths
       await this.deleteScheduleMonths(scheduleId),
+      //delete past scheduleSlots
       await this.deleteScheduleSlots(scheduleId),
     ]);
-    // await this.deleteScheduleMonths(scheduleId);
-    // await this.deleteScheduleSlots(scheduleId);
 
     Promise.all([
       await this.savingNewScheduleMonths(theSchedule.id, reqBody.months),
       await this.savingNewScheduleSlots(theSchedule.id, reqBody.slots),
     ]);
-    // await this.savingNewScheduleMonths(theSchedule.id, reqBody.months);
-    // await this.savingNewScheduleSlots(theSchedule.id, reqBody.slots);
 
     return await this.getByID(timezone, scheduleId);
   }
@@ -283,8 +276,8 @@ export class ScheduleModel {
       GROUP BY Schedule.id
     )
     SELECT
-    TrainerNotAvailableDays.trainerProfileId,
-    TrainerNotAvailableDays.dates AS notAvailableDays,
+    TrainerProfile.id,
+    (SELECT dates FROM TrainerNotAvailableDays) AS notAvailableDays,
     CASE
       WHEN COUNT(ScheduleWithSlots.scheduleId ) = 0 THEN null
       ELSE
@@ -295,10 +288,12 @@ export class ScheduleModel {
         ))
       END AS scheduleSlots
     FROM 
-    TrainerNotAvailableDays
-    LEFT JOIN ScheduleWithSlots ON ScheduleWithSlots.trainerProfileId = TrainerNotAvailableDays.trainerProfileId
-    GROUP BY trainerProfileId
+    TrainerProfile
+    LEFT JOIN ScheduleWithSlots ON ScheduleWithSlots.trainerProfileId = TrainerProfile.id
+    WHERE TrainerProfile.id = ${trainerProfileId}
+    GROUP BY TrainerProfile.id
     `;
+
     return trainerFieldSlots[0];
   }
 
@@ -316,7 +311,7 @@ export class ScheduleModel {
     return theSlot[0];
   }
 
-  async getBookedSlot(slotId: number, dayDate: string) {
+  async getBookedSessionBySlotId(slotId: number, dayDate: string) {
     let TheBookedSlot = await this.prisma.$queryRaw`
       SELECT *
       FROM TrainerBookedSession
@@ -325,6 +320,50 @@ export class ScheduleModel {
       AND status = 'active'
     `;
     return TheBookedSlot[0];
+  }
+
+  async getBookedSessionById(sessionId: number): Promise<BookedSessionDTO> {
+    let theSession = await this.prisma.$queryRaw`
+      SELECT *
+      FROM TrainerBookedSession
+      WHERE id = ${sessionId}
+      AND status = 'active'
+    `;
+    if (!theSession[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.BOOKED_SESSION_NOT_FOUND`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+    return theSession[0];
+  }
+
+  async saveTrainerSessionRating(
+    userId: number,
+    trainerBookedSessionId: number,
+    ratingNumber: number,
+    feedback: string,
+  ) {
+    await this.prisma.$queryRaw`
+    INSERT INTO Rate
+    (
+      userId,
+      trainerBookedSessionId,
+      rateableType,
+      ratingNumber,
+      feedback,
+      profileType
+    )
+    VALUES
+  (
+    ${userId},
+    ${trainerBookedSessionId},
+    "session",
+    ${ratingNumber},
+    ${feedback},
+    "trainer"
+  )`;
   }
 
   async createTrainerBookedSession(
