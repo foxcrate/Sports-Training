@@ -1,0 +1,135 @@
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
+
+@Injectable()
+export class SessionsModel {
+  constructor(private prisma: PrismaService) {}
+
+  async getCoachTrainingSession(sessionId: number) {
+    return this.prisma.$queryRaw`
+      SELECT
+        tbs.id AS coachBookedSessionId,
+        tbs.userId AS userId,
+        sr.status AS status,
+        tp.level AS coachLevel,
+        tp.userId AS coachUserId,
+        tbs.date AS bookedDate,
+        tbs.gmt AS gmt,
+        u.firstName AS firstName,
+        u.lastName AS lastName,
+        u.profileImage AS profileImage,
+        r.name AS region,
+        CASE
+          WHEN COUNT( tps.sportId ) > 0 THEN
+          JSON_ARRAYAGG(s.name) ELSE NULL 
+        END AS sports,
+        Slot.fromTime AS fromTime,
+        Slot.toTime AS toTime,
+        tp.cost AS cost 
+      FROM
+        TrainerBookedSession tbs
+        JOIN TrainerProfile tp ON tbs.trainerProfileId = tp.id
+        LEFT JOIN SessionRequest sr ON tbs.id = sr.trainerBookedSessionId
+        LEFT JOIN Slot ON Slot.id = tbs.slotId
+        LEFT JOIN Field f ON f.id = Slot.fieldId
+        LEFT JOIN Region r ON f.regionId = r.id
+        LEFT JOIN TrainerProfileSports tps ON tp.id = tps.trainerProfileId
+        LEFT JOIN Sport s ON tps.sportId = s.id
+        LEFT JOIN User u ON tp.userId = u.id
+      WHERE
+        tbs.id = ${sessionId}
+      GROUP BY
+        tbs.id
+    `;
+  }
+
+  async getCoachingSession(sessionId: number) {
+    return this.prisma.$queryRaw`
+      SELECT
+        tbs.id AS coachBookedSessionId,
+        tbs.userId AS userId,
+        sr.status AS status,
+        tp.level AS coachLevel,
+        pp.level AS playerLevel,
+        tp.userId AS coachUserId,
+        tbs.date AS bookedDate,
+        tbs.gmt AS gmt,
+        u.firstName AS firstName,
+        u.lastName AS lastName,
+        u.profileImage AS profileImage,
+        r.name AS region,
+        CASE
+          WHEN COUNT( tps.sportId ) > 0 THEN
+          JSON_ARRAYAGG(s.name) ELSE NULL 
+        END AS sports,
+        Slot.fromTime AS fromTime,
+        Slot.toTime AS toTime,
+        tp.cost AS cost 
+      FROM
+        TrainerBookedSession tbs
+        JOIN TrainerProfile tp ON tbs.trainerProfileId = tp.id
+        JOIN PlayerProfile pp ON pp.userId = tbs.userId
+        LEFT JOIN SessionRequest sr ON tbs.id = sr.trainerBookedSessionId
+        LEFT JOIN Slot ON Slot.id = tbs.slotId
+        LEFT JOIN Field f ON f.id = Slot.fieldId
+        LEFT JOIN Region r ON f.regionId = r.id
+        LEFT JOIN TrainerProfileSports tps ON tp.id = tps.trainerProfileId
+        LEFT JOIN Sport s ON tps.sportId = s.id
+        LEFT JOIN User u ON tbs.userId = u.id
+      WHERE
+        tbs.id = ${sessionId}
+      GROUP BY
+        tbs.id
+    `;
+  }
+
+  async getDoctorTrainingSession(sessionId: number) {
+    return this.prisma.$queryRaw`
+      SELECT
+        dbh.id AS doctorBookedHoursId,
+        dbh.userId AS userId,
+        dbh.fromDateTime AS bookedDateTime,
+        dbh.gmt AS gmt,
+        dc.name AS name,
+        dc.profileImage AS profileImage,
+        r.name AS region,
+        s.name AS specialization,
+        dc.slotDuration AS slotDuration,
+        dc.cost AS cost 
+      FROM
+        DoctorClinicsBookedHours dbh
+        JOIN DoctorClinic dc ON dbh.doctorClinicId = dc.id
+        LEFT JOIN Region r ON dc.regionId = r.id
+        LEFT JOIN DoctorClinicSpecialization s ON dc.doctorClinicSpecializationId = s.id 
+      WHERE
+        dbh.id = ${sessionId}
+      GROUP BY
+        dbh.id
+    `;
+  }
+
+  async getFieldTrainingSession(sessionId: number) {
+    return this.prisma.$queryRaw`
+      SELECT
+        fbh.id AS fieldBookedHoursId,
+        fbh.userId AS userId,
+        fbh.fromDateTime AS bookedDateTime,
+        fbh.gmt AS gmt,
+        f.name AS name,
+        f.profileImage AS profileImage,
+        r.name AS region,
+        s.name AS sport,
+        f.slotDuration AS slotDuration,
+        f.cost AS cost 
+      FROM
+        FieldsBookedHours fbh
+        JOIN Field f ON fbh.fieldId = f.id
+        LEFT JOIN Region r ON f.regionId = r.id
+        LEFT JOIN Sport s ON f.sportId = s.id 
+      WHERE
+        fbh.id = ${sessionId}
+      GROUP BY
+        fbh.id
+    `;
+  }
+}

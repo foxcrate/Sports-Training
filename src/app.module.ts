@@ -28,6 +28,7 @@ import { ChildModule } from './child/child.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { HomeModule } from './home/home.module';
 import { ProfileModule } from './profile/profile.module';
+import { SessionsModule } from './sessions/sessions.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { ProfileModule } from './profile/profile.module';
     CalendarModule,
     HomeModule,
     ProfileModule,
+    SessionsModule,
   ],
   controllers: [AppController],
   providers: [

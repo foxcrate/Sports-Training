@@ -41,5 +41,7 @@
   "WRONG_PAGE_ERROR": "Invalid page value, Must be a positive integer greater than 0",
   "WRONG_PAGE_SIZE_ERROR": "Invalid page size value, Must be one of the allowed values",
   "WRONG_FILTER_TYPE": "Unknown filter type",
-  "WRONG_DATE_FORMAT": "Wrong date format"
+  "WRONG_DATE_FORMAT": "Wrong date format",
+  "NOT_FOUND_SESSION": "Not found required session",
+  "NOT_ALLOWED_USER_SESSION": "User is not allowed to view this session"
 }
