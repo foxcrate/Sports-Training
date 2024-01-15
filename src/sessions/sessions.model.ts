@@ -83,6 +83,42 @@ export class SessionsModel {
     `;
   }
 
+  async getCoachSessionData(sessionId: number) {
+    return this.prisma.$queryRaw`
+      SELECT
+        tbs.id AS coachBookedSessionId,
+        sr.id AS sessionRequestId,
+        sr.status AS sessionRequestStatus,
+        tbs.status AS bookedSessionStatus,
+        sr.type AS sessionRequestType,
+        tp.userId AS coachUserId
+      FROM
+        TrainerBookedSession tbs
+        JOIN TrainerProfile tp ON tbs.trainerProfileId = tp.id
+        LEFT JOIN SessionRequest sr ON tbs.id = sr.trainerBookedSessionId
+      WHERE
+        tbs.id = ${sessionId}
+      GROUP BY
+        tbs.id
+    `;
+  }
+
+  async updateCoachSessionStatus(
+    bookedSessionId,
+    bookedSessionStatus,
+    sessionRequestId,
+    sessionRequestStatus,
+  ) {
+    return this.prisma.$transaction([
+      this.prisma.$queryRaw`
+            UPDATE SessionRequest SET status = ${sessionRequestStatus} WHERE id = ${sessionRequestId};
+          `,
+      this.prisma.$queryRaw`
+            UPDATE TrainerBookedSession SET status = ${bookedSessionStatus} WHERE id = ${bookedSessionId};
+          `,
+    ]);
+  }
+
   async getDoctorTrainingSession(sessionId: number) {
     return this.prisma.$queryRaw`
       SELECT

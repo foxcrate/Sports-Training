@@ -598,3 +598,10 @@ model Region{
 
 //   createdAt             DateTime              @default(now())
 // }
+
+model CancellationReasons {
+  id                    Int                 @id @default(autoincrement())
+  name                  String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @default(now())
+}

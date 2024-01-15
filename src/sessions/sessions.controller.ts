@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
 import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 import { Roles } from 'src/decorators/roles.decorator';
 import { AuthGuard } from 'src/guards/auth.guard';
@@ -34,5 +34,14 @@ export class SessionsController {
     @UserId() userId: number,
   ): Promise<TrainingSessionResultDto> {
     return this.sessionsService.getCoachingSession(userId, sessionId);
+  }
+
+  @Put('coach-approve-session/:sessionId')
+  async coachApproveSession(
+    @Param(new JoiValidation(SessionIdParamValidations))
+    { sessionId }: TrainingSessionParamsDto,
+    @UserId() userId: number,
+  ): Promise<TrainingSessionResultDto> {
+    return this.sessionsService.coachApproveSession(userId, sessionId);
   }
 }

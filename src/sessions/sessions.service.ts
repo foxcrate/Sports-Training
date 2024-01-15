@@ -1,7 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { GlobalService } from 'src/global/global.service';
 import { SessionsModel } from './sessions.model';
-import { HOME_SEARCH_TYPES_ENUM } from 'src/global/enums';
+import {
+  ACCEPTANCE_STATUSES_ENUM,
+  HOME_SEARCH_TYPES_ENUM,
+  SESSIONS_STATUSES_ENUM,
+} from 'src/global/enums';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import * as moment from 'moment-timezone';
 import {
@@ -10,6 +14,7 @@ import {
   FieldTrainingSessionResultDto,
   TrainingSessionResultDto,
 } from './dto/training-session-result.dto';
+import { CoachSessionDataDto } from './dto/coach-session-data.dto';
 
 @Injectable()
 export class SessionsService {
@@ -161,5 +166,54 @@ export class SessionsService {
     const validCoachSession = this.validateSessionExistence(coachSession);
     this.validateSessionViewUserRights(userId, validCoachSession.coachUserId);
     return this.formatCoachTrainingSession(validCoachSession);
+  }
+
+  validateSessionAcceptance(userId, sessionData) {
+    const foundSession = this.validateSessionExistence(sessionData);
+    this.validateSessionViewUserRights(userId, foundSession.coachUserId);
+    if (!foundSession.sessionRequestId) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.NOT_FOUND_SESSION_REQUEST`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+    if (foundSession.bookedSessionStatus !== SESSIONS_STATUSES_ENUM.NOT_ACTIVE) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.NOT_ALLOWED_BOOKED_SESSION_STATUS`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+    if (foundSession.sessionRequestStatus !== ACCEPTANCE_STATUSES_ENUM.PENDING) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.NOT_ALLOWED_TO_CHANGE_STATUS`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+  }
+
+  async coachApproveSession(
+    userId: number,
+    sessionId: number,
+  ): Promise<TrainingSessionResultDto> {
+    const coachSessionData: CoachSessionDataDto[] =
+      (await this.sessionsModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
+    const { sessionRequestId, coachBookedSessionId } = coachSessionData[0];
+    this.validateSessionAcceptance(userId, coachSessionData);
+    const [formattedSession] = await Promise.all([
+      this.getCoachingSession(userId, sessionId),
+      this.sessionsModel.updateCoachSessionStatus(
+        coachBookedSessionId,
+        SESSIONS_STATUSES_ENUM.ACTIVE,
+        sessionRequestId,
+        ACCEPTANCE_STATUSES_ENUM.ACCEPTED,
+      ),
+    ]);
+    return {
+      ...formattedSession,
+      status: ACCEPTANCE_STATUSES_ENUM.ACCEPTED,
+    };
   }
 }

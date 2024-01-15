@@ -45,5 +45,8 @@
   "WRONG_FILTER_TYPE": "نوع مرشح غير معروف",
   "WRONG_DATE_FORMAT": "تصميم التاريخ خطأ",
   "NOT_FOUND_SESSION": "الجلسة المطلوبة غير موجودة",
-  "NOT_ALLOWED_USER_SESSION": "غير مسموح للمستخدم بعرض الجلسة"
+  "NOT_ALLOWED_USER_SESSION": "غير مسموح للمستخدم بعرض الجلسة",
+  "NOT_FOUND_SESSION_REQUEST": "حدث خطأ ، لم يتم العثور على الطلب الخاص بالجلسة",
+  "NOT_ALLOWED_BOOKED_SESSION_STATUS": "الحالة الحالية لحجز الجلسة تمنع الموافقة",
+  "NOT_ALLOWED_TO_CHANGE_STATUS": "الحالة الحالية لطلب الجلسة لا يسمح بتغيير الحالة"
 }
