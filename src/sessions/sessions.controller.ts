@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
 import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 import { Roles } from 'src/decorators/roles.decorator';
 import { AuthGuard } from 'src/guards/auth.guard';
@@ -11,6 +11,8 @@ import { SessionTypeValidations } from './validations/session-type.validations';
 import { TrainingSessionParamsDto } from './dto/training-session-params.dto';
 import { TrainingSessionResultDto } from './dto/training-session-result.dto';
 import { CancellingReasonDto } from './dto/cancelling-reason.dto';
+import { CoachCancelSessionDto } from './dto/coach-cancel-session.dto.ts';
+import { CoachCancelSessionValidations } from './validations/coach-cancel-session.validations';
 
 @Roles(AvailableRoles.User)
 @UseGuards(AuthGuard, RoleGuard)
@@ -44,6 +46,26 @@ export class SessionsController {
     @UserId() userId: number,
   ): Promise<TrainingSessionResultDto> {
     return this.sessionsService.coachApproveSession(userId, sessionId);
+  }
+
+  @Put('coach-cancel-session/:sessionId')
+  async coachCancelSession(
+    @Param(new JoiValidation(SessionIdParamValidations))
+    { sessionId }: TrainingSessionParamsDto,
+    @Body(new JoiValidation(CoachCancelSessionValidations))
+    { cancelReasonId }: CoachCancelSessionDto,
+    @UserId() userId: number,
+  ): Promise<TrainingSessionResultDto> {
+    return this.sessionsService.coachCancelSession(userId, sessionId, cancelReasonId);
+  }
+
+  @Put('user-cancel-session/:sessionId')
+  async userCancelSession(
+    @Param(new JoiValidation(SessionIdParamValidations))
+    { sessionId }: TrainingSessionParamsDto,
+    @UserId() userId: number,
+  ): Promise<TrainingSessionResultDto> {
+    return this.sessionsService.userCancelSession(userId, sessionId);
   }
 
   @Get('cancelling-reasons')

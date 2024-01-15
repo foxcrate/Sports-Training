@@ -103,12 +103,42 @@ export class SessionsModel {
     `;
   }
 
+  async getUserSessionData(sessionId: number) {
+    return this.prisma.$queryRaw`
+      SELECT
+        tbs.id AS bookedSessionId,
+        sr.id AS sessionRequestId,
+        sr.status AS sessionRequestStatus,
+        tbs.status AS bookedSessionStatus,
+        sr.type AS sessionRequestType,
+        tbs.userId AS userId
+      FROM
+        TrainerBookedSession tbs
+        LEFT JOIN SessionRequest sr ON tbs.id = sr.trainerBookedSessionId
+      WHERE
+        tbs.id = ${sessionId}
+      GROUP BY
+        tbs.id
+    `;
+  }
+
   async getCancellingReasons() {
     return this.prisma.$queryRaw`
       SELECT
         *
       FROM
         CancellationReasons
+    `;
+  }
+
+  async getCancellingReason(id) {
+    return this.prisma.$queryRaw`
+      SELECT
+        *
+      FROM
+        CancellationReasons
+      WHERE
+        id = ${id}
     `;
   }
 
@@ -125,6 +155,26 @@ export class SessionsModel {
       this.prisma.$queryRaw`
             UPDATE TrainerBookedSession SET status = ${bookedSessionStatus} WHERE id = ${bookedSessionId};
           `,
+    ]);
+  }
+
+  async updateSetReasonCoachSessionStatus(
+    bookedSessionId,
+    bookedSessionStatus,
+    sessionRequestId,
+    sessionRequestStatus,
+    cancellationReasonsId,
+  ) {
+    return this.prisma.$transaction([
+      this.prisma.$queryRaw`
+          UPDATE SessionRequest SET status = ${sessionRequestStatus}, cancellationReasonsId = ${cancellationReasonsId} WHERE id = ${sessionRequestId};
+        `,
+      this.prisma.$queryRaw`
+          UPDATE TrainerBookedSession SET status = ${bookedSessionStatus} WHERE id = ${bookedSessionId};
+        `,
+      // this.prisma.$queryRaw`
+      //       DELETE FROM TrainerBookedSession WHERE id = ${bookedSessionId};
+      //     `,
     ]);
   }
 

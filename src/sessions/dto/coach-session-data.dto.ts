@@ -1,4 +1,4 @@
-import { ACCEPTANCE_STATUSES_ENUM, SESSIONS_STATUSES_ENUM } from 'src/global/enums';
+import { SESSIONS_STATUSES_ENUM, SESSION_REQUEST_STATUSES_ENUM } from 'src/global/enums';
 
 export interface CoachSessionDataDto {
   coachBookedSessionId: number;
@@ -6,5 +6,5 @@ export interface CoachSessionDataDto {
   sessionRequestId: number;
   bookedSessionStatus: SESSIONS_STATUSES_ENUM;
   sessionRequestType: string;
-  sessionRequestStatus: ACCEPTANCE_STATUSES_ENUM;
+  sessionRequestStatus: SESSION_REQUEST_STATUSES_ENUM;
 }

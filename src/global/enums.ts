@@ -38,3 +38,9 @@ export enum SESSIONS_STATUSES_ENUM {
   ACTIVE = 'active',
   NOT_ACTIVE = 'notActive',
 }
+
+export enum SESSION_REQUEST_STATUSES_ENUM {
+  ACCEPTED = 'accepted',
+  PENDING = 'pending',
+  REJECTED = 'rejected',
+}
