@@ -322,7 +322,7 @@ export class TrainerScheduleModel {
     return TheBookedSlot[0];
   }
 
-  async getBookedSessionById(sessionId: number): Promise<BookedSessionDTO> {
+  async getBookedSessionBySessionId(sessionId: number): Promise<BookedSessionDTO> {
     let theSession = await this.prisma.$queryRaw`
       SELECT *
       FROM TrainerBookedSession
@@ -337,6 +337,23 @@ export class TrainerScheduleModel {
       );
     }
     return theSession[0];
+  }
+
+  async getBookedSessionsByScheduleId(scheduleId: number): Promise<any> {
+    let scheduleSessions = await this.prisma.$queryRaw`
+      SELECT JSON_ARRAYAGG(Slot.id) AS slotsIds
+      FROM Schedule
+      LEFT JOIN Slot ON Slot.scheduleId = Schedule.id
+      WHERE Schedule.id = ${scheduleId}
+    `;
+    // if (!scheduleSessions[0]) {
+    //   throw new NotFoundException(
+    //     this.i18n.t(`errors.BOOKED_SESSION_NOT_FOUND`, {
+    //       lang: I18nContext.current().lang,
+    //     }),
+    //   );
+    // }
+    return scheduleSessions;
   }
 
   async saveTrainerSessionRating(

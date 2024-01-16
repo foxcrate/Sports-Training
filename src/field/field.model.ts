@@ -27,6 +27,8 @@ export class FieldModel {
         f.id,
         f.name,
         f.acceptanceStatus,
+        f.profileImage,
+        f.regionId,
         CASE WHEN AVG(r.ratingNumber) IS NULL THEN 5
           ELSE
           ROUND(AVG(r.ratingNumber),1)
@@ -55,15 +57,42 @@ export class FieldModel {
       WHERE
       f.acceptanceStatus = 'accepted'
       GROUP BY f.id
-    )
-    SELECT 
+    ),
+    FieldDetailsWithBookedHoursWithRegion AS(
+      SELECT 
       fdwbh.id,
       fdwbh.name,
       fdwbh.acceptanceStatus,
+      fdwbh.profileImage,
       fdwbh.ratingNumber,
+      CASE
+      WHEN COUNT(rg.id ) = 0 THEN null
+      ELSE
+      JSON_ARRAYAGG(JSON_OBJECT(
+        'id',rg.id,
+        'name', rg.name
+        ))
+      END AS region,
       fdwbh.availableWeekDays AS availableWeekDays,
       fdwbh.availableDayHours AS availableDayHours,
-      fdwbh.fieldBookedHours AS fieldBookedHours,
+      fdwbh.fieldBookedHours AS fieldBookedHours
+    FROM FieldDetailsWithBookedHours AS fdwbh
+    LEFT JOIN
+    Region AS rg
+    ON
+    fdwbh.regionId = rg.id
+    GROUP BY  fdwbh.id
+    )
+    SELECT 
+      fdwbhwr.id,
+      fdwbhwr.name,
+      fdwbhwr.acceptanceStatus,
+      fdwbhwr.profileImage,
+      fdwbhwr.ratingNumber,
+      fdwbhwr.region,
+      fdwbhwr.availableWeekDays AS availableWeekDays,
+      fdwbhwr.availableDayHours AS availableDayHours,
+      fdwbhwr.fieldBookedHours AS fieldBookedHours,
       CASE
       WHEN COUNT(fnad.id ) = 0 THEN null
       ELSE
@@ -72,12 +101,12 @@ export class FieldModel {
         'dayDate', fnad.dayDate
         ))
       END AS fieldNotAvailableDays
-    FROM FieldDetailsWithBookedHours AS fdwbh
+    FROM FieldDetailsWithBookedHoursWithRegion AS fdwbhwr
     LEFT JOIN
     FieldNotAvailableDays AS fnad
     ON
-    fdwbh.id = fnad.fieldId
-    GROUP BY  fdwbh.id
+    fdwbhwr.id = fnad.fieldId
+    GROUP BY  fdwbhwr.id
     `;
 
     return allFields;

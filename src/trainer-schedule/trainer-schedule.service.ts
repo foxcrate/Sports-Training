@@ -64,6 +64,7 @@ export class TrainerScheduleService {
       reqBody,
     );
     this.groupingAndValidatingScheduleSlots(reqBody.slots);
+    await this.validateExistanceOfBookedSessionInSchedule(scheduleId);
     return await this.scheduleModel.update(timezone, schedule.id, reqBody);
   }
 
@@ -184,7 +185,9 @@ export class TrainerScheduleService {
     let theTrainerProfile = await this.trainerProfileModel.getByUserId(userId);
 
     // throw error if session don't exist
-    let theSession = await this.scheduleModel.getBookedSessionById(reqBody.sessionId);
+    let theSession = await this.scheduleModel.getBookedSessionBySessionId(
+      reqBody.sessionId,
+    );
 
     await this.validateTrainerRatingSession(
       theTrainerProfile.id,
@@ -201,7 +204,12 @@ export class TrainerScheduleService {
 
   // // private // //
 
-  async validateTrainerRatingSession(
+  private async validateExistanceOfBookedSessionInSchedule(scheduleId: number) {
+    return true;
+    return await this.scheduleModel.getBookedSessionsByScheduleId(scheduleId);
+  }
+
+  private async validateTrainerRatingSession(
     theTrainerProfileId: number,
     sessionTrainerProfileId: number,
   ) {

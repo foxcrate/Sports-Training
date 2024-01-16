@@ -42,6 +42,7 @@ export class TrainerScheduleController {
     @Body(new JoiValidation(AddScheduleValidation)) reqBody,
     @Request() req: ExpressRequest,
   ) {
+    // return true;
     return await this.scheduleService.create(req['timezone'], req['id'], reqBody);
   }
 
@@ -54,6 +55,7 @@ export class TrainerScheduleController {
     @Body(new JoiValidation(AddScheduleValidation)) reqBody,
     @Request() req: ExpressRequest,
   ) {
+    return true;
     return await this.scheduleService.update(
       req['timezone'],
       req['id'],
