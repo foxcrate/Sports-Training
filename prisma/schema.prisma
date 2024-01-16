@@ -72,6 +72,12 @@ enum SessionRequestStatus {
   pending
   accepted
   rejected
+  canceled
+}
+
+enum CanceledByEnum {
+  player
+  trainer
 }
 
 model User {
@@ -340,8 +346,9 @@ model SessionRequest {
   trainerBookedSession   TrainerBookedSession @relation(fields: [trainerBookedSessionId], references: [id], onDelete: Cascade)
   trainerBookedSessionId Int                  @unique
 
-  type   SessionRequestType   @default(new)
-  status SessionRequestStatus @default(pending)
+  type       SessionRequestType   @default(new)
+  status     SessionRequestStatus @default(pending)
+  canceledBy CanceledByEnum?
 
   cancellationReasons   CancellationReasons? @relation(fields: [cancellationReasonsId], references: [id], onDelete: Restrict)
   cancellationReasonsId Int?
