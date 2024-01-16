@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { GlobalService } from 'src/global/global.service';
 import { SessionsModel } from './sessions.model';
 import {
+  CANCELED_BY_ENUM,
   HOME_SEARCH_TYPES_ENUM,
   SESSIONS_STATUSES_ENUM,
   SESSION_REQUEST_STATUSES_ENUM,
@@ -312,13 +313,14 @@ export class SessionsService {
         coachBookedSessionId,
         SESSIONS_STATUSES_ENUM.NOT_ACTIVE,
         sessionRequestId,
-        SESSION_REQUEST_STATUSES_ENUM.REJECTED,
+        SESSION_REQUEST_STATUSES_ENUM.CANCELED,
         validCancellingReason.id,
+        CANCELED_BY_ENUM.TRAINER,
       ),
     ]);
     return {
       ...formattedSession,
-      status: SESSION_REQUEST_STATUSES_ENUM.REJECTED,
+      status: SESSION_REQUEST_STATUSES_ENUM.CANCELED,
     };
   }
 
@@ -336,12 +338,13 @@ export class SessionsService {
         bookedSessionId,
         SESSIONS_STATUSES_ENUM.NOT_ACTIVE,
         sessionRequestId,
-        SESSION_REQUEST_STATUSES_ENUM.REJECTED,
+        SESSION_REQUEST_STATUSES_ENUM.CANCELED,
+        CANCELED_BY_ENUM.PLAYER,
       ),
     ]);
     return {
       ...formattedSession,
-      status: SESSION_REQUEST_STATUSES_ENUM.REJECTED,
+      status: SESSION_REQUEST_STATUSES_ENUM.CANCELED,
     };
   }
 }

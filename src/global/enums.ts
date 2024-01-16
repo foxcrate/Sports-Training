@@ -43,4 +43,10 @@ export enum SESSION_REQUEST_STATUSES_ENUM {
   ACCEPTED = 'accepted',
   PENDING = 'pending',
   REJECTED = 'rejected',
+  CANCELED = 'canceled',
+}
+
+export enum CANCELED_BY_ENUM {
+  PLAYER = 'player',
+  TRAINER = 'trainer',
 }

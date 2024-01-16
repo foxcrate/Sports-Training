@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { UserSessionDataDto } from './dto/user-session-data.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class SessionsModel {
@@ -154,10 +155,17 @@ export class SessionsModel {
     bookedSessionStatus,
     sessionRequestId,
     sessionRequestStatus,
+    canceledBy = null,
   ) {
     return this.prisma.$transaction([
       this.prisma.$queryRaw`
-            UPDATE SessionRequest SET status = ${sessionRequestStatus} WHERE id = ${sessionRequestId};
+            UPDATE
+              SessionRequest
+            SET
+              status = ${sessionRequestStatus}
+              ${canceledBy ? Prisma.sql`, canceledBy = ${canceledBy}` : Prisma.empty}
+            WHERE
+              id = ${sessionRequestId};
           `,
       this.prisma.$queryRaw`
             UPDATE TrainerBookedSession SET status = ${bookedSessionStatus} WHERE id = ${bookedSessionId};
@@ -171,17 +179,22 @@ export class SessionsModel {
     sessionRequestId,
     sessionRequestStatus,
     cancellationReasonsId,
+    canceledBy,
   ) {
     return this.prisma.$transaction([
       this.prisma.$queryRaw`
-          UPDATE SessionRequest SET status = ${sessionRequestStatus}, cancellationReasonsId = ${cancellationReasonsId} WHERE id = ${sessionRequestId};
+          UPDATE
+            SessionRequest
+          SET
+            status = ${sessionRequestStatus},
+            cancellationReasonsId = ${cancellationReasonsId},
+            canceledBy = ${canceledBy}
+          WHERE
+            id = ${sessionRequestId};
         `,
       this.prisma.$queryRaw`
           UPDATE TrainerBookedSession SET status = ${bookedSessionStatus} WHERE id = ${bookedSessionId};
         `,
-      // this.prisma.$queryRaw`
-      //       DELETE FROM TrainerBookedSession WHERE id = ${bookedSessionId};
-      //     `,
     ]);
   }
 
