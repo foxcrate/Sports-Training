@@ -16,6 +16,7 @@ import {
 } from './dto/training-session-result.dto';
 import { CoachSessionDataDto } from './dto/coach-session-data.dto';
 import { CancellingReasonDto } from './dto/cancelling-reason.dto';
+import { UserSessionDataDto } from './dto/user-session-data.dto';
 
 @Injectable()
 export class SessionsService {
@@ -220,7 +221,7 @@ export class SessionsService {
   }
 
   validateUserSession(userId, sessionData) {
-    const foundSession = this.validateSessionExistence(sessionData);
+    const foundSession: UserSessionDataDto = this.validateSessionExistence(sessionData);
     this.validateSessionViewUserRights(userId, foundSession.userId);
     if (!foundSession.sessionRequestId) {
       throw new BadRequestException(
@@ -239,6 +240,28 @@ export class SessionsService {
     if (foundSession.sessionRequestStatus !== SESSION_REQUEST_STATUSES_ENUM.PENDING) {
       throw new BadRequestException(
         this.i18n.t(`errors.NOT_ALLOWED_TO_CHANGE_STATUS`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+    const currentDateTime = moment().utc();
+    const dateMoment = moment(foundSession.date, 'YYYY-MM-DD');
+    const timeMoment = moment(foundSession.fromTime, 'HH:mm:ssZ');
+
+    // Combine date and time
+    const combinedDateTime = dateMoment.set({
+      hour: timeMoment.hours(),
+      minute: timeMoment.minutes(),
+      second: timeMoment.seconds(),
+      millisecond: timeMoment.milliseconds(),
+    });
+    const dateTimeAfterSubHours = combinedDateTime.subtract(
+      parseInt(`${foundSession.cancellationHours || 1}`, 10),
+      'hours',
+    );
+    if (dateTimeAfterSubHours.isBefore(currentDateTime)) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.NOT_ALLOWED_TO_CANCEL_SESSION`, {
           lang: I18nContext.current().lang,
         }),
       );
@@ -303,7 +326,8 @@ export class SessionsService {
     userId: number,
     sessionId: number,
   ): Promise<TrainingSessionResultDto> {
-    const sessionData = await this.sessionsModel.getUserSessionData(sessionId);
+    const sessionData: UserSessionDataDto[] =
+      await this.sessionsModel.getUserSessionData(sessionId);
     const validSession = this.validateUserSession(userId, sessionData);
     const { sessionRequestId, bookedSessionId } = validSession;
     const [formattedSession] = await Promise.all([

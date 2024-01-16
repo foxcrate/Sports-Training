@@ -15,6 +15,7 @@ export interface DoctorTrainingSessionResultDto extends TrainingSessionBaseDto {
 
 export interface FieldTrainingSessionResultDto extends TrainingSessionBaseDto {
   sport?: string;
+  description?: string;
 }
 
 export interface CoachTrainingSessionResultDto extends TrainingSessionBaseDto {

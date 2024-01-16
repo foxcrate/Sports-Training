@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { UserSessionDataDto } from './dto/user-session-data.dto';
 
 @Injectable()
 export class SessionsModel {
@@ -103,7 +104,7 @@ export class SessionsModel {
     `;
   }
 
-  async getUserSessionData(sessionId: number) {
+  async getUserSessionData(sessionId: number): Promise<UserSessionDataDto[]> {
     return this.prisma.$queryRaw`
       SELECT
         tbs.id AS bookedSessionId,
@@ -111,10 +112,16 @@ export class SessionsModel {
         sr.status AS sessionRequestStatus,
         tbs.status AS bookedSessionStatus,
         sr.type AS sessionRequestType,
+        tp.defaultCancellationTime AS cancellationHours,
+        tbs.date AS date,
+        Slot.fromTime AS fromTime,
+        Slot.toTime AS toTime,
         tbs.userId AS userId
       FROM
         TrainerBookedSession tbs
+        JOIN TrainerProfile tp ON tbs.trainerProfileId = tp.id
         LEFT JOIN SessionRequest sr ON tbs.id = sr.trainerBookedSessionId
+        LEFT JOIN Slot ON Slot.id = tbs.slotId
       WHERE
         tbs.id = ${sessionId}
       GROUP BY
@@ -215,6 +222,7 @@ export class SessionsModel {
         r.name AS region,
         s.name AS sport,
         f.slotDuration AS slotDuration,
+        f.description AS description,
         f.cost AS cost 
       FROM
         FieldsBookedHours fbh

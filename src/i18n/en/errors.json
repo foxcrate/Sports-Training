@@ -49,5 +49,6 @@
   "NOT_ALLOWED_USER_SESSION": "User is not allowed to view this session",
   "NOT_FOUND_SESSION_REQUEST": "Something wrong happened, Not found session request",
   "NOT_ALLOWED_BOOKED_SESSION_STATUS": "Current booked session status prevent changing status",
-  "NOT_ALLOWED_TO_CHANGE_STATUS": "Session request current status is not allowing to change status"
+  "NOT_ALLOWED_TO_CHANGE_STATUS": "Session request current status is not allowing to change status",
+  "NOT_ALLOWED_TO_CANCEL_SESSION": "It is not allowed to cancel session at this time"
 }
