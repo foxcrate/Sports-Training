@@ -12,6 +12,7 @@
   "UPLOAD_IMAGE_ERROR": "Error in uploading image",
   "SENDING_NOTIFICATION_ERROR": "Error in sending notification",
   "RECORD_NOT_FOUND": "Record not found",
+  "PLAYER_PROFILE_NOT_FOUND": "Player Profile not found",
   "TRAINER_PROFILE_NOT_FOUND": "Trainer Profile not found",
   "SCHEDULE_NOT_FOUND": "Schedule not found",
   "AGE_GROUP_NOT_FOUND": "Age Group not found",
@@ -50,5 +51,6 @@
   "NOT_FOUND_SESSION_REQUEST": "Something wrong happened, Not found session request",
   "NOT_ALLOWED_BOOKED_SESSION_STATUS": "Current booked session status prevent changing status",
   "NOT_ALLOWED_TO_CHANGE_STATUS": "Session request current status is not allowing to change status",
-  "NOT_ALLOWED_TO_CANCEL_SESSION": "It is not allowed to cancel session at this time"
+  "NOT_ALLOWED_TO_CANCEL_SESSION": "It is not allowed to cancel session at this time",
+  "CANT_UPDATE_OR_DELETE_USED_SCHEDULE": "You can't update or delete this schedule for now, because it is used by an incoming session"
 }

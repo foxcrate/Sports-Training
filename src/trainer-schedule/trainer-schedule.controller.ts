@@ -18,8 +18,6 @@ import { Request as ExpressRequest } from 'express';
 import { ScheduleIdValidation } from './validations/scheduleId.validation';
 import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { AddScheduleValidation } from './validations/create.validation';
-import { RateSessionValidation } from './validations/rate-session.validation';
-import { RateSessionDto } from './dtos/rate-session.dto';
 import { UserId } from 'src/decorators/user-id.decorator';
 
 @Controller('trainer-schedule')
@@ -42,7 +40,6 @@ export class TrainerScheduleController {
     @Body(new JoiValidation(AddScheduleValidation)) reqBody,
     @Request() req: ExpressRequest,
   ) {
-    // return true;
     return await this.scheduleService.create(req['timezone'], req['id'], reqBody);
   }
 
@@ -55,7 +52,6 @@ export class TrainerScheduleController {
     @Body(new JoiValidation(AddScheduleValidation)) reqBody,
     @Request() req: ExpressRequest,
   ) {
-    return true;
     return await this.scheduleService.update(
       req['timezone'],
       req['id'],
@@ -84,16 +80,5 @@ export class TrainerScheduleController {
     @Request() req: ExpressRequest,
   ) {
     return await this.scheduleService.getOne(req['timezone'], req['id'], params.id);
-  }
-
-  @Post('/rate-session')
-  @Version('1')
-  @Roles('user')
-  @UseGuards(AuthGuard, RoleGuard)
-  async rateSession1(
-    @Body(new JoiValidation(RateSessionValidation)) reqBody: RateSessionDto,
-    @UserId() userId: number,
-  ) {
-    return await this.scheduleService.trainerRateSession(userId, reqBody);
   }
 }

@@ -45,7 +45,7 @@ export class UserController {
     return await this.userService.getOne(req['id']);
   }
 
-  @Post()
+  @Post('childs')
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
