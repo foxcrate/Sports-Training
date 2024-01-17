@@ -15,12 +15,12 @@ enum Gender {
   male
 }
 
-enum ScheduleType{
+enum ScheduleType {
   work
   override
 }
 
-enum AcceptanceStatus{
+enum AcceptanceStatus {
   accepted
   pending
   declined
@@ -40,7 +40,7 @@ enum UserType {
   child
 }
 
-enum ProfileType{
+enum ProfileType {
   player
   trainer
 }
@@ -58,534 +58,541 @@ enum Level {
   advanced
 }
 
-enum SessionStatus{
+enum SessionStatus {
   active
   notActive
 }
 
-enum SessionRequestType{
+enum SessionRequestType {
   new
   change
 }
 
-enum SessionRequestStatus{
+enum SessionRequestStatus {
   pending
   accepted
   rejected
+  canceled
 }
 
+enum CanceledByEnum {
+  player
+  trainer
+}
 
 model User {
-  id                        Int                     @id @default(autoincrement())
-  firstName                 String?
-  lastName                  String?
-  profileImage              String?
-  password                  String?
-  email                     String?                 @unique
-  mobileNumber              String                  @unique
-  gender                    Gender?
-  birthday                  DateTime?
-  isPhoneVerified           Boolean                 @default(false)
-  isActivated               Boolean                 @default(true)
-  
-  userType                  UserType?               @default(user)
-  fcm_token                 String?
-  provider                  Provider                @default(native)
-  
-  playerProfile             PlayerProfile?
-  trainerProfile            TrainerProfile?
-  fields                    FieldsBookedHours[]
-  doctorClinics             DoctorClinicsBookedHours[]
-  trainerBookedSessions     TrainerBookedSession[]
-  addedFields               Field[]
-  addedDoctorClinics        DoctorClinic[]
-  parentsChilds             ParentsChilds[]         @relation("ParentsChilds")
-  childsParents             ParentsChilds[]         @relation("ChildsParents")
-  rates                     Rate[]
+  id              Int       @id @default(autoincrement())
+  firstName       String?
+  lastName        String?
+  profileImage    String?
+  password        String?
+  email           String?   @unique
+  mobileNumber    String    @unique
+  gender          Gender?
+  birthday        DateTime?
+  isPhoneVerified Boolean   @default(false)
+  isActivated     Boolean   @default(true)
 
-  createdAt                 DateTime                @default(now())
-  updatedAt                 DateTime                @default(now())
-}
+  userType  UserType? @default(user)
+  fcm_token String?
+  provider  Provider  @default(native)
 
-model ParentsChilds{
-  id                  Int                     @id @default(autoincrement())
-
-  parent              User                    @relation("ParentsChilds",fields: [parentId], references: [id])
-  parentId            Int
-
-  child               User                    @relation("ChildsParents",fields: [childId], references: [id])
-  childId             Int
-
-  @@unique([parentId,childId])
-
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
-}
-
-model OTP{
-  id                    Int                   @id @default(autoincrement())
-  mobileNumber          String
-  otp                   String
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
-}
-
-model PlayerProfile{
-  id                    Int                   @id @default(autoincrement())
-
-  level                 Level?
-
-  regionId              Int?          
-  region                Region?               @relation(fields: [regionId], references: [id])
-
-  sports                PlayerProfileSports[]
+  playerProfile         PlayerProfile?
+  trainerProfile        TrainerProfile?
+  fields                FieldsBookedHours[]
+  doctorClinics         DoctorClinicsBookedHours[]
+  trainerBookedSessions TrainerBookedSession[]
+  addedFields           Field[]
+  addedDoctorClinics    DoctorClinic[]
+  parentsChilds         ParentsChilds[]            @relation("ParentsChilds")
+  childsParents         ParentsChilds[]            @relation("ChildsParents")
   rates                 Rate[]
 
-  userId                Int                   @unique
-  user                  User                  @relation(fields: [userId], references: [id],onDelete: Cascade)
-
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model PlayerProfileSports{
-  playerProfile       PlayerProfile           @relation(fields: [playerProfileId], references: [id])
-  playerProfileId     Int
-  sport               Sport                   @relation(fields: [sportId], references: [id])
-  sportId             Int
+model ParentsChilds {
+  id Int @id @default(autoincrement())
+
+  parent   User @relation("ParentsChilds", fields: [parentId], references: [id])
+  parentId Int
+
+  child   User @relation("ChildsParents", fields: [childId], references: [id])
+  childId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@unique([parentId, childId])
+}
+
+model OTP {
+  id           Int      @id @default(autoincrement())
+  mobileNumber String
+  otp          String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+}
+
+model PlayerProfile {
+  id Int @id @default(autoincrement())
+
+  level Level?
+
+  regionId Int?
+  region   Region? @relation(fields: [regionId], references: [id])
+
+  sports PlayerProfileSports[]
+  rates  Rate[]
+
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model PlayerProfileSports {
+  playerProfile   PlayerProfile @relation(fields: [playerProfileId], references: [id])
+  playerProfileId Int
+  sport           Sport         @relation(fields: [sportId], references: [id])
+  sportId         Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 
   @@id([playerProfileId, sportId])
-
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
 }
 
-model TrainerProfile{
-  id                        Int                     @id @default(autoincrement())
+model TrainerProfile {
+  id Int @id @default(autoincrement())
 
-  level                     Level?                  @default(beginner)
+  level Level? @default(beginner)
 
-  ageGroup                  AgeGroup?               @relation(fields: [ageGroupId], references: [id])
-  ageGroupId                Int?          
+  ageGroup   AgeGroup? @relation(fields: [ageGroupId], references: [id])
+  ageGroupId Int?
 
-  sessionDescription        String?
+  sessionDescription String?
 
+  cost Int?
 
-  cost                      Int?
+  rates Rate[]
 
-  rates                     Rate[]
+  pictures Picture[]
 
-  pictures                  Picture[]
+  certificates Certificate[]
 
-  certificates              Certificate[]
+  sports TrainerProfileSports[]
 
-  sports                    TrainerProfileSports[]
+  fields TrainerProfileFields[]
 
-  fields                    TrainerProfileFields[]
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  userId                    Int                     @unique
-  user                      User                    @relation(fields: [userId], references: [id],onDelete: Cascade)
+  regionId Int?
+  region   Region? @relation(fields: [regionId], references: [id])
 
-  regionId                  Int?          
-  region                    Region?                 @relation(fields: [regionId], references: [id])
+  schedules Schedule[]
 
-  schedules                 Schedule[]
+  notAvailableDays TrainerProfileNotAvailableDays[]
 
-  notAvailableDays          TrainerProfileNotAvailableDays[]
+  trainerBookedSessions TrainerBookedSession[]
 
-  trainerBookedSessions     TrainerBookedSession[]
+  defaultCancellationTime Int?
 
-  createdAt                 DateTime                @default(now())
-  updatedAt                 DateTime                @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model AgeGroup{
-  id                        Int                     @id @default(autoincrement())
+model AgeGroup {
+  id Int @id @default(autoincrement())
 
-  name                      String
+  name String
 
-  trainerProfiles           TrainerProfile[]
+  trainerProfiles TrainerProfile[]
 
-  createdAt                 DateTime                @default(now())
-  updatedAt                 DateTime                @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model Schedule{
-  id                  Int                     @id @default(autoincrement())
+model Schedule {
+  id Int @id @default(autoincrement())
 
-  type                ScheduleType            @default(work)
+  type ScheduleType @default(work)
 
-  slots               Slot[]
+  slots Slot[]
 
-  TrainerProfile      TrainerProfile          @relation(fields: [trainerProfileId], references: [id])
-  trainerProfileId    Int
+  TrainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id])
+  trainerProfileId Int
 
-  months              SchedulesMonths[]
+  months SchedulesMonths[]
 
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model Slot{
-  id                        Int                     @id @default(autoincrement())
+model Slot {
+  id Int @id @default(autoincrement())
 
-  name                      String?
+  name String?
 
-  fromTime                  String
-  toTime                    String
+  fromTime String
+  toTime   String
 
-  cost                      Int?
+  cost Int?
 
-  weekDayNumber             Int?
-  weekDayName               String?
+  weekDayNumber Int?
+  weekDayName   String?
 
-  Schedule                  Schedule                @relation(fields: [scheduleId], references: [id])
-  scheduleId                Int
+  Schedule   Schedule @relation(fields: [scheduleId], references: [id])
+  scheduleId Int
 
-  field                     Field?                @relation(fields: [fieldId], references: [id],onDelete: Cascade)
-  fieldId                   Int?  
+  field   Field? @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  fieldId Int?
 
-  trainerBookedSessions     TrainerBookedSession[]
+  trainerBookedSessions TrainerBookedSession[]
 
-  createdAt                 DateTime                @default(now())
-  updatedAt                 DateTime                @default(now())
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model Month{
-  id                  Int                     @id @default(autoincrement())
-  
-  monthNumber         Int?
-  monthName           String?
+model Month {
+  id Int @id @default(autoincrement())
 
-  schedules             SchedulesMonths[]
+  monthNumber Int?
+  monthName   String?
 
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
+  schedules SchedulesMonths[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model SchedulesMonths{
-  id                  Int                     @id @default(autoincrement())
+model SchedulesMonths {
+  id Int @id @default(autoincrement())
 
-  schedule             Schedule               @relation(fields: [scheduleId], references: [id])
-  scheduleId           Int
+  schedule   Schedule @relation(fields: [scheduleId], references: [id])
+  scheduleId Int
 
-  month              Month                    @relation(fields: [monthId], references: [id])
-  monthId            Int
+  month   Month @relation(fields: [monthId], references: [id])
+  monthId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
   @@unique([scheduleId, monthId])
-
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
 }
 
-model TrainerProfileSports{
-  trainerProfile       TrainerProfile         @relation(fields: [trainerProfileId], references: [id])
-  trainerProfileId     Int
+model TrainerProfileSports {
+  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id])
+  trainerProfileId Int
 
-  sport               Sport                   @relation(fields: [sportId], references: [id])
-  sportId             Int
+  sport   Sport @relation(fields: [sportId], references: [id])
+  sportId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 
   @@id([trainerProfileId, sportId])
-
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
 }
 
-model TrainerProfileFields{
-  id                  Int                     @id @default(autoincrement())
+model TrainerProfileFields {
+  id Int @id @default(autoincrement())
 
-  trainerProfile       TrainerProfile         @relation(fields: [trainerProfileId], references: [id])
-  trainerProfileId     Int
+  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id])
+  trainerProfileId Int
 
-  field               Field @relation(fields: [fieldId], references: [id])
-  fieldId             Int
+  field   Field @relation(fields: [fieldId], references: [id])
+  fieldId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 
   @@unique([trainerProfileId, fieldId])
-
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
 }
 
-model TrainerBookedSession{
-  id                  Int                     @id @default(autoincrement())
+model TrainerBookedSession {
+  id Int @id @default(autoincrement())
 
-  status              SessionStatus           @default(active)
+  status SessionStatus @default(active)
 
-  gmt                 Int                     @default(0)
+  gmt Int @default(0)
 
-  date                DateTime                @db.Date
+  date DateTime @db.Date
 
-  sessionRequest      SessionRequest?
+  sessionRequest SessionRequest?
 
-  rates               Rate[]
-  
-  user                User                    @relation(fields: [userId], references: [id])
-  userId              Int
+  rates Rate[]
 
-  trainerProfile      TrainerProfile         @relation(fields: [trainerProfileId], references: [id])
-  trainerProfileId    Int
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
 
-  slot                Slot                    @relation(fields: [slotId], references: [id])
-  slotId              Int
+  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id])
+  trainerProfileId Int
 
-  @@unique([date,slotId])
+  slot   Slot @relation(fields: [slotId], references: [id])
+  slotId Int
 
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@unique([date, slotId])
 }
 
-model SessionRequest{
-  id                        Int                     @id @default(autoincrement())
+model SessionRequest {
+  id Int @id @default(autoincrement())
 
-  trainerBookedSession      TrainerBookedSession    @relation(fields: [trainerBookedSessionId], references: [id],onDelete: Cascade)
-  trainerBookedSessionId    Int                     @unique
+  trainerBookedSession   TrainerBookedSession @relation(fields: [trainerBookedSessionId], references: [id], onDelete: Cascade)
+  trainerBookedSessionId Int                  @unique
 
-  type                      SessionRequestType      @default(new)
-  status                    SessionRequestStatus    @default(pending)
+  type       SessionRequestType   @default(new)
+  status     SessionRequestStatus @default(pending)
+  canceledBy CanceledByEnum?
 
-  createdAt                 DateTime                @default(now())
-  updatedAt                 DateTime                @default(now())
+  cancellationReasons   CancellationReasons? @relation(fields: [cancellationReasonsId], references: [id], onDelete: Restrict)
+  cancellationReasonsId Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model TrainerProfileNotAvailableDays{
-  id                  Int                     @id @default(autoincrement())
-  dayDate             DateTime
+model TrainerProfileNotAvailableDays {
+  id      Int      @id @default(autoincrement())
+  dayDate DateTime
 
-  trainerProfile               TrainerProfile                   @relation(fields: [trainerProfileId], references: [id])
+  trainerProfile TrainerProfile @relation(fields: [trainerProfileId], references: [id])
 
-  trainerProfileId             Int
+  trainerProfileId Int
 
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model Field{
-  id                  Int                     @id @default(autoincrement())
-  name                String
-  description         String?
-  cost                Int?
+model Field {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  cost        Int?
 
-  slotDuration        Int?
-  address             String?
-  longitude           Decimal?
-  latitude            Decimal?
-  profileImage        String?
-  acceptanceStatus    AcceptanceStatus        @default(pending)
-  availableWeekDays   Json?
+  slotDuration      Int?
+  address           String?
+  longitude         Decimal?
+  latitude          Decimal?
+  profileImage      String?
+  acceptanceStatus  AcceptanceStatus @default(pending)
+  availableWeekDays Json?
 
-  availableDayHours   Json?      
-  rates               Rate[]
+  availableDayHours Json?
+  rates             Rate[]
 
-  slots               Slot[]
+  slots Slot[]
 
-  addedByUserId       Int?
-  addedByUser         User?                   @relation(fields: [addedByUserId], references: [id],onDelete: SetNull)
-  
-  sport               Sport?                  @relation(fields: [sportId], references: [id])
-  sportId             Int?
+  addedByUserId Int?
+  addedByUser   User? @relation(fields: [addedByUserId], references: [id], onDelete: SetNull)
 
-  region              Region?                 @relation(fields: [regionId], references: [id])
-  regionId            Int?
+  sport   Sport? @relation(fields: [sportId], references: [id])
+  sportId Int?
 
-  users               FieldsBookedHours[]
-  notAvailableDays    FieldNotAvailableDays[]
-  trainerProfiles     TrainerProfileFields[]
+  region   Region? @relation(fields: [regionId], references: [id])
+  regionId Int?
 
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
+  users            FieldsBookedHours[]
+  notAvailableDays FieldNotAvailableDays[]
+  trainerProfiles  TrainerProfileFields[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
+model Rate {
+  id Int @id @default(autoincrement())
 
-model Rate{
-  id                    Int                   @id @default(autoincrement())
+  ratingNumber Int?
 
-  ratingNumber          Int?
+  feedback String?
 
-  feedback              String?
+  rateableType RateableType
 
-  rateableType          RateableType
+  profileType ProfileType @default(player)
 
-  profileType           ProfileType           @default(player)
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
 
-  user                  User                  @relation(fields: [userId], references: [id],onDelete: Cascade)
-  userId                Int  
-  
-  field                 Field?                @relation(fields: [fieldId], references: [id],onDelete: Cascade)
-  fieldId               Int?  
+  field   Field? @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  fieldId Int?
 
-  doctorClinic          DoctorClinic?         @relation(fields: [doctorClinicId], references: [id], onDelete: Cascade)
-  doctorClinicId        Int?
+  doctorClinic   DoctorClinic? @relation(fields: [doctorClinicId], references: [id], onDelete: Cascade)
+  doctorClinicId Int?
 
-  trainerProfile        TrainerProfile?         @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
-  trainerProfileId      Int?
+  trainerProfile   TrainerProfile? @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
+  trainerProfileId Int?
 
-  playerProfile         PlayerProfile?         @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
-  playerProfileId       Int?
+  playerProfile   PlayerProfile? @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  playerProfileId Int?
 
-  trainerBookedSession          TrainerBookedSession?         @relation(fields: [trainerBookedSessionId], references: [id], onDelete: Cascade)
-  trainerBookedSessionId        Int?
+  trainerBookedSession   TrainerBookedSession? @relation(fields: [trainerBookedSessionId], references: [id], onDelete: Cascade)
+  trainerBookedSessionId Int?
 
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model Picture{
-  id                    Int                   @id @default(autoincrement())
+model Picture {
+  id Int @id @default(autoincrement())
 
-  imageLink             String
+  imageLink String
 
-  doctorClinic          DoctorClinic?         @relation(fields: [doctorClinicId], references: [id],onDelete: Cascade)
-  doctorClinicId        Int?
+  doctorClinic   DoctorClinic? @relation(fields: [doctorClinicId], references: [id], onDelete: Cascade)
+  doctorClinicId Int?
 
-  trainerProfile        TrainerProfile?         @relation(fields: [trainerProfileId], references: [id],onDelete: Cascade)
-  trainerProfileId      Int?
+  trainerProfile   TrainerProfile? @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
+  trainerProfileId Int?
 
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model Certificate{
-  id                    Int                   @id @default(autoincrement())
+model Certificate {
+  id Int @id @default(autoincrement())
 
-  name                  String
-  
-  imageLink             String
+  name String
 
+  imageLink String
 
-  trainerProfile        TrainerProfile?         @relation(fields: [trainerProfileId], references: [id],onDelete: Cascade)
-  trainerProfileId      Int?
+  trainerProfile   TrainerProfile? @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
+  trainerProfileId Int?
 
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model DoctorClinic{
-  id                  Int                     @id @default(autoincrement())
-  name                String
-  description         String?
-  qualifications      String?
-  cost                Int?
-  slotDuration        Int?
-  address             String?
-  longitude           Decimal?
-  latitude            Decimal?
-  profileImage        String?
-  acceptanceStatus    AcceptanceStatus        @default(pending)
-  availableWeekDays   Json?
+model DoctorClinic {
+  id                Int              @id @default(autoincrement())
+  name              String
+  description       String?
+  qualifications    String?
+  cost              Int?
+  slotDuration      Int?
+  address           String?
+  longitude         Decimal?
+  latitude          Decimal?
+  profileImage      String?
+  acceptanceStatus  AcceptanceStatus @default(pending)
+  availableWeekDays Json?
 
-  availableDayHours   Json?   
+  availableDayHours Json?
 
-  rates               Rate[]
+  rates Rate[]
 
-  pictures            Picture[]
+  pictures Picture[]
 
-  addedByUserId             Int?
-  addedByUser               User?             @relation(fields: [addedByUserId], references: [id],onDelete: Cascade)
+  addedByUserId Int?
+  addedByUser   User? @relation(fields: [addedByUserId], references: [id], onDelete: Cascade)
 
-  region                    Region?           @relation(fields: [regionId], references: [id])
-  regionId                  Int?
+  region   Region? @relation(fields: [regionId], references: [id])
+  regionId Int?
 
-  doctorClinicSpecialization      DoctorClinicSpecialization? @relation(fields: [doctorClinicSpecializationId], references: [id])
-  doctorClinicSpecializationId    Int?
+  doctorClinicSpecialization   DoctorClinicSpecialization? @relation(fields: [doctorClinicSpecializationId], references: [id])
+  doctorClinicSpecializationId Int?
 
-  users               DoctorClinicsBookedHours[]
-  notAvailableDays    DoctorClinicNotAvailableDays[]
+  users            DoctorClinicsBookedHours[]
+  notAvailableDays DoctorClinicNotAvailableDays[]
 
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model DoctorClinicSpecialization{
-  id                    Int                   @id @default(autoincrement())
+model DoctorClinicSpecialization {
+  id Int @id @default(autoincrement())
 
-  name                String
+  name String
 
-  doctorClinc           DoctorClinic[]
+  doctorClinc DoctorClinic[]
 
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model FieldNotAvailableDays{
-  id                  Int                     @id @default(autoincrement())
-  dayDate             DateTime
+model FieldNotAvailableDays {
+  id      Int      @id @default(autoincrement())
+  dayDate DateTime
 
-  field               Field                   @relation(fields: [fieldId], references: [id])
-  fieldId             Int
+  field   Field @relation(fields: [fieldId], references: [id])
+  fieldId Int
 
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model DoctorClinicNotAvailableDays{
-  id                  Int                     @id @default(autoincrement())
-  dayDate             DateTime
+model DoctorClinicNotAvailableDays {
+  id      Int      @id @default(autoincrement())
+  dayDate DateTime
 
-    doctorClinic        DoctorClinic          @relation(fields: [doctorClinicId], references: [id])
-    doctorClinicId      Int
+  doctorClinic   DoctorClinic @relation(fields: [doctorClinicId], references: [id])
+  doctorClinicId Int
 
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model FieldsBookedHours{
-  id                  Int                    @id @default(autoincrement())
+model FieldsBookedHours {
+  id Int @id @default(autoincrement())
 
-  fromDateTime        DateTime
-  gmt                 Int                     @default(0)
-  
-  user                User                    @relation(fields: [userId], references: [id])
-  userId              Int
+  fromDateTime DateTime
+  gmt          Int      @default(0)
 
-  field               Field                   @relation(fields: [fieldId], references: [id])
-  fieldId             Int
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
 
-  createdAt           DateTime                @default(now())
-  updatedAt           DateTime                @default(now())
+  field   Field @relation(fields: [fieldId], references: [id])
+  fieldId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model DoctorClinicsBookedHours{
-  id                  Int                    @id @default(autoincrement())
+model DoctorClinicsBookedHours {
+  id Int @id @default(autoincrement())
 
-  fromDateTime                DateTime
-  gmt                 Int                   @default(0)
-  
-  user                User                  @relation(fields: [userId], references: [id])
-  userId              Int
+  fromDateTime DateTime
+  gmt          Int      @default(0)
 
-  doctorClinic        DoctorClinic          @relation(fields: [doctorClinicId], references: [id])
-  doctorClinicId      Int
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
 
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @default(now())
+  doctorClinic   DoctorClinic @relation(fields: [doctorClinicId], references: [id])
+  doctorClinicId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model Sport{
-  id                  Int                   @id @default(autoincrement())
+model Sport {
+  id Int @id @default(autoincrement())
 
-  name                String?
+  name String?
 
-  playerProfiles      PlayerProfileSports[]
-  trainerProfiles     TrainerProfileSports[]
-  fields              Field[]
+  playerProfiles  PlayerProfileSports[]
+  trainerProfiles TrainerProfileSports[]
+  fields          Field[]
 
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
-model Region{
-  id                    Int                 @id @default(autoincrement())
-  
-  name                  String?
+model Region {
+  id Int @id @default(autoincrement())
 
-  playerProfile         PlayerProfile[]
-  trainerProfile        TrainerProfile[]
-  fields                Field[]
-  doctorClinc           DoctorClinic[]
+  name String?
 
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @default(now())
+  playerProfile  PlayerProfile[]
+  trainerProfile TrainerProfile[]
+  fields         Field[]
+  doctorClinc    DoctorClinic[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 // model Internationalization{
@@ -598,3 +605,11 @@ model Region{
 
 //   createdAt             DateTime              @default(now())
 // }
+
+model CancellationReasons {
+  id             Int              @id @default(autoincrement())
+  name           String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @default(now())
+  SessionRequest SessionRequest[]
+}

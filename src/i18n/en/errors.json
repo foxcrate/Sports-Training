@@ -45,5 +45,12 @@
   "WRONG_PAGE_SIZE_ERROR": "Invalid page size value, Must be one of the allowed values",
   "WRONG_FILTER_TYPE": "Unknown filter type",
   "WRONG_DATE_FORMAT": "Wrong date format",
+  "NOT_FOUND_SESSION": "Not found required session",
+  "NOT_FOUND_CANCELLING_REASON": "Not found cancelling reason",
+  "NOT_ALLOWED_USER_SESSION": "User is not allowed to view this session",
+  "NOT_FOUND_SESSION_REQUEST": "Something wrong happened, Not found session request",
+  "NOT_ALLOWED_BOOKED_SESSION_STATUS": "Current booked session status prevent changing status",
+  "NOT_ALLOWED_TO_CHANGE_STATUS": "Session request current status is not allowing to change status",
+  "NOT_ALLOWED_TO_CANCEL_SESSION": "It is not allowed to cancel session at this time",
   "CANT_UPDATE_OR_DELETE_USED_SCHEDULE": "You can't update or delete this schedule for now, because it is used by an incoming session"
 }
