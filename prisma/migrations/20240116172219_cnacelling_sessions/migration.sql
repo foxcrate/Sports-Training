@@ -1,10 +1,10 @@
 -- AlterTable
-ALTER TABLE `sessionrequest` ADD COLUMN `canceledBy` ENUM('player', 'trainer') NULL,
+ALTER TABLE `SessionRequest` ADD COLUMN `canceledBy` ENUM('player', 'trainer') NULL,
     ADD COLUMN `cancellationReasonsId` INTEGER NULL,
     MODIFY `status` ENUM('pending', 'accepted', 'rejected', 'canceled') NOT NULL DEFAULT 'pending';
 
 -- AlterTable
-ALTER TABLE `trainerprofile` ADD COLUMN `defaultCancellationTime` INTEGER NULL;
+ALTER TABLE `TrainerProfile` ADD COLUMN `defaultCancellationTime` INTEGER NULL;
 
 -- CreateTable
 CREATE TABLE `CancellationReasons` (
