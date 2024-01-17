@@ -12,6 +12,7 @@
   "UPLOAD_IMAGE_ERROR": "Error in uploading image",
   "SENDING_NOTIFICATION_ERROR": "Error in sending notification",
   "RECORD_NOT_FOUND": "Record not found",
+  "PLAYER_PROFILE_NOT_FOUND": "Player Profile not found",
   "TRAINER_PROFILE_NOT_FOUND": "Trainer Profile not found",
   "SCHEDULE_NOT_FOUND": "Schedule not found",
   "AGE_GROUP_NOT_FOUND": "Age Group not found",
@@ -43,5 +44,6 @@
   "WRONG_PAGE_ERROR": "Invalid page value, Must be a positive integer greater than 0",
   "WRONG_PAGE_SIZE_ERROR": "Invalid page size value, Must be one of the allowed values",
   "WRONG_FILTER_TYPE": "Unknown filter type",
-  "WRONG_DATE_FORMAT": "Wrong date format"
+  "WRONG_DATE_FORMAT": "Wrong date format",
+  "CANT_UPDATE_OR_DELETE_USED_SCHEDULE": "You can't update or delete this schedule for now, because it is used by an incoming session"
 }

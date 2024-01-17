@@ -8,7 +8,7 @@ import { ScheduleCreateDto } from './dtos/create.dto';
 import { SlotDetailsDto } from './dtos/slot-details.dto';
 import * as moment from 'moment-timezone';
 import { ScheduleSlotsDTO } from './dtos/schedule-slots';
-import { RateSessionDto } from './dtos/rate-session.dto';
+import { SessionModel } from 'src/session/session.model';
 
 @Injectable()
 export class TrainerScheduleService {
@@ -17,6 +17,7 @@ export class TrainerScheduleService {
     private globalService: GlobalService,
     private readonly i18n: I18nService,
     private trainerProfileModel: TrainerProfileModel,
+    private sessionModel: SessionModel,
   ) {}
 
   async getAll(userId: number): Promise<ScheduleSlotsDetailsDTO[]> {
@@ -148,17 +149,17 @@ export class TrainerScheduleService {
     slotId: number,
   ) {
     await this.validateBookingTrainerSession(trainerProfileId, dayDate, slotId);
-    let trainerBookedSession = await this.scheduleModel.createTrainerBookedSession(
+    let trainerBookedSession = await this.sessionModel.createTrainerBookedSession(
       userId,
       dayDate,
       trainerProfileId,
       slotId,
     );
 
-    await this.scheduleModel.createNewSessionRequest(trainerBookedSession.id);
+    await this.sessionModel.createNewTrainerSessionRequest(trainerBookedSession.id);
     // send firebase notification
 
-    let trainerBookedSessionCard = await this.scheduleModel.getTrainerBookedSessionCard(
+    let trainerBookedSessionCard = await this.sessionModel.getTrainerBookedSessionCard(
       trainerBookedSession.id,
     );
 
@@ -180,43 +181,14 @@ export class TrainerScheduleService {
     };
   }
 
-  async trainerRateSession(userId: number, reqBody: RateSessionDto) {
-    // throw an error if trainerProfile don't exist
-    let theTrainerProfile = await this.trainerProfileModel.getByUserId(userId);
-
-    // throw error if session don't exist
-    let theSession = await this.scheduleModel.getBookedSessionBySessionId(
-      reqBody.sessionId,
-    );
-
-    await this.validateTrainerRatingSession(
-      theTrainerProfile.id,
-      theSession.trainerProfileId,
-    );
-    await this.scheduleModel.saveTrainerSessionRating(
-      theTrainerProfile.userId,
-      theSession.id,
-      reqBody.ratingNumber,
-      reqBody.feedback,
-    );
-    return true;
-  }
-
   // // private // //
 
   private async validateExistanceOfBookedSessionInSchedule(scheduleId: number) {
-    return true;
-    return await this.scheduleModel.getBookedSessionsByScheduleId(scheduleId);
-  }
-
-  private async validateTrainerRatingSession(
-    theTrainerProfileId: number,
-    sessionTrainerProfileId: number,
-  ) {
-    //check if this session is done by this trainer
-    if (sessionTrainerProfileId != theTrainerProfileId) {
+    let bookedSessions =
+      await this.sessionModel.getBookedSessionsByScheduleId(scheduleId);
+    if (bookedSessions) {
       throw new BadRequestException(
-        this.i18n.t(`errors.WRONG_TRAINER_SESSION_MIX`, {
+        this.i18n.t(`errors.CANT_UPDATE_OR_DELETE_USED_SCHEDULE`, {
           lang: I18nContext.current().lang,
         }),
       );
@@ -265,7 +237,7 @@ export class TrainerScheduleService {
   }
 
   private async checkBookedSlot(slotId: number, dayDate: string): Promise<boolean> {
-    let bookedSlot = await this.scheduleModel.getBookedSessionBySlotId(slotId, dayDate);
+    let bookedSlot = await this.sessionModel.getBookedSessionBySlotId(slotId, dayDate);
 
     if (bookedSlot) {
       return true;
