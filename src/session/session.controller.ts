@@ -13,8 +13,8 @@ import { AuthGuard } from 'src/guards/auth.guard';
 import { RoleGuard } from 'src/guards/role.guard';
 import { UserId } from 'src/decorators/user-id.decorator';
 import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
-import { RateSessionValidation } from './dtos/rate-session.validation';
-import { RateSessionDto } from './dtos/rate-session.dto';
+import { RateTrainerValidation } from './validations/rate-trainer.validation';
+import { RateTrainerDto } from './dtos/rate-trainer.dto';
 import { SessionService } from './session.service';
 import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 import { CancellingReasonDto } from './dtos/cancelling-reason.dto';
@@ -31,12 +31,12 @@ import { SessionTypeValidations } from './validations/session-type.validations';
 export class SessionController {
   constructor(private sessionService: SessionService) {}
 
-  @Post('/player-rate')
+  @Post('rate-trainer')
   async rateSession1(
-    @Body(new JoiValidation(RateSessionValidation)) reqBody: RateSessionDto,
+    @Body(new JoiValidation(RateTrainerValidation)) reqBody: RateTrainerDto,
     @UserId() userId: number,
   ) {
-    return await this.sessionService.playerRateSession(userId, reqBody);
+    return await this.sessionService.playerRateTrainer(userId, reqBody);
   }
 
   @Get('training-session/:sessionId')

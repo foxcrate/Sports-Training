@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { RateSessionDto } from './dtos/rate-session.dto';
+import { RateTrainerDto } from './dtos/rate-trainer.dto';
 import { SessionModel } from './session.model';
 import { PlayerProfileModel } from 'src/player-profile/player-profile.model';
 import { GlobalService } from 'src/global/global.service';
@@ -30,7 +30,7 @@ export class SessionService {
     private globalService: GlobalService,
   ) {}
 
-  async playerRateSession(userId: number, reqBody: RateSessionDto) {
+  async playerRateTrainer(userId: number, reqBody: RateTrainerDto) {
     // throw an error if playerProfile don't exist
     let thePlayerProfile = await this.playerProfileModel.getOneByUserId(userId);
     if (!thePlayerProfile) {
@@ -47,9 +47,9 @@ export class SessionService {
     );
 
     await this.validatePlayerRatingSession(thePlayerProfile.userId, theSession.userId);
-    await this.sessionModel.savePlayerSessionRating(
+    await this.sessionModel.savePlayerTrainerRating(
       thePlayerProfile.userId,
-      theSession.id,
+      theSession.trainerProfileId,
       reqBody.ratingNumber,
       reqBody.feedback,
     );

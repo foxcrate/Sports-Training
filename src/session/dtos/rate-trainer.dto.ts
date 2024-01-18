@@ -1,4 +1,4 @@
-export class RateSessionDto {
+export class RateTrainerDto {
   sessionId: number;
   ratingNumber: number;
   feedback: string;

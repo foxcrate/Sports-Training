@@ -64,9 +64,9 @@ export class SessionModel {
     return scheduleSessions;
   }
 
-  async savePlayerSessionRating(
+  async savePlayerTrainerRating(
     userId: number,
-    trainerBookedSessionId: number,
+    trainerProfileId: number,
     ratingNumber: number,
     feedback: string,
   ) {
@@ -74,7 +74,7 @@ export class SessionModel {
     INSERT INTO Rate
     (
       userId,
-      trainerBookedSessionId,
+      trainerProfileId,
       rateableType,
       ratingNumber,
       feedback,
@@ -83,8 +83,8 @@ export class SessionModel {
     VALUES
   (
     ${userId},
-    ${trainerBookedSessionId},
-    "session",
+    ${trainerProfileId},
+    "trainerProfile",
     ${ratingNumber},
     ${feedback},
     "player"
