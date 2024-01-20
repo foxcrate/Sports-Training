@@ -13,7 +13,7 @@ import { SessionModel } from 'src/session/session.model';
 @Injectable()
 export class TrainerScheduleService {
   constructor(
-    private scheduleModel: TrainerScheduleModel,
+    private trainerScheduleModel: TrainerScheduleModel,
     private globalService: GlobalService,
     private readonly i18n: I18nService,
     private trainerProfileModel: TrainerProfileModel,
@@ -24,7 +24,7 @@ export class TrainerScheduleService {
     //get user traienr profile
     let trainerProfile = await this.trainerProfileModel.getByUserId(userId);
 
-    return await this.scheduleModel.getAll(trainerProfile.id);
+    return await this.trainerScheduleModel.getAll(trainerProfile.id);
   }
 
   async getOne(
@@ -40,7 +40,7 @@ export class TrainerScheduleService {
     reqBody.slots = this.slotsTimeTo24(reqBody.slots);
     await this.validateCreateScheduleMonths(trainerProfile.id, reqBody);
     this.groupingAndValidatingScheduleSlots(reqBody.slots);
-    return await this.scheduleModel.create(timezone, trainerProfile.id, reqBody);
+    return await this.trainerScheduleModel.create(timezone, trainerProfile.id, reqBody);
   }
 
   async delete(
@@ -49,7 +49,7 @@ export class TrainerScheduleService {
     scheduleId: number,
   ): Promise<ScheduleSlotsDetailsDTO> {
     let theSchedule = await this.authorizeResource(timezone, userId, scheduleId);
-    return await this.scheduleModel.deleteByID(timezone, theSchedule.id);
+    return await this.trainerScheduleModel.deleteByID(timezone, theSchedule.id);
   }
 
   async update(
@@ -65,8 +65,7 @@ export class TrainerScheduleService {
       reqBody,
     );
     this.groupingAndValidatingScheduleSlots(reqBody.slots);
-    await this.validateExistanceOfBookedSessionInSchedule(scheduleId);
-    return await this.scheduleModel.update(timezone, schedule.id, reqBody);
+    return await this.trainerScheduleModel.update(timezone, schedule.id, reqBody);
   }
 
   async getTrainerFields(trainerProfileId: number) {
@@ -74,7 +73,7 @@ export class TrainerScheduleService {
   }
 
   async getTrainerFieldDaysForThisWeek(trainerProfileId: number, fieldId: number) {
-    let trainerFieldSlots: any = await this.scheduleModel.getTrainerFieldSlots(
+    let trainerFieldSlots: any = await this.trainerScheduleModel.getTrainerFieldSlots(
       trainerProfileId,
       fieldId,
     );
@@ -106,7 +105,7 @@ export class TrainerScheduleService {
     fieldId: number,
     dayDate: string,
   ) {
-    let trainerFieldSlots: any = await this.scheduleModel.getTrainerFieldSlots(
+    let trainerFieldSlots: any = await this.trainerScheduleModel.getTrainerFieldSlots(
       trainerProfileId,
       fieldId,
     );
@@ -183,26 +182,14 @@ export class TrainerScheduleService {
 
   // // private // //
 
-  private async validateExistanceOfBookedSessionInSchedule(scheduleId: number) {
-    let bookedSessions =
-      await this.sessionModel.getBookedSessionsByScheduleId(scheduleId);
-    if (bookedSessions) {
-      throw new BadRequestException(
-        this.i18n.t(`errors.CANT_UPDATE_OR_DELETE_USED_SCHEDULE`, {
-          lang: I18nContext.current().lang,
-        }),
-      );
-    }
-  }
-
   private async validateBookingTrainerSession(
     trainerProfileId: number,
     dayDate: string,
     slotId: number,
   ) {
-    let theSlot = await this.scheduleModel.getSlotById(slotId);
-    let theSchedule = await this.scheduleModel.getByID(null, theSlot.scheduleId);
-    let trainerFieldSlots: any = await this.scheduleModel.getTrainerFieldSlots(
+    let theSlot = await this.trainerScheduleModel.getSlotById(slotId);
+    let theSchedule = await this.trainerScheduleModel.getByID(null, theSlot.scheduleId);
+    let trainerFieldSlots: any = await this.trainerScheduleModel.getTrainerFieldSlots(
       trainerProfileId,
       theSlot.fieldId,
     );
@@ -362,7 +349,7 @@ export class TrainerScheduleService {
     userId: number,
     scheduleId: number,
   ): Promise<ScheduleSlotsDetailsDTO> {
-    let schedule = await this.scheduleModel.getByID(timezone, scheduleId);
+    let schedule = await this.trainerScheduleModel.getByID(timezone, scheduleId);
 
     let schedulesIds = await this.trainerProfileModel.getSchedulesIds(userId);
 
@@ -380,7 +367,7 @@ export class TrainerScheduleService {
   ) {
     //get all trainer schedule months
     let allTrainerSchedulesMonths =
-      await this.scheduleModel.allTrainerSchedulesMonths(trainerProfileId);
+      await this.trainerScheduleModel.allTrainerSchedulesMonths(trainerProfileId);
 
     //check intersecting months
 
@@ -404,7 +391,7 @@ export class TrainerScheduleService {
   ) {
     //get all trainer schedule months except the desired update schedule
     let allTrainerSchedulesMonthsExceptOne =
-      await this.scheduleModel.allTrainerSchedulesMonthsExceptOne(
+      await this.trainerScheduleModel.allTrainerSchedulesMonthsExceptOne(
         scheduleId,
         trainerProfileId,
       );

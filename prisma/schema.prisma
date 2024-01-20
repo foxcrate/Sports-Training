@@ -245,8 +245,8 @@ model Slot {
   weekDayNumber Int?
   weekDayName   String?
 
-  Schedule   Schedule @relation(fields: [scheduleId], references: [id])
-  scheduleId Int
+  Schedule   Schedule? @relation(fields: [scheduleId], references: [id],onDelete: SetNull)
+  scheduleId Int?
 
   field   Field? @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   fieldId Int?
