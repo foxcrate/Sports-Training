@@ -177,7 +177,7 @@ model TrainerProfile {
 
   cost Int? @default(200)
 
-  hoursPriorToBooking Int? @default(8)
+  hoursPriorToBooking Int? @default(24)
 
   rates Rate[]
 
