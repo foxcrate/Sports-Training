@@ -8,8 +8,9 @@ export class ReturnTrainerProfileDto {
   id: number;
   level: Level;
   ageGroupId: number;
-  cost: number;
   sessionDescription: String;
+  cost: number;
+  hoursPriorToBooking: number;
   userId: number;
   createdAt: number;
 }

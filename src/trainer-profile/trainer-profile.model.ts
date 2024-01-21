@@ -30,6 +30,7 @@ export class TrainerProfileModel {
       ageGroupId,
       cost,
       sessionDescription,
+      hoursPriorToBooking,
       userId,
       createdAt
     FROM TrainerProfile AS tp
@@ -56,6 +57,7 @@ export class TrainerProfileModel {
       ageGroupId,
       cost,
       sessionDescription,
+      hoursPriorToBooking,
       userId,
       createdAt
     FROM TrainerProfile AS tp
@@ -170,6 +172,7 @@ export class TrainerProfileModel {
       'name', ag.name)
     END AS ageGroup,
     tp.cost AS cost,
+    tp.hoursPriorToBooking AS hoursPriorToBooking,
     tp.sessionDescription AS sessionDescription,
     tp.regionId AS regionId,
     tp.userId AS userId,
@@ -192,6 +195,7 @@ export class TrainerProfileModel {
     tpws.trainerProfileId AS id,
     tpws.level AS level,
     tpws.cost AS cost,
+    tpws.hoursPriorToBooking AS hoursPriorToBooking,
     tpws.ageGroup AS ageGroup,
     tpws.sessionDescription AS sessionDescription,
     CASE 
@@ -277,6 +281,7 @@ export class TrainerProfileModel {
       ageGroupId,
       sessionDescription,
       cost,
+      hoursPriorToBooking,
       regionId,
       userId
     )
@@ -286,6 +291,7 @@ export class TrainerProfileModel {
       ${createData.ageGroupId},
       ${createData.sessionDescription},
       ${createData.cost},
+      ${createData.hoursPriorToBooking},
       ${createData.regionId},
       ${userId}
     )
@@ -328,11 +334,12 @@ export class TrainerProfileModel {
     await this.prisma.$queryRaw`
       UPDATE TrainerProfile
       SET
-      level = ${createData.level},
-      ageGroupId = ${createData.ageGroupId},
-      sessionDescription = ${createData.sessionDescription},
-      cost = ${createData.cost},
-      regionId = ${createData.regionId}
+      level = IFNULL(${createData.level},level),
+      ageGroupId = IFNULL(${createData.ageGroupId},ageGroupId),
+      sessionDescription = IFNULL(${createData.sessionDescription},sessionDescription),
+      cost = IFNULL(${createData.cost},cost),
+      hoursPriorToBooking = IFNULL(${createData.hoursPriorToBooking},hoursPriorToBooking),
+      regionId = IFNULL(${createData.regionId},regionId)
       WHERE
       userId = ${userId};
     `;

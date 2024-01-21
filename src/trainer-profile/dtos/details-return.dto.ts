@@ -10,8 +10,9 @@ export class ReturnTrainerProfileDetailsDto {
   id: number;
   level: Level;
   ageGroupId: number;
-  cost: number;
   sessionDescription: String;
+  cost: number;
+  hoursPriorToBooking: number;
   region: {};
   sports: number[];
   fields: number[];

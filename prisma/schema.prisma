@@ -175,7 +175,9 @@ model TrainerProfile {
 
   sessionDescription String?
 
-  cost Int?
+  cost Int? @default(200)
+
+  hoursPriorToBooking Int? @default(8)
 
   rates Rate[]
 
