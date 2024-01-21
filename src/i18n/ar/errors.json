@@ -52,5 +52,7 @@
   "NOT_ALLOWED_BOOKED_SESSION_STATUS": "الحالة الحالية لحجز الجلسة تمنع تغيير الحالة",
   "NOT_ALLOWED_TO_CHANGE_STATUS": "الحالة الحالية لطلب الجلسة لا يسمح بتغيير الحالة",
   "NOT_ALLOWED_TO_CANCEL_SESSION": "لا يمكنك إلغاء الجلسة في الوقت الحالي",
+  "TRAINER_ALREADY_HAS_SCHEDULE": "المدرب يملك جدول بالفعل",
+  "TRAINER_HAS_NO_SCHEDULE":"المدرب لا يملك جدول",
   "CANT_UPDATE_OR_DELETE_USED_SCHEDULE": "لا يمكنك مسح أو تعديل جدول المدرب الأن, لإنه مستخدم لحجز حصة قادمة"
 }

@@ -274,7 +274,7 @@ model Month {
 model SchedulesMonths {
   id Int @id @default(autoincrement())
 
-  schedule   Schedule @relation(fields: [scheduleId], references: [id])
+  schedule   Schedule @relation(fields: [scheduleId], references: [id],onDelete: Cascade)
   scheduleId Int
 
   month   Month @relation(fields: [monthId], references: [id])

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { GlobalService } from 'src/global/global.service';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -94,6 +94,26 @@ export class TrainerScheduleModel {
     schedule.ScheduleSlots = this.timezonedSlots(timezone, schedule.ScheduleSlots);
     return schedule;
   }
+
+  async getTrainerScheduleId(trainerProfileId: number): Promise<number> {
+    let TheSchedule = await this.prisma.$queryRaw`
+      SELECT
+      id
+      FROM
+      Schedule
+      WHERE
+      trainerProfileId = ${trainerProfileId}
+    `;
+
+    if (!TheSchedule[0]) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.TRAINER_HAS_NO_SCHEDULE`, { lang: I18nContext.current().lang }),
+      );
+    }
+
+    return TheSchedule[0].id;
+  }
+
 
   async create(
     timezone,

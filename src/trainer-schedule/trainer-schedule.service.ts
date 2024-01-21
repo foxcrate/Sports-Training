@@ -37,6 +37,14 @@ export class TrainerScheduleService {
 
   async create(timezone, userId: number, reqBody: ScheduleCreateDto): Promise<any> {
     let trainerProfile = await this.trainerProfileModel.getByUserId(userId);
+    ///////// Temproray, Trainer has one schedule /////////
+    let trainerSchedules = await this.getAll(trainerProfile.id);
+    if(trainerSchedules.length == 1){
+      throw new BadRequestException(
+        this.i18n.t(`errors.TRAINER_ALREADY_HAS_SCHEDULE`, { lang: I18nContext.current().lang }),
+      );
+    }
+    //////////
     reqBody.slots = this.slotsTimeTo24(reqBody.slots);
     await this.validateCreateScheduleMonths(trainerProfile.id, reqBody);
     this.groupingAndValidatingScheduleSlots(reqBody.slots);

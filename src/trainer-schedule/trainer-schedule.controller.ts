@@ -19,10 +19,16 @@ import { ScheduleIdValidation } from './validations/scheduleId.validation';
 import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { AddScheduleValidation } from './validations/create.validation';
 import { UserId } from 'src/decorators/user-id.decorator';
+import { TrainerScheduleModel } from './trainer-schedule.model';
+import { TrainerProfileModel } from 'src/trainer-profile/trainer-profile.model';
 
 @Controller('trainer-schedule')
 export class TrainerScheduleController {
-  constructor(private scheduleService: TrainerScheduleService) {}
+  constructor(
+      private scheduleService: TrainerScheduleService,
+      private trainerScheduleModel: TrainerScheduleModel,
+      private trainerProfileModel: TrainerProfileModel,
+    ) {}
 
   @Get()
   @Version('1')
@@ -52,6 +58,18 @@ export class TrainerScheduleController {
     @Body(new JoiValidation(AddScheduleValidation)) reqBody,
     @Request() req: ExpressRequest,
   ) {
+    ///////// Temproray, Trainer has one schedule /////////
+    if(params.id == 0){
+      let trainerProfile = await this.trainerProfileModel.getByUserId(req['id'])
+      params.id = await this.trainerScheduleModel.getTrainerScheduleId(trainerProfile.id)
+      return await this.scheduleService.update(
+        req['timezone'],
+        req['id'],
+        params.id,
+        reqBody,
+      );
+    }
+    //////////
     return await this.scheduleService.update(
       req['timezone'],
       req['id'],
@@ -68,6 +86,13 @@ export class TrainerScheduleController {
     @Param(new JoiValidation(ScheduleIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {
+    ///////// Temproray, Trainer has one schedule /////////
+    if(params.id == 0){
+      let trainerProfile = await this.trainerProfileModel.getByUserId(req['id'])
+      params.id = await this.trainerScheduleModel.getTrainerScheduleId(trainerProfile.id)
+      return await this.scheduleService.delete(req['timezone'], req['id'], params.id);
+    }
+    //////////
     return await this.scheduleService.delete(req['timezone'], req['id'], params.id);
   }
 
@@ -79,6 +104,13 @@ export class TrainerScheduleController {
     @Param(new JoiValidation(ScheduleIdValidation)) params,
     @Request() req: ExpressRequest,
   ) {
+    ///////// Temproray, Trainer has one schedule /////////
+    if(params.id == 0){
+      let trainerProfile = await this.trainerProfileModel.getByUserId(req['id'])
+      params.id = await this.trainerScheduleModel.getTrainerScheduleId(trainerProfile.id)
+      return await this.scheduleService.getOne(req['timezone'], req['id'], params.id);
+    }
+    //////////
     return await this.scheduleService.getOne(req['timezone'], req['id'], params.id);
   }
 }
