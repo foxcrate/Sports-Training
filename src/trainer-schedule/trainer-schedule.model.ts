@@ -63,6 +63,13 @@ export class TrainerScheduleModel {
     )
     SELECT
     swm.id,swm.trainerProfileId,swm.scheduleMonths,
+    (
+      SELECT
+      cost
+      FROM
+      TrainerProfile
+      WHERE id = swm.trainerProfileId
+    ) AS trainerDefaultSlotCost,
     CASE
     WHEN COUNT(sl.id ) = 0 THEN null
     ELSE
@@ -107,13 +114,14 @@ export class TrainerScheduleModel {
 
     if (!TheSchedule[0]) {
       throw new BadRequestException(
-        this.i18n.t(`errors.TRAINER_HAS_NO_SCHEDULE`, { lang: I18nContext.current().lang }),
+        this.i18n.t(`errors.TRAINER_HAS_NO_SCHEDULE`, {
+          lang: I18nContext.current().lang,
+        }),
       );
     }
 
     return TheSchedule[0].id;
   }
-
 
   async create(
     timezone,
@@ -382,6 +390,8 @@ export class TrainerScheduleModel {
   }
 
   private async savingNewScheduleSlots(scheduleId: number, slotsArray: SlotDetailsDto[]) {
+    let theSchedule = await this.getByID(null, scheduleId);
+
     let momentDate = moment();
     let date = momentDate.format('YYYY-MM-DD');
     if (slotsArray.length == 0) {
@@ -393,7 +403,7 @@ export class TrainerScheduleModel {
         slotsArray[i].name,
         moment(`${date}T${slotsArray[i].fromTime}`).utc().format('HH:mmZ'),
         moment(`${date}T${slotsArray[i].toTime}`).utc().format('HH:mmZ'),
-        slotsArray[i].cost,
+        slotsArray[i].cost ? slotsArray[i].cost : theSchedule.trainerDefaultSlotCost,
         slotsArray[i].weekDayNumber,
         // slotsArray[i].weekDayName,
         this.globalSerice.getDayNameByNumber(slotsArray[i].weekDayNumber),

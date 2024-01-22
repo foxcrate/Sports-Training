@@ -4,11 +4,14 @@ import { ReturnTrainerProfileDto } from './dtos/return.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { TrainerProfileModel } from './trainer-profile.model';
 import { ReturnTrainerProfileDetailsDto } from './dtos/details-return.dto';
+import { TrainerScheduleModel } from 'src/trainer-schedule/trainer-schedule.model';
 
 @Injectable()
 export class TrainerProfileService {
   constructor(
     private trainerProfileModel: TrainerProfileModel,
+    private trainerScheduleModel: TrainerScheduleModel,
+
     private readonly i18n: I18nService,
   ) {}
 
@@ -83,7 +86,7 @@ export class TrainerProfileService {
       ),
       await this.trainerProfileModel.deletePastNotAvailableDays(deletedTrainerProfile.id),
       await this.trainerProfileModel.deletePastBookedSessions(deletedTrainerProfile.id),
-      await this.trainerProfileModel.deletePastSchedules(deletedTrainerProfile.id),
+      await this.trainerScheduleModel.deleteByTrainerProfileId(deletedTrainerProfile.id),
     ]);
     // await this.trainerProfileModel.deletePastTrainerSports(deletedTrainerProfile.id);
     // await this.trainerProfileModel.deletePastTrainerFields(deletedTrainerProfile.id);

@@ -17,7 +17,6 @@ export class TrainerProfileModel {
     private prisma: PrismaService,
     private readonly i18n: I18nService,
     private sportService: SportService,
-    private trainerScheduleModel: TrainerScheduleModel,
     private globalService: GlobalService,
     private globalModel: GlobalModel,
   ) {}
@@ -473,10 +472,6 @@ export class TrainerProfileModel {
   // async deletePastBookedSession(trainerProfileId: number) {
 
   // }
-
-  async deletePastSchedules(trainerProfileId: number) {
-    await this.trainerScheduleModel.deleteByTrainerProfileId(trainerProfileId);
-  }
 
   async deletePastBookedSessions(trainerProfileId: number) {
     // delete booked sessions requests

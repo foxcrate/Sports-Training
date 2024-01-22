@@ -4,5 +4,6 @@ export class ScheduleSlotsDetailsDTO {
   id: number;
   trainerProfileId: number;
   scheduleMonths: number[];
+  trainerDefaultSlotCost: number;
   ScheduleSlots: SlotDetailsDto[];
 }
