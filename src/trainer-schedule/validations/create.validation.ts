@@ -3,7 +3,7 @@ import * as Joi from 'joi';
 export const AddScheduleValidation = Joi.object({
   slots: Joi.array()
     .items({
-      name: Joi.string().required(),
+      name: Joi.string(),
       fromTime: Joi.string()
         .regex(/^([0-9]{2})\:([0-9]{2})( [AaPp][Mm])?$/)
         .required(),
@@ -30,5 +30,5 @@ export const AddScheduleValidation = Joi.object({
   months: Joi.array()
     .items(Joi.number().valid(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12))
     .required()
-    .min(1)
+    .min(1),
 });

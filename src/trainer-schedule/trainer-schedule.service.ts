@@ -135,6 +135,7 @@ export class TrainerScheduleService {
         if (!(await this.checkBookedSlot(availableSlotsForDay[i].id, dayDate))) {
           returnSlots.push({
             slotId: availableSlotsForDay[i].id,
+            status: false,
             fromTime: moment(`${dayDate}T${availableSlotsForDay[i].fromTime}`).format(
               'hh:mm A',
             ),
@@ -158,7 +159,8 @@ export class TrainerScheduleService {
     dayDate: string,
     slotId: number,
   ) {
-    await this.validateBookingTrainerSession(trainerProfileId, dayDate, slotId);
+    await this.validateBookingTrainerSession(userId, trainerProfileId, dayDate, slotId);
+
     let trainerBookedSession = await this.sessionModel.createTrainerBookedSession(
       userId,
       dayDate,
@@ -194,21 +196,45 @@ export class TrainerScheduleService {
   // // private // //
 
   private async validateBookingTrainerSession(
+    userId: number,
     trainerProfileId: number,
     dayDate: string,
     slotId: number,
   ) {
     let theSlot = await this.trainerScheduleModel.getSlotById(slotId);
+    let theTrainerProfile = await this.trainerProfileModel.getByID(trainerProfileId);
     let theSchedule = await this.trainerScheduleModel.getByID(null, theSlot.scheduleId);
     let trainerFieldSlots: any = await this.trainerScheduleModel.getTrainerFieldSlots(
       trainerProfileId,
       theSlot.fieldId,
     );
 
+    // check different player and trainer
+    if (userId === theTrainerProfile.userId) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.SAME_PLAYER_TRAINER_PROFILE_OWNER`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
     // check not available days
     if (!this.checkNotAvailableDays(dayDate, trainerFieldSlots?.notAvailableDays)) {
       throw new BadRequestException(
         this.i18n.t(`errors.DAY_NOT_AVAILABLE`, { lang: I18nContext.current().lang }),
+      );
+    }
+
+    // validate trainer's hoursPriorToBooking
+
+    let timeNow = moment();
+    let bookingTime = moment(`${dayDate}T${theSlot.fromTime}`);
+
+    var durationInHours = moment.duration(bookingTime.diff(timeNow)).asHours();
+
+    if (durationInHours < theTrainerProfile.hoursPriorToBooking) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.LATE_BOOKING_TIME`, { lang: I18nContext.current().lang }),
       );
     }
 

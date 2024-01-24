@@ -53,6 +53,8 @@
   "NOT_ALLOWED_TO_CHANGE_STATUS": "Session request current status is not allowing to change status",
   "NOT_ALLOWED_TO_CANCEL_SESSION": "It is not allowed to cancel session at this time",
   "TRAINER_ALREADY_HAS_SCHEDULE": "Trainer already has a schedule",
-  "TRAINER_HAS_NO_SCHEDULE":"Trainer has no schedule",
+  "TRAINER_HAS_NO_SCHEDULE": "Trainer has no schedule",
+  "LATE_BOOKING_TIME": "You are late to book with this trainer",
+  "SAME_PLAYER_TRAINER_PROFILE_OWNER": "The player profile and trainer profile belong to the same user",
   "CANT_UPDATE_OR_DELETE_USED_SCHEDULE": "You can't update or delete this schedule for now, because it is used by an incoming session"
 }

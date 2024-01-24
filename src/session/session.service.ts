@@ -239,7 +239,10 @@ export class SessionService {
         }),
       );
     }
-    if (foundSession.bookedSessionStatus !== SESSIONS_STATUSES_ENUM.NOT_ACTIVE) {
+    if (
+      foundSession.bookedSessionStatus == SESSIONS_STATUSES_ENUM.COMPLETED ||
+      foundSession.bookedSessionStatus == SESSIONS_STATUSES_ENUM.CANCELED
+    ) {
       throw new BadRequestException(
         this.i18n.t(`errors.NOT_ALLOWED_BOOKED_SESSION_STATUS`, {
           lang: I18nContext.current().lang,
@@ -266,7 +269,10 @@ export class SessionService {
         }),
       );
     }
-    if (foundSession.bookedSessionStatus !== SESSIONS_STATUSES_ENUM.NOT_ACTIVE) {
+    if (
+      foundSession.bookedSessionStatus == SESSIONS_STATUSES_ENUM.COMPLETED ||
+      foundSession.bookedSessionStatus == SESSIONS_STATUSES_ENUM.CANCELED
+    ) {
       throw new BadRequestException(
         this.i18n.t(`errors.NOT_ALLOWED_BOOKED_SESSION_STATUS`, {
           lang: I18nContext.current().lang,
@@ -317,7 +323,7 @@ export class SessionService {
       this.getCoachingSession(userId, sessionId),
       this.sessionModel.updateCoachSessionStatus(
         coachBookedSessionId,
-        SESSIONS_STATUSES_ENUM.ACTIVE,
+        SESSIONS_STATUSES_ENUM.UPCOMING,
         sessionRequestId,
         SESSION_REQUEST_STATUSES_ENUM.ACCEPTED,
       ),
@@ -346,7 +352,7 @@ export class SessionService {
       this.getCoachingSession(userId, sessionId),
       this.sessionModel.updateSetReasonCoachSessionStatus(
         coachBookedSessionId,
-        SESSIONS_STATUSES_ENUM.NOT_ACTIVE,
+        SESSIONS_STATUSES_ENUM.CANCELED,
         sessionRequestId,
         SESSION_REQUEST_STATUSES_ENUM.CANCELED,
         validCancellingReason.id,
@@ -371,7 +377,7 @@ export class SessionService {
       this.getCoachingSession(userId, sessionId),
       this.sessionModel.updateCoachSessionStatus(
         bookedSessionId,
-        SESSIONS_STATUSES_ENUM.NOT_ACTIVE,
+        SESSIONS_STATUSES_ENUM.CANCELED,
         sessionRequestId,
         SESSION_REQUEST_STATUSES_ENUM.CANCELED,
         CANCELED_BY_ENUM.PLAYER,

@@ -35,8 +35,9 @@ export enum PROFILE_TYPES_ENUM {
 }
 
 export enum SESSIONS_STATUSES_ENUM {
-  ACTIVE = 'active',
-  NOT_ACTIVE = 'notActive',
+  UPCOMING = 'upcoming',
+  COMPLETED = 'completed',
+  CANCELED = 'canceled',
 }
 
 export enum SESSION_REQUEST_STATUSES_ENUM {

@@ -5,6 +5,7 @@ import { Prisma } from '@prisma/client';
 import { BookedSessionDTO } from './dtos/booked-session.dto';
 import { SessionCardDTO } from './dtos/session-card.dto';
 import { UserSessionDataDto } from './dtos/user-session-data.dto';
+import { SESSIONS_STATUSES_ENUM } from 'src/global/enums';
 
 @Injectable()
 export class SessionModel {
@@ -22,7 +23,7 @@ export class SessionModel {
       FROM TrainerBookedSession
       WHERE slotId = ${slotId}
       AND date = ${dayDate}
-      AND status = 'active'
+      AND status = ${SESSIONS_STATUSES_ENUM.UPCOMING}
     `;
     return TheBookedSlot[0];
   }
@@ -32,7 +33,7 @@ export class SessionModel {
       SELECT *
       FROM TrainerBookedSession
       WHERE id = ${sessionId}
-      AND status = 'active'
+      AND status = ${SESSIONS_STATUSES_ENUM.UPCOMING}
     `;
     if (!theSession[0]) {
       throw new NotFoundException(
@@ -59,7 +60,7 @@ export class SessionModel {
     WHERE
     TrainerBookedSession.slotId IN (SELECT slotsIds FROM ScheduleSlotsIds)
     AND
-    TrainerBookedSession.status = 'active'
+    TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.UPCOMING}
     `;
     return scheduleSessions;
   }
@@ -181,7 +182,7 @@ export class SessionModel {
         ${dayDate},
         ${trainerProfileId},
         ${slotId},
-        'active'
+        ${SESSIONS_STATUSES_ENUM.UPCOMING}
       )`,
         this.prisma.$queryRaw`
         SELECT
