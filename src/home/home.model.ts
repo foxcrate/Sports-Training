@@ -51,7 +51,7 @@ export class HomeModel {
         tp.acceptanceStatus = '${ACCEPTANCE_STATUSES_ENUM.ACCEPTED}'
      */
     if (filters.name) {
-      sql += ` AND tp.name LIKE '%${filters.name}%' `;
+      sql += ` AND u.firstName LIKE '%${filters.name}%' `;
     }
     if (filters.area) {
       sql += ` AND tp.regionId = ${filters.area} `;
