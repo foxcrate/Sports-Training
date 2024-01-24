@@ -112,7 +112,7 @@ export class CalendarModel {
             LEFT JOIN User u ON tp.userId = u.id
             LEFT JOIN Slot ON Slot.id = tbs.slotId
           WHERE
-            tbs.status = '${SESSIONS_STATUSES_ENUM.ACTIVE}'
+            tbs.status = '${SESSIONS_STATUSES_ENUM.UPCOMING}'
             AND tbs.userId = ${userId} 
         `;
         if (date) {
