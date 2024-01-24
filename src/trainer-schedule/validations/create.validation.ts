@@ -10,7 +10,7 @@ export const AddScheduleValidation = Joi.object({
       toTime: Joi.string()
         .regex(/^([0-9]{2})\:([0-9]{2})( [AaPp][Mm])?$/)
         .required(),
-      cost: Joi.number().required(),
+      cost: Joi.number(),
       weekDayNumber: Joi.number().valid(0, 1, 2, 3, 4, 5, 6).required(),
       // weekDayName: Joi.string()
       //   .valid(
