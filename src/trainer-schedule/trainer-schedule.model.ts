@@ -10,6 +10,9 @@ import * as moment from 'moment-timezone';
 import { SlotDetailsDto } from './dtos/slot-details.dto';
 import { FieldReturnDto } from 'src/field/dtos/return.dto';
 import { ReturnTrainerProfileDto } from 'src/trainer-profile/dtos/return.dto';
+import { SESSIONS_STATUSES_ENUM } from 'src/global/enums';
+import { UserSlotState } from './dtos/user-slot-state.dto';
+import { TrainerFieldSlots } from './dtos/trainer-field-slots.dto';
 
 @Injectable()
 export class TrainerScheduleModel {
@@ -102,27 +105,6 @@ export class TrainerScheduleModel {
     return schedule;
   }
 
-  async getTrainerScheduleId(trainerProfileId: number): Promise<number> {
-    let TheSchedule = await this.prisma.$queryRaw`
-      SELECT
-      id
-      FROM
-      Schedule
-      WHERE
-      trainerProfileId = ${trainerProfileId}
-    `;
-
-    if (!TheSchedule[0]) {
-      throw new BadRequestException(
-        this.i18n.t(`errors.TRAINER_HAS_NO_SCHEDULE`, {
-          lang: I18nContext.current().lang,
-        }),
-      );
-    }
-
-    return TheSchedule[0].id;
-  }
-
   async create(
     timezone,
     trainerProfileId: number,
@@ -161,7 +143,11 @@ export class TrainerScheduleModel {
     return await this.getByID(timezone, newSchedule.id);
   }
 
-  async update(timezone, scheduleId: number, reqBody: ScheduleCreateDto) {
+  async update(
+    timezone,
+    scheduleId: number,
+    reqBody: ScheduleCreateDto,
+  ): Promise<ScheduleSlotsDetailsDTO> {
     let theSchedule = await this.getByID(timezone, scheduleId);
 
     Promise.all([
@@ -196,6 +182,30 @@ export class TrainerScheduleModel {
     WHERE id = ${id}
   `;
     return deletedSchedle;
+  }
+
+  async getUserBookedTimes(userId: number): Promise<UserSlotState[]> {
+    let userBookedSlots = await this.prisma.$queryRaw`
+    SELECT
+    CASE WHEN COUNT(Slot.id ) = 0 THEN null
+      ELSE
+      JSON_ARRAYAGG(JSON_OBJECT(
+        'slotId',Slot.id,
+        'fromTime', Slot.fromTime,
+        'toTime',Slot.toTime
+        'status',True,
+        ))
+      END AS times
+    FROM
+    TrainerBookedSession
+    left join Slot on TrainerBookedSession.slotId = Slot.id
+    where
+    userId = ${userId}
+    and
+    status = ${SESSIONS_STATUSES_ENUM.UPCOMING}
+    `;
+
+    return userBookedSlots[0].times ? userBookedSlots[0].times : [];
   }
 
   async deleteByTrainerProfileId(trainerProfileId: number) {
@@ -250,7 +260,10 @@ export class TrainerScheduleModel {
     return allSchedulesMonths[0].months;
   }
 
-  async getTrainerFieldSlots(trainerProfileId: number, fieldId: number) {
+  async getTrainerFieldSlots(
+    trainerProfileId: number,
+    fieldId: number,
+  ): Promise<TrainerFieldSlots> {
     await this.checkTrainerProfileExistence(trainerProfileId);
     await this.checkFieldExistence(fieldId);
     let trainerFieldSlots = await this.prisma.$queryRaw`
@@ -326,7 +339,7 @@ export class TrainerScheduleModel {
     return trainerFieldSlots[0];
   }
 
-  async getSlotById(slotId): Promise<SlotDetailsDto> {
+  async getSlotById(slotId: number): Promise<SlotDetailsDto> {
     let theSlot = await this.prisma.$queryRaw`
       SELECT *
       FROM Slot
@@ -340,7 +353,28 @@ export class TrainerScheduleModel {
     return theSlot[0];
   }
 
-  private async checkTrainerProfileExistence(trainerProfileId: number) {
+  async getTrainerScheduleId(trainerProfileId: number): Promise<number> {
+    let TheSchedule = await this.prisma.$queryRaw`
+      SELECT
+      id
+      FROM
+      Schedule
+      WHERE
+      trainerProfileId = ${trainerProfileId}
+    `;
+
+    if (!TheSchedule[0]) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.TRAINER_HAS_NO_SCHEDULE`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
+    return TheSchedule[0].id;
+  }
+
+  private async checkTrainerProfileExistence(trainerProfileId: number): Promise<boolean> {
     let foundedTrainerProfile: ReturnTrainerProfileDto = await this.prisma.$queryRaw`
     SELECT *
     FROM TrainerProfile
@@ -357,7 +391,7 @@ export class TrainerScheduleModel {
     return true;
   }
 
-  private async checkFieldExistence(fieldId: number) {
+  private async checkFieldExistence(fieldId: number): Promise<boolean> {
     let foundedField: FieldReturnDto = await this.prisma.$queryRaw`
     SELECT *
     FROM Field
@@ -405,7 +439,6 @@ export class TrainerScheduleModel {
         moment(`${date}T${slotsArray[i].toTime}`).utc().format('HH:mmZ'),
         slotsArray[i].cost ? slotsArray[i].cost : theSchedule.trainerDefaultSlotCost,
         slotsArray[i].weekDayNumber,
-        // slotsArray[i].weekDayName,
         this.globalSerice.getDayNameByNumber(slotsArray[i].weekDayNumber),
         slotsArray[i].fieldId,
         scheduleId,
@@ -437,7 +470,7 @@ export class TrainerScheduleModel {
 
   private async deleteNotBookedScheduleSlots(scheduleId: number) {
     //get schedule slot ids
-    let allSlotsIds: any[] = await this.prisma.$queryRaw`
+    let allSlotsIds = await this.prisma.$queryRaw`
     SELECT
     JSON_ARRAYAGG(id) as ids
     FROM
@@ -472,7 +505,7 @@ export class TrainerScheduleModel {
     }
   }
 
-  private timezonedSlots(timezone, scheduleSlots: []) {
+  private timezonedSlots(timezone, scheduleSlots: []): SlotDetailsDto[] {
     if (timezone == null) {
       timezone = 'Africa/Cairo';
     }

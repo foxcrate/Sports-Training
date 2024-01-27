@@ -9,6 +9,9 @@ import { SlotDetailsDto } from './dtos/slot-details.dto';
 import * as moment from 'moment-timezone';
 import { ScheduleSlotsDTO } from './dtos/schedule-slots';
 import { SessionModel } from 'src/session/session.model';
+import { UserSlotState } from './dtos/user-slot-state.dto';
+import { SessionCardDTO } from 'src/session/dtos/session-card.dto';
+import { SimplifiedFieldReturn } from 'src/field/dtos/field-simplified-return.dto';
 
 @Injectable()
 export class TrainerScheduleService {
@@ -79,12 +82,15 @@ export class TrainerScheduleService {
     return await this.trainerScheduleModel.update(timezone, schedule.id, reqBody);
   }
 
-  async getTrainerFields(trainerProfileId: number) {
+  async getTrainerFields(trainerProfileId: number): Promise<SimplifiedFieldReturn[]> {
     return await this.trainerProfileModel.getTrainerFields(trainerProfileId);
   }
 
-  async getTrainerFieldDaysForThisWeek(trainerProfileId: number, fieldId: number) {
-    let trainerFieldSlots: any = await this.trainerScheduleModel.getTrainerFieldSlots(
+  async getTrainerFieldDaysForThisWeek(
+    trainerProfileId: number,
+    fieldId: number,
+  ): Promise<string[]> {
+    let trainerFieldSlots = await this.trainerScheduleModel.getTrainerFieldSlots(
       trainerProfileId,
       fieldId,
     );
@@ -112,45 +118,49 @@ export class TrainerScheduleService {
   }
 
   async getTrainerDayFieldSlots(
+    userId: number,
     trainerProfileId: number,
     fieldId: number,
     dayDate: string,
-  ) {
-    let trainerFieldSlots: any = await this.trainerScheduleModel.getTrainerFieldSlots(
+  ): Promise<UserSlotState[]> {
+    let trainerFieldSlots = await this.trainerScheduleModel.getTrainerFieldSlots(
       trainerProfileId,
       fieldId,
     );
 
     dayDate = moment(dayDate).format('YYYY-MM-DD');
 
-    let returnSlots = [];
+    let playerBookedTimes = await this.trainerScheduleModel.getUserBookedTimes(userId);
 
-    if (this.checkNotAvailableDays(dayDate, trainerFieldSlots?.notAvailableDays)) {
-      let availableSlotsForDay = this.getDaySlots(
-        dayDate,
-        trainerFieldSlots?.scheduleSlots,
-      );
-      for (let i = 0; i < availableSlotsForDay.length; i++) {
-        //check for booked
-        if (!(await this.checkBookedSlot(availableSlotsForDay[i].id, dayDate))) {
-          returnSlots.push({
-            slotId: availableSlotsForDay[i].id,
-            status: false,
-            fromTime: moment(`${dayDate}T${availableSlotsForDay[i].fromTime}`).format(
-              'hh:mm A',
-            ),
-            toTime: moment(`${dayDate}T${availableSlotsForDay[i].toTime}`).format(
-              'hh:mm A',
-            ),
-          });
-        }
-      }
-      return returnSlots;
-    } else {
+    let trainerFreeSlots = [];
+
+    // check if day is registered as not available by trainer
+    if (!this.checkNotAvailableDays(dayDate, trainerFieldSlots?.notAvailableDays)) {
       throw new BadRequestException(
         this.i18n.t(`errors.DAY_NOT_AVAILABLE`, { lang: I18nContext.current().lang }),
       );
     }
+
+    let availableSlotsForDay = this.getDaySlots(
+      dayDate,
+      trainerFieldSlots?.scheduleSlots,
+    );
+    for (let i = 0; i < availableSlotsForDay.length; i++) {
+      //check for trainer booked slots
+      if (!(await this.checkBookedSlot(availableSlotsForDay[i].id, dayDate))) {
+        trainerFreeSlots.push({
+          slotId: availableSlotsForDay[i].id,
+          fromTime: availableSlotsForDay[i].fromTime,
+          toTime: availableSlotsForDay[i].toTime,
+          status: true,
+        });
+      }
+    }
+
+    return this.validateSlotStateRelativeToPlayerTime(
+      trainerFreeSlots,
+      playerBookedTimes,
+    );
   }
 
   async bookTrainerSession(
@@ -158,7 +168,7 @@ export class TrainerScheduleService {
     trainerProfileId: number,
     dayDate: string,
     slotId: number,
-  ) {
+  ): Promise<SessionCardDTO> {
     await this.validateBookingTrainerSession(userId, trainerProfileId, dayDate, slotId);
 
     let trainerBookedSession = await this.sessionModel.createTrainerBookedSession(
@@ -177,20 +187,14 @@ export class TrainerScheduleService {
 
     let formatedDayDate = moment(trainerBookedSessionCard.date).format('YYYY-MM-DD');
 
-    return {
-      firstName: trainerBookedSessionCard.firstName,
-      lastName: trainerBookedSessionCard.lastName,
-      profileImage: trainerBookedSessionCard.profileImage,
-      date: formatedDayDate,
-      fromTime: moment(`${formatedDayDate}T${trainerBookedSessionCard.fromTime}`).format(
-        'hh:mm A',
-      ),
-      toTime: moment(`${formatedDayDate}T${trainerBookedSessionCard.toTime}`).format(
-        'hh:mm A',
-      ),
-      cost: trainerBookedSessionCard.cost,
-      sports: trainerBookedSessionCard.sports,
-    };
+    trainerBookedSessionCard.fromTime = moment(
+      `${formatedDayDate}T${trainerBookedSessionCard.fromTime}`,
+    ).format('hh:mm A');
+    trainerBookedSessionCard.toTime = moment(
+      `${formatedDayDate}T${trainerBookedSessionCard.toTime}`,
+    ).format('hh:mm A');
+
+    return trainerBookedSessionCard;
   }
 
   // // private // //
@@ -200,11 +204,11 @@ export class TrainerScheduleService {
     trainerProfileId: number,
     dayDate: string,
     slotId: number,
-  ) {
+  ): Promise<Boolean> {
     let theSlot = await this.trainerScheduleModel.getSlotById(slotId);
     let theTrainerProfile = await this.trainerProfileModel.getByID(trainerProfileId);
     let theSchedule = await this.trainerScheduleModel.getByID(null, theSlot.scheduleId);
-    let trainerFieldSlots: any = await this.trainerScheduleModel.getTrainerFieldSlots(
+    let trainerFieldSlots = await this.trainerScheduleModel.getTrainerFieldSlots(
       trainerProfileId,
       theSlot.fieldId,
     );
@@ -226,7 +230,6 @@ export class TrainerScheduleService {
     }
 
     // validate trainer's hoursPriorToBooking
-
     let timeNow = moment();
     let bookingTime = moment(`${dayDate}T${theSlot.fromTime}`);
 
@@ -293,23 +296,43 @@ export class TrainerScheduleService {
         return i.number;
       });
 
-      // console.log(monthsNumbers);
-
       let weekDaysNumbers = scheduleSlots[i].slots.map((i) => {
         return i.weekDayNumber;
       });
 
       if (monthsNumbers.includes(dateMonth)) {
         if (weekDaysNumbers.includes(dateWeekDay)) {
-          // console.log('true');
-          // console.log(scheduleSlots[i]);
-
           return true;
         }
       }
     }
 
     return false;
+  }
+
+  private validateSlotStateRelativeToPlayerTime(
+    trainerFreeSlots: UserSlotState[],
+    playerBookedSlots: UserSlotState[],
+  ): UserSlotState[] {
+    for (let i = 0; i < trainerFreeSlots.length; i++) {
+      var trainerSlot = trainerFreeSlots[i];
+      var fromTime1 = moment(`1970-01-01T${trainerSlot.fromTime}`);
+      var toTime1 = moment(`1970-01-01T${trainerSlot.toTime}`);
+
+      for (let j = 0; j < playerBookedSlots.length; j++) {
+        var playerSlot = playerBookedSlots[j];
+        var fromTime2 = moment(`1970-01-01T${playerSlot.fromTime}`);
+        var toTime2 = moment(`1970-01-01T${playerSlot.toTime}`);
+
+        if (
+          (fromTime2 >= fromTime1 && fromTime2 < toTime1) ||
+          (fromTime1 >= fromTime2 && fromTime1 < toTime2)
+        ) {
+          trainerFreeSlots[i].status = false;
+        }
+      }
+    }
+    return trainerFreeSlots;
   }
 
   private checkWeekDayAvailabilityForOneScheduleSlot(
@@ -350,8 +373,8 @@ export class TrainerScheduleService {
     scheduleSlots: ScheduleSlotsDTO[],
   ): SlotDetailsDto[] {
     let daySlots: any = [];
-    let dayDateWeekDay = moment(dayDateString).weekday();
     let dayDateMonth = moment(dayDateString).month() + 1;
+    let dayDateWeekDay = moment(dayDateString).weekday();
 
     for (let i = 0; i < scheduleSlots?.length; i++) {
       let slotMonthsNumbers = scheduleSlots[i].months.map((i) => {
@@ -373,7 +396,7 @@ export class TrainerScheduleService {
     return daySlots;
   }
 
-  private slotsTimeTo24(slotsArray: SlotDetailsDto[]) {
+  private slotsTimeTo24(slotsArray: SlotDetailsDto[]): SlotDetailsDto[] {
     return slotsArray.map((slot) => {
       slot.fromTime = this.globalService.timeTo24(slot.fromTime);
       slot.toTime = this.globalService.timeTo24(slot.toTime);
@@ -401,13 +424,12 @@ export class TrainerScheduleService {
   private async validateCreateScheduleMonths(
     trainerProfileId: number,
     reqBody: ScheduleCreateDto,
-  ) {
+  ): Promise<boolean> {
     //get all trainer schedule months
     let allTrainerSchedulesMonths =
       await this.trainerScheduleModel.allTrainerSchedulesMonths(trainerProfileId);
 
     //check intersecting months
-
     for (let i = 0; i < reqBody.months.length; i++) {
       if (allTrainerSchedulesMonths?.includes(reqBody.months[i])) {
         throw new BadRequestException(
@@ -425,7 +447,7 @@ export class TrainerScheduleService {
     scheduleId: number,
     trainerProfileId: number,
     reqBody: ScheduleCreateDto,
-  ) {
+  ): Promise<boolean> {
     //get all trainer schedule months except the desired update schedule
     let allTrainerSchedulesMonthsExceptOne =
       await this.trainerScheduleModel.allTrainerSchedulesMonthsExceptOne(
@@ -434,7 +456,6 @@ export class TrainerScheduleService {
       );
 
     //check intersecting months
-
     for (let i = 0; i < reqBody.months.length; i++) {
       if (allTrainerSchedulesMonthsExceptOne?.includes(reqBody.months[i])) {
         throw new BadRequestException(
@@ -488,7 +509,14 @@ export class TrainerScheduleService {
       }
     }
   }
+
   private groupSlotsByWeekday(slotsArray: SlotDetailsDto[]) {
+    // group slots by weekday number
+    // returnValue:
+    //{
+    //     '1':slotDetails[],
+    //     '5':slotDetails[]
+    // }
     return slotsArray.reduce((acc, obj) => {
       const groupKey = obj['weekDayNumber'];
       acc[groupKey] = acc[groupKey] || [];

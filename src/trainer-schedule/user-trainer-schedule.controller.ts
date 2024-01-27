@@ -51,8 +51,10 @@ export class UserTrainerScheduleController {
   @UseGuards(AuthGuard, RoleGuard)
   async getTrainerDaySlots1(
     @Param(new JoiValidation(TrainerDayFieldSlotsValidation)) params,
+    @Request() req: ExpressRequest,
   ) {
     return await this.scheduleService.getTrainerDayFieldSlots(
+      req['id'],
       params.trainerProfileId,
       params.fieldId,
       params.dayDate,

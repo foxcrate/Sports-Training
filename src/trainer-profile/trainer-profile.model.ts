@@ -10,6 +10,7 @@ import { FieldReturnDto } from 'src/field/dtos/return.dto';
 import { SportService } from 'src/sport/sport.service';
 import { TrainerScheduleModel } from 'src/trainer-schedule/trainer-schedule.model';
 import { GlobalModel } from 'src/global/global.model';
+import { SimplifiedFieldReturn } from 'src/field/dtos/field-simplified-return.dto';
 
 @Injectable()
 export class TrainerProfileModel {
@@ -245,7 +246,7 @@ export class TrainerProfileModel {
     return schedulesIdsArray;
   }
 
-  async getTrainerFields(trainerProfileId: number) {
+  async getTrainerFields(trainerProfileId: number): Promise<SimplifiedFieldReturn[]> {
     await this.getByID(trainerProfileId);
     let trainerProfileFields = await this.prisma.$queryRaw`
       SELECT 

@@ -5,7 +5,12 @@ import { Prisma } from '@prisma/client';
 import { BookedSessionDTO } from './dtos/booked-session.dto';
 import { SessionCardDTO } from './dtos/session-card.dto';
 import { UserSessionDataDto } from './dtos/user-session-data.dto';
-import { SESSIONS_STATUSES_ENUM } from 'src/global/enums';
+import {
+  PROFILE_TYPES_ENUM,
+  RATEABLE_TYPES_ENUM,
+  SESSIONS_STATUSES_ENUM,
+  SESSION_REQUEST_STATUSES_ENUM,
+} from 'src/global/enums';
 
 @Injectable()
 export class SessionModel {
@@ -85,10 +90,10 @@ export class SessionModel {
   (
     ${userId},
     ${trainerProfileId},
-    "trainerProfile",
+    ${RATEABLE_TYPES_ENUM.TRAINER}
     ${ratingNumber},
     ${feedback},
-    "player"
+    ${PROFILE_TYPES_ENUM.PLAYER}
   )`;
   }
 
@@ -155,7 +160,7 @@ export class SessionModel {
     VALUES
   (
     ${trainerBookedSessionId},
-    'accepted'
+    ${SESSION_REQUEST_STATUSES_ENUM.ACCEPTED}
   )`;
   }
 
@@ -164,7 +169,7 @@ export class SessionModel {
     dayDate: string,
     trainerProfileId: number,
     slotId: number,
-  ) {
+  ): Promise<BookedSessionDTO> {
     let createdTrainerBookedSession: any = await this.prisma.$transaction(
       [
         this.prisma.$queryRaw`

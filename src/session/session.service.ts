@@ -30,7 +30,7 @@ export class SessionService {
     private globalService: GlobalService,
   ) {}
 
-  async playerRateTrainer(userId: number, reqBody: RateTrainerDto) {
+  async playerRateTrainer(userId: number, reqBody: RateTrainerDto): Promise<boolean> {
     // throw an error if playerProfile don't exist
     let thePlayerProfile = await this.playerProfileModel.getOneByUserId(userId);
     if (!thePlayerProfile) {
@@ -46,7 +46,7 @@ export class SessionService {
       reqBody.sessionId,
     );
 
-    await this.validatePlayerRatingSession(thePlayerProfile.userId, theSession.userId);
+    this.validatePlayerRatingSession(thePlayerProfile.userId, theSession.userId);
     await this.sessionModel.savePlayerTrainerRating(
       thePlayerProfile.userId,
       theSession.trainerProfileId,
@@ -56,7 +56,7 @@ export class SessionService {
     return true;
   }
 
-  private async validatePlayerRatingSession(userId: number, sessionUserID: number) {
+  private validatePlayerRatingSession(userId: number, sessionUserID: number): boolean {
     //check if this session is done by this trainer
     if (sessionUserID != userId) {
       throw new BadRequestException(
@@ -65,6 +65,7 @@ export class SessionService {
         }),
       );
     }
+    return true;
   }
 
   private formatDateStartEndTime(bookedDateTime, slotDuration) {

@@ -25,10 +25,10 @@ import { TrainerProfileModel } from 'src/trainer-profile/trainer-profile.model';
 @Controller('trainer-schedule')
 export class TrainerScheduleController {
   constructor(
-      private scheduleService: TrainerScheduleService,
-      private trainerScheduleModel: TrainerScheduleModel,
-      private trainerProfileModel: TrainerProfileModel,
-    ) {}
+    private scheduleService: TrainerScheduleService,
+    private trainerScheduleModel: TrainerScheduleModel,
+    private trainerProfileModel: TrainerProfileModel,
+  ) {}
 
   @Get()
   @Version('1')
@@ -59,9 +59,9 @@ export class TrainerScheduleController {
     @Request() req: ExpressRequest,
   ) {
     ///////// Temproray, Trainer has one schedule /////////
-    if(params.id == 0){
-      let trainerProfile = await this.trainerProfileModel.getByUserId(req['id'])
-      params.id = await this.trainerScheduleModel.getTrainerScheduleId(trainerProfile.id)
+    if (params.id == 0) {
+      let trainerProfile = await this.trainerProfileModel.getByUserId(req['id']);
+      params.id = await this.trainerScheduleModel.getTrainerScheduleId(trainerProfile.id);
       return await this.scheduleService.update(
         req['timezone'],
         req['id'],
@@ -87,9 +87,9 @@ export class TrainerScheduleController {
     @Request() req: ExpressRequest,
   ) {
     ///////// Temproray, Trainer has one schedule /////////
-    if(params.id == 0){
-      let trainerProfile = await this.trainerProfileModel.getByUserId(req['id'])
-      params.id = await this.trainerScheduleModel.getTrainerScheduleId(trainerProfile.id)
+    if (params.id == 0) {
+      let trainerProfile = await this.trainerProfileModel.getByUserId(req['id']);
+      params.id = await this.trainerScheduleModel.getTrainerScheduleId(trainerProfile.id);
       return await this.scheduleService.delete(req['timezone'], req['id'], params.id);
     }
     //////////
@@ -105,9 +105,9 @@ export class TrainerScheduleController {
     @Request() req: ExpressRequest,
   ) {
     ///////// Temproray, Trainer has one schedule /////////
-    if(params.id == 0){
-      let trainerProfile = await this.trainerProfileModel.getByUserId(req['id'])
-      params.id = await this.trainerScheduleModel.getTrainerScheduleId(trainerProfile.id)
+    if (params.id == 0) {
+      let trainerProfile = await this.trainerProfileModel.getByUserId(req['id']);
+      params.id = await this.trainerScheduleModel.getTrainerScheduleId(trainerProfile.id);
       return await this.scheduleService.getOne(req['timezone'], req['id'], params.id);
     }
     //////////
