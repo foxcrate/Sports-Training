@@ -192,8 +192,8 @@ export class TrainerScheduleModel {
       JSON_ARRAYAGG(JSON_OBJECT(
         'slotId',Slot.id,
         'fromTime', Slot.fromTime,
-        'toTime',Slot.toTime
-        'status',True,
+        'toTime',Slot.toTime,
+        'status',True
         ))
       END AS times
     FROM

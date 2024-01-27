@@ -157,10 +157,13 @@ export class TrainerScheduleService {
       }
     }
 
-    return this.validateSlotStateRelativeToPlayerTime(
+    let slotTime24 = this.validateSlotStateRelativeToPlayerTime(
       trainerFreeSlots,
       playerBookedTimes,
     );
+
+    //turn slot time to time12
+    return this.slotsTimeTo12(slotTime24);
   }
 
   async bookTrainerSession(
@@ -400,6 +403,14 @@ export class TrainerScheduleService {
     return slotsArray.map((slot) => {
       slot.fromTime = this.globalService.timeTo24(slot.fromTime);
       slot.toTime = this.globalService.timeTo24(slot.toTime);
+      return slot;
+    });
+  }
+
+  private slotsTimeTo12(slotsArray: UserSlotState[]): UserSlotState[] {
+    return slotsArray.map((slot) => {
+      slot.fromTime = moment(`1970-01-01T${slot.fromTime}`).format('hh:mm A');
+      slot.toTime = moment(`1970-01-01T${slot.toTime}`).format('hh:mm A');
       return slot;
     });
   }
