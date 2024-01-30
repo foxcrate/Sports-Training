@@ -105,85 +105,6 @@ export class TrainerScheduleModel {
     return schedule;
   }
 
-  async create(
-    timezone,
-    trainerProfileId: number,
-    reqBody: ScheduleCreateDto,
-  ): Promise<ScheduleSlotsDetailsDTO> {
-    let createdSchedule: ReturnScheduleDto[] = await this.prisma.$transaction(
-      [
-        this.prisma.$queryRaw`
-        INSERT INTO Schedule
-        (
-          trainerProfileId
-        )
-        VALUES
-      (
-        ${trainerProfileId}
-      )`,
-        this.prisma.$queryRaw`
-        SELECT
-          *
-        FROM Schedule
-        WHERE
-        id = LAST_INSERT_ID()
-        `,
-      ],
-      {
-        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
-      },
-    );
-    let newSchedule = createdSchedule[1][0];
-
-    Promise.all([
-      await this.savingNewScheduleMonths(newSchedule.id, reqBody.months),
-      await this.savingNewScheduleSlots(newSchedule.id, reqBody.slots),
-    ]);
-
-    return await this.getByID(timezone, newSchedule.id);
-  }
-
-  async update(
-    timezone,
-    scheduleId: number,
-    reqBody: ScheduleCreateDto,
-  ): Promise<ScheduleSlotsDetailsDTO> {
-    let theSchedule = await this.getByID(timezone, scheduleId);
-
-    Promise.all([
-      //delete past scheduleMonths
-      await this.deleteScheduleMonths(scheduleId),
-
-      //nullify or past scheduleSlots
-      //we don't delete the slots in case of a trainerSession is booked in this slot, we only nullify scheduelId
-      await this.deleteNotBookedScheduleSlots(scheduleId),
-    ]);
-
-    Promise.all([
-      await this.savingNewScheduleMonths(theSchedule.id, reqBody.months),
-      await this.savingNewScheduleSlots(theSchedule.id, reqBody.slots),
-    ]);
-
-    return await this.getByID(timezone, scheduleId);
-  }
-
-  async deleteByID(timezone, id: number): Promise<ScheduleSlotsDetailsDTO> {
-    let deletedSchedle = await this.getByID(timezone, id);
-
-    Promise.all([
-      await this.deleteNotBookedScheduleSlots(id),
-      await this.deleteScheduleMonths(id),
-    ]);
-
-    // delete schedule
-    await this.prisma.$queryRaw`
-    DELETE
-    FROM Schedule
-    WHERE id = ${id}
-  `;
-    return deletedSchedle;
-  }
-
   async getUserBookedTimes(userId: number): Promise<UserSlotState[]> {
     let userBookedSlots = await this.prisma.$queryRaw`
     SELECT
@@ -206,58 +127,6 @@ export class TrainerScheduleModel {
     `;
 
     return userBookedSlots[0].times ? userBookedSlots[0].times : [];
-  }
-
-  async deleteByTrainerProfileId(trainerProfileId: number) {
-    let allTrainerProfileSchedules: ScheduleSlotsDetailsDTO[] = await this.prisma
-      .$queryRaw`
-      SELECT 
-      *
-      FROM
-      Schedule
-      WHERE
-      trainerProfileId = ${trainerProfileId}
-    `;
-
-    for (let index = 0; index < allTrainerProfileSchedules.length; index++) {
-      await this.deleteByID(null, allTrainerProfileSchedules[index].id);
-    }
-  }
-
-  async allTrainerSchedulesMonths(trainerProfileId: number): Promise<number[]> {
-    let allSchedulesMonths = await this.prisma.$queryRaw`
-    SELECT
-    JSON_ARRAYAGG(m.monthNumber) AS months
-    FROM
-    Schedule AS s
-    JOIN SchedulesMonths AS sm
-    ON s.id = sm.ScheduleId
-    JOIN Month AS m
-    ON sm.monthId = m.id
-    WHERE s.trainerProfileId = ${trainerProfileId}
-    `;
-
-    return allSchedulesMonths[0].months;
-  }
-
-  async allTrainerSchedulesMonthsExceptOne(
-    scheduleId,
-    trainerProfileId: number,
-  ): Promise<number[]> {
-    let allSchedulesMonths = await this.prisma.$queryRaw`
-    SELECT
-    JSON_ARRAYAGG(m.monthNumber) AS months
-    FROM
-    Schedule AS s
-    JOIN SchedulesMonths AS sm
-    ON s.id = sm.ScheduleId
-    JOIN Month AS m
-    ON sm.monthId = m.id
-    WHERE s.trainerProfileId = ${trainerProfileId}
-    AND s.id <> ${scheduleId}
-    `;
-
-    return allSchedulesMonths[0].months;
   }
 
   async getTrainerFieldSlots(
@@ -372,6 +241,137 @@ export class TrainerScheduleModel {
     }
 
     return TheSchedule[0].id;
+  }
+
+  async allTrainerSchedulesMonths(trainerProfileId: number): Promise<number[]> {
+    let allSchedulesMonths = await this.prisma.$queryRaw`
+    SELECT
+    JSON_ARRAYAGG(m.monthNumber) AS months
+    FROM
+    Schedule AS s
+    JOIN SchedulesMonths AS sm
+    ON s.id = sm.ScheduleId
+    JOIN Month AS m
+    ON sm.monthId = m.id
+    WHERE s.trainerProfileId = ${trainerProfileId}
+    `;
+
+    return allSchedulesMonths[0].months;
+  }
+
+  async allTrainerSchedulesMonthsExceptOne(
+    scheduleId,
+    trainerProfileId: number,
+  ): Promise<number[]> {
+    let allSchedulesMonths = await this.prisma.$queryRaw`
+    SELECT
+    JSON_ARRAYAGG(m.monthNumber) AS months
+    FROM
+    Schedule AS s
+    JOIN SchedulesMonths AS sm
+    ON s.id = sm.ScheduleId
+    JOIN Month AS m
+    ON sm.monthId = m.id
+    WHERE s.trainerProfileId = ${trainerProfileId}
+    AND s.id <> ${scheduleId}
+    `;
+
+    return allSchedulesMonths[0].months;
+  }
+
+  async create(
+    timezone,
+    trainerProfileId: number,
+    reqBody: ScheduleCreateDto,
+  ): Promise<ScheduleSlotsDetailsDTO> {
+    let createdSchedule: ReturnScheduleDto[] = await this.prisma.$transaction(
+      [
+        this.prisma.$queryRaw`
+        INSERT INTO Schedule
+        (
+          trainerProfileId
+        )
+        VALUES
+      (
+        ${trainerProfileId}
+      )`,
+        this.prisma.$queryRaw`
+        SELECT
+          *
+        FROM Schedule
+        WHERE
+        id = LAST_INSERT_ID()
+        `,
+      ],
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted,
+      },
+    );
+    let newSchedule = createdSchedule[1][0];
+
+    Promise.all([
+      await this.savingNewScheduleMonths(newSchedule.id, reqBody.months),
+      await this.savingNewScheduleSlots(newSchedule.id, reqBody.slots),
+    ]);
+
+    return await this.getByID(timezone, newSchedule.id);
+  }
+
+  async update(
+    timezone,
+    scheduleId: number,
+    reqBody: ScheduleCreateDto,
+  ): Promise<ScheduleSlotsDetailsDTO> {
+    let theSchedule = await this.getByID(timezone, scheduleId);
+
+    Promise.all([
+      //delete past scheduleMonths
+      await this.deleteScheduleMonths(scheduleId),
+
+      //nullify or past scheduleSlots
+      //we don't delete the slots in case of a trainerSession is booked in this slot, we only nullify scheduelId
+      await this.deleteNotBookedScheduleSlots(scheduleId),
+    ]);
+
+    Promise.all([
+      await this.savingNewScheduleMonths(theSchedule.id, reqBody.months),
+      await this.savingNewScheduleSlots(theSchedule.id, reqBody.slots),
+    ]);
+
+    return await this.getByID(timezone, scheduleId);
+  }
+
+  async deleteByID(timezone, id: number): Promise<ScheduleSlotsDetailsDTO> {
+    let deletedSchedle = await this.getByID(timezone, id);
+
+    Promise.all([
+      await this.deleteNotBookedScheduleSlots(id),
+      await this.deleteScheduleMonths(id),
+    ]);
+
+    // delete schedule
+    await this.prisma.$queryRaw`
+    DELETE
+    FROM Schedule
+    WHERE id = ${id}
+  `;
+    return deletedSchedle;
+  }
+
+  async deleteByTrainerProfileId(trainerProfileId: number) {
+    let allTrainerProfileSchedules: ScheduleSlotsDetailsDTO[] = await this.prisma
+      .$queryRaw`
+      SELECT 
+      *
+      FROM
+      Schedule
+      WHERE
+      trainerProfileId = ${trainerProfileId}
+    `;
+
+    for (let index = 0; index < allTrainerProfileSchedules.length; index++) {
+      await this.deleteByID(null, allTrainerProfileSchedules[index].id);
+    }
   }
 
   private async checkTrainerProfileExistence(trainerProfileId: number): Promise<boolean> {

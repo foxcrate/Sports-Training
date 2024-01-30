@@ -204,6 +204,33 @@ export class SessionModel {
     return createdTrainerBookedSession[1][0];
   }
 
+  async markSessionAsComplete(userId: number, theDateTime: string) {
+    console.log({ theDateTime });
+
+    let finishedSessionsIds = await this.prisma.$queryRaw`
+      with timePassedSessions as (
+        select
+        TrainerBookedSession.id
+        from
+        TrainerBookedSession
+        left join Slot
+        on Slot.id = TrainerBookedSession.slotId
+        where
+        CONCAT(TrainerBookedSession.date,' ', Slot.toTime) < ${theDateTime}
+        and
+        TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.UPCOMING}
+      )
+      select * from timePassedSessions;
+    `;
+    return finishedSessionsIds;
+  }
+
+  async markChildsSessionsAsComplete(childsIds: number[], theDateTime: string) {
+    //
+  }
+
+  // //
+
   async getCoachTrainingSession(sessionId: number) {
     return this.prisma.$queryRaw`
       SELECT
