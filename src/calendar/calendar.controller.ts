@@ -37,6 +37,8 @@ export class CalendarController {
       filters.type,
       filters.date,
       parseInt(filters.pageSize || '0', 10),
+      filters.status,
+      filters.fieldId,
     );
   }
 }

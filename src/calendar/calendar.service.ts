@@ -6,7 +6,8 @@ import { DatesCountResultDto } from './dto/dates-count-result.dto';
 import * as moment from 'moment-timezone';
 import { DateSessionsResultDto } from './dto/date-sessions-result.dto';
 import { DatesCountTypeFilter } from './dto/dates-count-filters.dto';
-import { HOME_SEARCH_TYPES_ENUM } from 'src/global/enums';
+import { CALENDAR_TYPES_ENUM } from './dto/calendar-types.enum';
+import { SESSIONS_STATUSES_ENUM } from 'src/global/enums';
 
 @Injectable()
 export class CalendarService {
@@ -39,7 +40,7 @@ export class CalendarService {
         startTime: null,
         endTime: null,
       };
-      if (result.type === HOME_SEARCH_TYPES_ENUM.COACHES) {
+      if (result.type === CALENDAR_TYPES_ENUM.COACHES) {
         startEndTime.startTime = this.globalService.getLocalTime12(
           moment.utc(fromTime, 'HH:mmZ'),
         );
@@ -88,6 +89,8 @@ export class CalendarService {
     type: string,
     date: string,
     pageSize: number,
+    status: SESSIONS_STATUSES_ENUM,
+    fieldId: number,
   ): Promise<DateSessionsResultDto> {
     if (date && !this.globalService.isValidDateFormat(date)) {
       throw new BadRequestException(
@@ -104,16 +107,31 @@ export class CalendarService {
         userId,
         date,
         pageSize || this.DEFAULT_LIMIT_MULTI_RESULTS,
+        status,
+        fieldId,
       );
     } else {
       switch (convertedType[0]) {
-        case HOME_SEARCH_TYPES_ENUM.COACHES:
-          results = await this.calendarModel.getTrainerProfileDateSessions(userId, date);
+        case CALENDAR_TYPES_ENUM.PLAYERS:
+          results = await this.calendarModel.getPlayerDateSessions(
+            userId,
+            date,
+            status,
+            fieldId,
+          );
           break;
-        case HOME_SEARCH_TYPES_ENUM.DOCTORS:
+        case CALENDAR_TYPES_ENUM.COACHES:
+          results = await this.calendarModel.getCoachSessions(
+            userId,
+            date,
+            status,
+            fieldId,
+          );
+          break;
+        case CALENDAR_TYPES_ENUM.DOCTORS:
           results = await this.calendarModel.getDoctorClinicDateSessions(userId, date);
           break;
-        case HOME_SEARCH_TYPES_ENUM.FIELDS:
+        case CALENDAR_TYPES_ENUM.FIELDS:
           results = await this.calendarModel.getFieldsDateSessions(userId, date);
           break;
         default:
