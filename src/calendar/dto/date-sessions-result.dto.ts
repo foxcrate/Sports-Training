@@ -1,5 +1,6 @@
 export type AllTypesResultDto = {
   coachBookedHoursId: string | null;
+  playerBookedHoursId: string | null;
   doctorBookedHoursId: string | null;
   fieldBookedHoursId: string | null;
   bookedHour: string;
@@ -10,6 +11,7 @@ export type AllTypesResultDto = {
   sport: string | null;
   specialization: string | null;
   startTime: string;
+  sessionField: string | null;
 };
 
 export type DateSessionsResultDto = AllTypesResultDto[];

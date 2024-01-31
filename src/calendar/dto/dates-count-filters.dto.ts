@@ -1,9 +1,6 @@
-import { HOME_SEARCH_TYPES_ENUM } from 'src/global/enums';
+import { CALENDAR_TYPES_ENUM } from './calendar-types.enum';
 
-export type DatesCountTypeFilter =
-  | HOME_SEARCH_TYPES_ENUM.COACHES
-  | HOME_SEARCH_TYPES_ENUM.DOCTORS
-  | HOME_SEARCH_TYPES_ENUM.FIELDS;
+export type DatesCountTypeFilter = CALENDAR_TYPES_ENUM;
 
 export interface DatesCountFiltersDto {
   type: DatesCountTypeFilter;

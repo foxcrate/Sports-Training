@@ -2,8 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { GlobalService } from 'src/global/global.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { DatesCountTypeFilter } from './dto/dates-count-filters.dto';
-import { HOME_SEARCH_TYPES_ENUM, SESSIONS_STATUSES_ENUM } from 'src/global/enums';
+import { SESSIONS_STATUSES_ENUM } from 'src/global/enums';
 import { DatesCountResultDto } from './dto/dates-count-result.dto';
+import { CALENDAR_TYPES_ENUM } from './dto/calendar-types.enum';
 
 @Injectable()
 export class CalendarModel {
@@ -21,7 +22,7 @@ export class CalendarModel {
   ) {
     let sql = ``;
     switch (type) {
-      case HOME_SEARCH_TYPES_ENUM.COACHES:
+      case CALENDAR_TYPES_ENUM.PLAYERS:
         sql += `
           SELECT
             DATE( date ) AS bookingDate,
@@ -35,7 +36,22 @@ export class CalendarModel {
             DATE( date )
           `;
         break;
-      case HOME_SEARCH_TYPES_ENUM.DOCTORS:
+      case CALENDAR_TYPES_ENUM.COACHES:
+        sql += `
+          SELECT
+            DATE( date ) AS bookingDate,
+            COUNT(*) AS bookedHoursCount 
+          FROM TrainerBookedSession tbs
+          JOIN TrainerProfile tp ON tbs.trainerProfileId = tp.id
+          WHERE
+            tp.userId = ${userId}
+            AND DATE( date ) BETWEEN '${startDate}' 
+            AND '${endDate}' 
+          GROUP BY
+            DATE( date )
+          `;
+        break;
+      case CALENDAR_TYPES_ENUM.DOCTORS:
         sql += `
           SELECT
             DATE( fromDateTime ) AS bookingDate,
@@ -79,13 +95,16 @@ export class CalendarModel {
     userId: number,
     date: string,
     addOrderBy: boolean = false,
+    status: SESSIONS_STATUSES_ENUM | undefined = undefined,
+    fieldId: number | undefined = undefined,
   ) {
     let sql = null;
     switch (type) {
-      case HOME_SEARCH_TYPES_ENUM.COACHES:
+      case CALENDAR_TYPES_ENUM.PLAYERS:
         sql = `
           SELECT
-            tbs.id AS coachBookedHoursId,
+            NULL AS coachBookedHoursId,
+            tbs.id AS playerBookedHoursId,
             NULL AS doctorBookedHoursId,
             NULL AS fieldBookedHoursId,
             tbs.date AS bookedHour,
@@ -99,10 +118,11 @@ export class CalendarModel {
             END AS sports,
             NULL AS sport,
             NULL AS specialization,
-            '${HOME_SEARCH_TYPES_ENUM.COACHES}' AS type,
+            '${CALENDAR_TYPES_ENUM.PLAYERS}' AS type,
             NULL AS slotDuration,
             Slot.fromTime AS fromTime,
-            Slot.toTime As toTime
+            Slot.toTime As toTime,
+            f.name AS sessionField 
           FROM
             TrainerBookedSession tbs
             JOIN TrainerProfile tp ON tbs.trainerProfileId = tp.id
@@ -111,22 +131,78 @@ export class CalendarModel {
             LEFT JOIN Sport s ON tps.sportId = s.id
             LEFT JOIN User u ON tp.userId = u.id
             LEFT JOIN Slot ON Slot.id = tbs.slotId
+            LEFT JOIN Field f ON Slot.fieldId = f.id
           WHERE
-            tbs.status = '${SESSIONS_STATUSES_ENUM.UPCOMING}'
-            AND tbs.userId = ${userId} 
+            tbs.userId = ${userId} 
         `;
+        if (status) {
+          sql += ` AND tbs.status = '${status}' `;
+        }
         if (date) {
           sql += ` AND DATE( tbs.date ) = '${date}' `;
+        }
+        if (fieldId) {
+          sql += ` AND Slot.fieldId = '${fieldId}' `;
         }
         sql += ` GROUP BY tbs.id `;
         if (addOrderBy) {
           sql += ` ORDER BY bookedHour `;
         }
         break;
-      case HOME_SEARCH_TYPES_ENUM.DOCTORS:
+      case CALENDAR_TYPES_ENUM.COACHES:
+        sql = `
+          SELECT
+            tbs.id AS coachBookedHoursId,
+            NULL AS playerBookedHoursId,
+            NULL AS doctorBookedHoursId,
+            NULL AS fieldBookedHoursId,
+            tbs.date AS bookedHour,
+            tbs.gmt AS gmt,
+            u.firstName AS NAME,
+            u.profileImage AS profileImage,
+            r.NAME AS region,
+            CASE
+              WHEN COUNT( tps.sportId ) > 0 THEN
+              JSON_ARRAYAGG( s.NAME ) ELSE NULL 
+            END AS sports,
+            NULL AS sport,
+            NULL AS specialization,
+            '${CALENDAR_TYPES_ENUM.COACHES}' AS type,
+            NULL AS slotDuration,
+            Slot.fromTime AS fromTime,
+            Slot.toTime As toTime,
+            f.name AS sessionField 
+          FROM
+            TrainerBookedSession tbs
+            JOIN TrainerProfile tp ON tbs.trainerProfileId = tp.id
+            LEFT JOIN Region r ON tp.regionId = r.id
+            LEFT JOIN TrainerProfileSports tps ON tp.id = tps.trainerProfileId
+            LEFT JOIN Sport s ON tps.sportId = s.id
+            LEFT JOIN User u ON tp.userId = u.id
+            LEFT JOIN Slot ON Slot.id = tbs.slotId
+            LEFT JOIN Field f ON Slot.fieldId = f.id
+          WHERE
+            tp.userId = ${userId} 
+        `;
+        if (status) {
+          sql += ` AND tbs.status = '${status}' `;
+        }
+        if (date) {
+          sql += ` AND DATE( tbs.date ) = '${date}' `;
+        }
+        if (fieldId) {
+          sql += ` AND Slot.fieldId = '${fieldId}' `;
+        }
+        sql += ` GROUP BY tbs.id `;
+        if (addOrderBy) {
+          sql += ` ORDER BY bookedHour `;
+        }
+        break;
+      case CALENDAR_TYPES_ENUM.DOCTORS:
         sql = `
           SELECT
             NULL AS coachBookedHoursId,
+            NULL AS playerBookedHoursId,
             dbh.id AS doctorBookedHoursId,
             NULL AS fieldBookedHoursId,
             dbh.fromDateTime AS bookedHour,
@@ -137,10 +213,11 @@ export class CalendarModel {
             NULL AS sports,
             NULL AS sport,
             s.name AS specialization,
-            '${HOME_SEARCH_TYPES_ENUM.DOCTORS}' AS type,
+            '${CALENDAR_TYPES_ENUM.DOCTORS}' AS type,
             dc.slotDuration AS slotDuration,
             NULL AS fromTime,
-            NULL As toTime 
+            NULL As toTime,
+            NULL AS sessionField 
           FROM
             DoctorClinicsBookedHours dbh
             JOIN DoctorClinic dc ON dbh.doctorClinicId = dc.id
@@ -161,6 +238,7 @@ export class CalendarModel {
         sql = `
           SELECT
             NULL AS coachBookedHoursId,
+            NULL AS playerBookedHoursId,
             NULL AS doctorBookedHoursId,
             fbh.id AS fieldBookedHoursId,
             fbh.fromDateTime AS bookedHour,
@@ -171,10 +249,11 @@ export class CalendarModel {
             NULL AS sports,
             s.name AS sport,
             NULL AS specialization,
-            '${HOME_SEARCH_TYPES_ENUM.FIELDS}' AS type,
+            '${CALENDAR_TYPES_ENUM.FIELDS}' AS type,
             f.slotDuration AS slotDuration,
             NULL AS fromTime,
-            NULL As toTime 
+            NULL As toTime,
+            NULL AS sessionField 
           FROM
             FieldsBookedHours fbh
             JOIN Field f ON fbh.fieldId = f.id
@@ -202,21 +281,28 @@ export class CalendarModel {
       { rawSql: doctorCountRawSql },
       { rawSql: fieldCountRawSql },
       { rawSql: coachCountRawSql },
+      { rawSql: playerCountRawSql },
     ] = [
       this.generateDatesCountQuery(
-        HOME_SEARCH_TYPES_ENUM.DOCTORS,
+        CALENDAR_TYPES_ENUM.DOCTORS,
         userId,
         startDate,
         endDate,
       ),
       this.generateDatesCountQuery(
-        HOME_SEARCH_TYPES_ENUM.FIELDS,
+        CALENDAR_TYPES_ENUM.FIELDS,
         userId,
         startDate,
         endDate,
       ),
       this.generateDatesCountQuery(
-        HOME_SEARCH_TYPES_ENUM.COACHES,
+        CALENDAR_TYPES_ENUM.COACHES,
+        userId,
+        startDate,
+        endDate,
+      ),
+      this.generateDatesCountQuery(
+        CALENDAR_TYPES_ENUM.PLAYERS,
         userId,
         startDate,
         endDate,
@@ -227,7 +313,7 @@ export class CalendarModel {
         SELECT
           bookingDate, SUM(bookedHoursCount) AS bookedHoursCount
         FROM
-          (${doctorCountRawSql} UNION ALL ${fieldCountRawSql} UNION ALL ${coachCountRawSql}) AS countResult
+          (${doctorCountRawSql} UNION ALL ${fieldCountRawSql} UNION ALL ${playerCountRawSql} UNION ALL ${coachCountRawSql}) AS countResult
         GROUP BY
           bookingDate
         ORDER BY
@@ -242,15 +328,22 @@ export class CalendarModel {
     userId: number,
     date: string,
     limit: number,
+    status: SESSIONS_STATUSES_ENUM | undefined = undefined,
+    fieldId: number | undefined = undefined,
   ): Promise<DatesCountResultDto[]> {
     if (!types) {
-      types = Object.values(HOME_SEARCH_TYPES_ENUM).filter(
-        (homeSearchType) => homeSearchType !== HOME_SEARCH_TYPES_ENUM.ALL,
-      ) as DatesCountTypeFilter[];
+      types = Object.values(CALENDAR_TYPES_ENUM) as DatesCountTypeFilter[];
     }
     const selectRawSqlQueries = [];
     types.forEach((type: DatesCountTypeFilter) => {
-      const { rawSql } = this.generateDateSessionsQuery(type, userId, date);
+      const { rawSql } = this.generateDateSessionsQuery(
+        type,
+        userId,
+        date,
+        false,
+        status,
+        fieldId,
+      );
       selectRawSqlQueries.push(rawSql);
     });
     const selectRawSqlQueriesLength = selectRawSqlQueries.length - 1;
@@ -272,7 +365,7 @@ export class CalendarModel {
     date: string,
   ): Promise<DatesCountResultDto[]> {
     const { preparedSql } = this.generateDateSessionsQuery(
-      HOME_SEARCH_TYPES_ENUM.DOCTORS,
+      CALENDAR_TYPES_ENUM.DOCTORS,
       userId,
       date,
       true,
@@ -280,15 +373,36 @@ export class CalendarModel {
     return this.prisma.$queryRaw(preparedSql);
   }
 
-  async getTrainerProfileDateSessions(
+  async getCoachSessions(
     userId: number,
     date: string,
+    status: SESSIONS_STATUSES_ENUM,
+    fieldId: number,
   ): Promise<DatesCountResultDto[]> {
     const { preparedSql } = this.generateDateSessionsQuery(
-      HOME_SEARCH_TYPES_ENUM.COACHES,
+      CALENDAR_TYPES_ENUM.COACHES,
       userId,
       date,
       true,
+      status,
+      fieldId,
+    );
+    return this.prisma.$queryRaw(preparedSql);
+  }
+
+  async getPlayerDateSessions(
+    userId: number,
+    date: string,
+    status: SESSIONS_STATUSES_ENUM,
+    fieldId: number,
+  ): Promise<DatesCountResultDto[]> {
+    const { preparedSql } = this.generateDateSessionsQuery(
+      CALENDAR_TYPES_ENUM.PLAYERS,
+      userId,
+      date,
+      true,
+      status,
+      fieldId,
     );
     return this.prisma.$queryRaw(preparedSql);
   }
@@ -298,7 +412,7 @@ export class CalendarModel {
     date: string,
   ): Promise<DatesCountResultDto[]> {
     const { preparedSql } = this.generateDateSessionsQuery(
-      HOME_SEARCH_TYPES_ENUM.FIELDS,
+      CALENDAR_TYPES_ENUM.FIELDS,
       userId,
       date,
       true,

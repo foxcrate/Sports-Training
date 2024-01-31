@@ -1,14 +1,13 @@
 import * as Joi from 'joi';
-import { HOME_SEARCH_TYPES_ENUM } from 'src/global/enums';
+import { CALENDAR_TYPES_ENUM } from '../dto/calendar-types.enum';
+import { SESSIONS_STATUSES_ENUM } from 'src/global/enums';
 
 const typeSchema = Joi.string()
   .optional()
   .default('')
   .custom((value, helpers) => {
     const types = value.split(',').map((type) => type.trim());
-    const allowedTypes = Object.values(HOME_SEARCH_TYPES_ENUM).filter(
-      (type) => type !== HOME_SEARCH_TYPES_ENUM.ALL,
-    );
+    const allowedTypes = Object.values(CALENDAR_TYPES_ENUM);
 
     const isValid = types.every((type) => allowedTypes.includes(type));
 
@@ -34,5 +33,9 @@ const pageSizeSchema = Joi.string()
 export const SessionsFiltersValidation = Joi.object({
   type: typeSchema,
   date: Joi.string().isoDate().optional(),
+  status: Joi.string()
+    .optional()
+    .valid(...Object.values(SESSIONS_STATUSES_ENUM)),
   pageSize: pageSizeSchema,
+  fieldId: Joi.number().optional().positive(),
 });
