@@ -42,8 +42,18 @@ export class AuthController {
 
   @Post('user/send-signup-otp')
   @Version('1')
-  async sendOtp1(@Body(new JoiValidation(SendOTPValidation)) sendOTPData: SendOTPDto) {
-    return await this.authService.sendOtp(sendOTPData.mobileNumber);
+  async sendSignupOtp1(
+    @Body(new JoiValidation(SendOTPValidation)) sendOTPData: SendOTPDto,
+  ) {
+    return await this.authService.sendSignupOtp(sendOTPData.mobileNumber);
+  }
+
+  @Post('user/send-forget-password-otp')
+  @Version('1')
+  async sendForgePasswordOtp1(
+    @Body(new JoiValidation(SendOTPValidation)) sendOTPData: SendOTPDto,
+  ) {
+    return await this.authService.sendForgetPasswordOtp(sendOTPData.mobileNumber);
   }
 
   @Post('user/send-change-mobile-otp')
@@ -53,7 +63,7 @@ export class AuthController {
   async sendChangeMobileOtp(
     @Body(new JoiValidation(SendOTPValidation)) sendOTPData: SendOTPDto,
   ) {
-    return await this.authService.sendOtp(sendOTPData.mobileNumber);
+    return await this.authService.sendChangeMobileOtp(sendOTPData.mobileNumber);
   }
 
   @Post('user/create-password')
@@ -66,6 +76,18 @@ export class AuthController {
     @Request() req: ExpressRequest,
   ) {
     return await this.authService.createPassword(req['id'], createPasswordData.password);
+  }
+
+  @Post('user/change-password')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async changePassword1(
+    @Body(new JoiValidation(CreatePasswordValidation))
+    createPasswordData: CreatePasswordDto,
+    @Request() req: ExpressRequest,
+  ) {
+    return await this.authService.changePassword(req['id'], createPasswordData.password);
   }
 
   @Post('user/verify-signup-otp')
@@ -85,6 +107,16 @@ export class AuthController {
     @Request() req: ExpressRequest,
   ) {
     return await this.authService.verifyChangeMobileOTP(verifyOtpData, req['id']);
+  }
+
+  @Post('user/verify-forget-password-otp')
+  @Version('1')
+  @Roles('user')
+  async verifyForgetPasswordOtp1(
+    @Body(new JoiValidation(VerifyOtpValidation)) verifyOtpData: VerifyOtpDto,
+    @Request() req: ExpressRequest,
+  ) {
+    return await this.authService.verifyForgetPasswordOTP(verifyOtpData);
   }
 
   @Post('user/complete-signup')

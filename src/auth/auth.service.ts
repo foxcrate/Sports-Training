@@ -61,6 +61,17 @@ export class AuthService {
     return updatedUser;
   }
 
+  async changePassword(userId: number, password: string) {
+    let hashedPassword = await this.globalService.hashPassword(password);
+    let theUser = await this.userModel.getById(userId);
+
+    await this.userModel.updatePassword(userId, hashedPassword);
+
+    let updatedUser = await this.userModel.getById(theUser.id);
+
+    return updatedUser;
+  }
+
   async userCompleteSignup(userId: number, completeSignupData: CompleteSignupUserDto) {
     let repeatedAccount = await this.userService.findRepeatedEmail(
       completeSignupData.email,
@@ -72,8 +83,24 @@ export class AuthService {
     }
   }
 
-  async sendOtp(mobileNumber: string) {
+  async sendSignupOtp(mobileNumber: string) {
     await this.userService.findRepeatedMobile(mobileNumber);
+
+    await this.saveOTP(mobileNumber, '1234');
+    //send otp
+    return 'OTP sent successfully';
+  }
+
+  async sendChangeMobileOtp(mobileNumber: string) {
+    await this.userService.findRepeatedMobile(mobileNumber);
+
+    await this.saveOTP(mobileNumber, '1234');
+    //send otp
+    return 'OTP sent successfully';
+  }
+
+  async sendForgetPasswordOtp(mobileNumber: string) {
+    await this.userService.findByMobile(mobileNumber);
 
     await this.saveOTP(mobileNumber, '1234');
     //send otp
@@ -101,6 +128,17 @@ export class AuthService {
 
     //return token to user
     return await this.userModel.updateMobile(userId, data.mobileNumber);
+  }
+
+  async verifyForgetPasswordOTP(data: VerifyOtpDto) {
+    //throw error if not passed
+    await this.checkSavedOTP(data.mobileNumber, data.otp);
+
+    await this.deletePastOTP(data.mobileNumber);
+
+    //return token to user
+    let user = await this.userModel.getByMobileNumber(data.mobileNumber);
+    return this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id);
   }
 
   private async saveOTP(mobileNumber: string, otp: string) {
