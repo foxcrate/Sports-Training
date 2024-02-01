@@ -105,7 +105,7 @@ export class UserModel {
   }
 
   async updatePassword(userId: number, hashedPassword: string) {
-    //update
+    //update//
     await this.prisma.$queryRaw`
        UPDATE User
        SET
