@@ -28,7 +28,7 @@ export class SessionModel {
       FROM TrainerBookedSession
       WHERE slotId = ${slotId}
       AND date = ${dayDate}
-      AND status = ${SESSIONS_STATUSES_ENUM.UPCOMING}
+      AND status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
     `;
     return TheBookedSlot[0];
   }
@@ -38,7 +38,7 @@ export class SessionModel {
       SELECT *
       FROM TrainerBookedSession
       WHERE id = ${sessionId}
-      AND status = ${SESSIONS_STATUSES_ENUM.UPCOMING}
+      AND status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
     `;
     if (!theSession[0]) {
       throw new NotFoundException(
@@ -65,7 +65,7 @@ export class SessionModel {
     WHERE
     TrainerBookedSession.slotId IN (SELECT slotsIds FROM ScheduleSlotsIds)
     AND
-    TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.UPCOMING}
+    TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
     `;
     return scheduleSessions;
   }
@@ -178,16 +178,14 @@ export class SessionModel {
           userId,
           date,
           trainerProfileId,
-          slotId,
-          status
+          slotId
         )
         VALUES
       (
         ${userId},
         ${dayDate},
         ${trainerProfileId},
-        ${slotId},
-        ${SESSIONS_STATUSES_ENUM.UPCOMING}
+        ${slotId}
       )`,
         this.prisma.$queryRaw`
         SELECT
@@ -218,7 +216,7 @@ export class SessionModel {
         where
         CONCAT(TrainerBookedSession.date,' ', Slot.toTime) < ${theDateTime}
         and
-        TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.UPCOMING}
+        TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
       )
       select * from timePassedSessions;
     `;

@@ -59,9 +59,8 @@ enum Level {
 }
 
 enum SessionStatus {
-  upcoming
-  completed
-  canceled
+  active
+  notActive
 }
 
 enum SessionRequestType {
@@ -318,7 +317,7 @@ model TrainerProfileFields {
 model TrainerBookedSession {
   id Int @id @default(autoincrement())
 
-  status SessionStatus @default(upcoming)
+  status SessionStatus @default(notActive)
 
   gmt Int @default(0)
 

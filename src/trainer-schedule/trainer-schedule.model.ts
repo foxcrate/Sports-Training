@@ -123,7 +123,7 @@ export class TrainerScheduleModel {
     where
     userId = ${userId}
     and
-    status = ${SESSIONS_STATUSES_ENUM.UPCOMING}
+    status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
     `;
 
     return userBookedSlots[0].times ? userBookedSlots[0].times : [];
