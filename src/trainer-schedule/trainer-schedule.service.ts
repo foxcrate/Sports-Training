@@ -207,7 +207,7 @@ export class TrainerScheduleService {
     trainerProfileId: number,
     dayDate: string,
     slotId: number,
-  ): Promise<Boolean> {
+  ): Promise<boolean> {
     let theSlot = await this.trainerScheduleModel.getSlotById(slotId);
     let theTrainerProfile = await this.trainerProfileModel.getByID(trainerProfileId);
     let theSchedule = await this.trainerScheduleModel.getByID(null, theSlot.scheduleId);
@@ -215,6 +215,18 @@ export class TrainerScheduleService {
       trainerProfileId,
       theSlot.fieldId,
     );
+
+    // validate its an upcoming date
+    let dateNow = moment(moment().format('YYYY-MM-DD'));
+    let bookingDate = moment(dayDate);
+
+    if (dateNow > bookingDate) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.PASSED_DATE`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
 
     // check different player and trainer
     if (userId === theTrainerProfile.userId) {

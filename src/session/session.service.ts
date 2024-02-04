@@ -105,11 +105,11 @@ export class SessionService {
   ): Promise<TrainingSessionResultDto> {
     const coachSessionData: CoachSessionDataDto[] =
       (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
-    const validCoachSession = this.validateSession(userId, coachSessionData);
+    const validCoachSession = this.validateChangeSessionRequest(userId, coachSessionData);
     const { sessionRequestId, coachBookedSessionId } = validCoachSession;
     const [formattedSession] = await Promise.all([
       this.getCoachingSession(userId, sessionId),
-      this.sessionModel.updateCoachSessionStatus(
+      this.sessionModel.updateSessionRequest(
         coachBookedSessionId,
         SESSIONS_STATUSES_ENUM.ACTIVE,
         sessionRequestId,
@@ -119,6 +119,29 @@ export class SessionService {
     return {
       ...formattedSession,
       status: SESSION_REQUEST_STATUSES_ENUM.ACCEPTED,
+    };
+  }
+
+  async coachDeclineSession(
+    userId: number,
+    sessionId: number,
+  ): Promise<TrainingSessionResultDto> {
+    const coachSessionData: CoachSessionDataDto[] =
+      (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
+    const validCoachSession = this.validateChangeSessionRequest(userId, coachSessionData);
+    const { sessionRequestId, coachBookedSessionId } = validCoachSession;
+    const [formattedSession] = await Promise.all([
+      this.getCoachingSession(userId, sessionId),
+      this.sessionModel.updateSessionRequest(
+        coachBookedSessionId,
+        SESSIONS_STATUSES_ENUM.NOT_ACTIVE,
+        sessionRequestId,
+        SESSION_REQUEST_STATUSES_ENUM.REJECTED,
+      ),
+    ]);
+    return {
+      ...formattedSession,
+      status: SESSION_REQUEST_STATUSES_ENUM.REJECTED,
     };
   }
 
@@ -132,7 +155,7 @@ export class SessionService {
       this.sessionModel.getCancellingReason(cancelReasonId),
     ]);
     const [validCoachSession, validCancellingReason] = [
-      this.validateSession(userId, coachSessionData),
+      this.validateCancelRequest(userId, coachSessionData),
       this.validateCancellingReasonExistence(cancelReasonData),
     ];
     const { sessionRequestId, coachBookedSessionId } = validCoachSession;
@@ -140,62 +163,73 @@ export class SessionService {
       this.getCoachingSession(userId, sessionId),
       this.sessionModel.updateSetReasonCoachSessionStatus(
         coachBookedSessionId,
-        SESSIONS_STATUSES_ENUM.NOT_ACTIVE,
-        sessionRequestId,
-        SESSION_REQUEST_STATUSES_ENUM.CANCELED,
+        SESSIONS_STATUSES_ENUM.CANCELED,
         validCancellingReason.id,
         CANCELED_BY_ENUM.TRAINER,
       ),
     ]);
     return {
       ...formattedSession,
-      status: SESSION_REQUEST_STATUSES_ENUM.CANCELED,
+      status: SESSIONS_STATUSES_ENUM.CANCELED,
     };
   }
 
   async userCancelSession(
     userId: number,
     sessionId: number,
+    cancelReasonId: number,
   ): Promise<TrainingSessionResultDto> {
-    const sessionData: UserSessionDataDto[] =
-      await this.sessionModel.getUserSessionData(sessionId);
-    const validSession = this.validateUserSession(userId, sessionData);
+    // const sessionData: UserSessionDataDto[] =
+    //   await this.sessionModel.getUserSessionData(sessionId);
+    const [sessionData, cancelReasonData] = await Promise.all([
+      await this.sessionModel.getUserSessionData(sessionId),
+      this.sessionModel.getCancellingReason(cancelReasonId),
+    ]);
+    // const validSession = this.validateUserSession(userId, sessionData);
+    const [validSession, validCancellingReason] = [
+      this.validateUserSession(userId, sessionData),
+      this.validateCancellingReasonExistence(cancelReasonData),
+    ];
     const { sessionRequestId, bookedSessionId } = validSession;
     const [formattedSession] = await Promise.all([
-      this.getCoachingSession(userId, sessionId),
-      this.sessionModel.updateCoachSessionStatus(
+      this.getTrainingSession(userId, sessionId, HOME_SEARCH_TYPES_ENUM.COACHES),
+      // this.sessionModel.updateCoachSessionStatus(
+      //   bookedSessionId,
+      //   SESSIONS_STATUSES_ENUM.CANCELED,
+      //   CANCELED_BY_ENUM.PLAYER,
+      // ),
+      this.sessionModel.updateSetReasonCoachSessionStatus(
         bookedSessionId,
-        SESSIONS_STATUSES_ENUM.NOT_ACTIVE,
-        sessionRequestId,
-        SESSION_REQUEST_STATUSES_ENUM.CANCELED,
+        SESSIONS_STATUSES_ENUM.CANCELED,
+        validCancellingReason.id,
         CANCELED_BY_ENUM.PLAYER,
       ),
     ]);
     return {
       ...formattedSession,
-      status: SESSION_REQUEST_STATUSES_ENUM.CANCELED,
+      status: SESSIONS_STATUSES_ENUM.CANCELED,
     };
   }
 
   // async markSessionAsComplete(theDateTime: string) {}
 
-  validateSession(userId, sessionData) {
+  validateChangeSessionRequest(userId, sessionData) {
     const foundSession = this.validateSessionExistence(sessionData);
     this.validateSessionViewUserRights(userId, foundSession.coachUserId);
-    if (!foundSession.sessionRequestId) {
-      throw new BadRequestException(
-        this.i18n.t(`errors.NOT_FOUND_SESSION_REQUEST`, {
-          lang: I18nContext.current().lang,
-        }),
-      );
-    }
-    if (foundSession.bookedSessionStatus == SESSIONS_STATUSES_ENUM.NOT_ACTIVE) {
-      throw new BadRequestException(
-        this.i18n.t(`errors.NOT_ALLOWED_BOOKED_SESSION_STATUS`, {
-          lang: I18nContext.current().lang,
-        }),
-      );
-    }
+    // if (!foundSession.sessionRequestId) {
+    //   throw new BadRequestException(
+    //     this.i18n.t(`errors.NOT_FOUND_SESSION_REQUEST`, {
+    //       lang: I18nContext.current().lang,
+    //     }),
+    //   );
+    // }
+    // if (foundSession.bookedSessionStatus == SESSIONS_STATUSES_ENUM.NOT_ACTIVE) {
+    //   throw new BadRequestException(
+    //     this.i18n.t(`errors.NOT_ALLOWED_BOOKED_SESSION_STATUS`, {
+    //       lang: I18nContext.current().lang,
+    //     }),
+    //   );
+    // }
     if (foundSession.sessionRequestStatus !== SESSION_REQUEST_STATUSES_ENUM.PENDING) {
       throw new BadRequestException(
         this.i18n.t(`errors.NOT_ALLOWED_TO_CHANGE_STATUS`, {
@@ -206,52 +240,83 @@ export class SessionService {
     return foundSession;
   }
 
-  validateUserSession(userId, sessionData) {
-    const foundSession: UserSessionDataDto = this.validateSessionExistence(sessionData);
-    this.validateSessionViewUserRights(userId, foundSession.userId);
-    if (!foundSession.sessionRequestId) {
-      throw new BadRequestException(
-        this.i18n.t(`errors.NOT_FOUND_SESSION_REQUEST`, {
-          lang: I18nContext.current().lang,
-        }),
-      );
-    }
-    if (foundSession.bookedSessionStatus == SESSIONS_STATUSES_ENUM.NOT_ACTIVE) {
+  validateCancelRequest(userId, sessionData) {
+    const foundSession = this.validateSessionExistence(sessionData);
+    this.validateSessionViewUserRights(userId, foundSession.coachUserId);
+    // if (!foundSession.sessionRequestId) {
+    //   throw new BadRequestException(
+    //     this.i18n.t(`errors.NOT_FOUND_SESSION_REQUEST`, {
+    //       lang: I18nContext.current().lang,
+    //     }),
+    //   );
+    // }
+    if (foundSession.bookedSessionStatus !== SESSIONS_STATUSES_ENUM.ACTIVE) {
       throw new BadRequestException(
         this.i18n.t(`errors.NOT_ALLOWED_BOOKED_SESSION_STATUS`, {
           lang: I18nContext.current().lang,
         }),
       );
     }
-    if (foundSession.sessionRequestStatus !== SESSION_REQUEST_STATUSES_ENUM.PENDING) {
+    // if (foundSession.sessionRequestStatus !== SESSION_REQUEST_STATUSES_ENUM.PENDING) {
+    //   throw new BadRequestException(
+    //     this.i18n.t(`errors.NOT_ALLOWED_TO_CHANGE_STATUS`, {
+    //       lang: I18nContext.current().lang,
+    //     }),
+    //   );
+    // }
+    return foundSession;
+  }
+
+  validateUserSession(userId, sessionData) {
+    const foundSession: UserSessionDataDto = this.validateSessionExistence(sessionData);
+    // console.log({ userId });
+    // console.log({ foundSession });
+
+    this.validateSessionViewUserRights(userId, foundSession.userId);
+    // if (!foundSession.sessionRequestId) {
+    //   throw new BadRequestException(
+    //     this.i18n.t(`errors.NOT_FOUND_SESSION_REQUEST`, {
+    //       lang: I18nContext.current().lang,
+    //     }),
+    //   );
+    // }
+    if (foundSession.bookedSessionStatus !== SESSIONS_STATUSES_ENUM.ACTIVE) {
       throw new BadRequestException(
-        this.i18n.t(`errors.NOT_ALLOWED_TO_CHANGE_STATUS`, {
+        this.i18n.t(`errors.NOT_ALLOWED_BOOKED_SESSION_STATUS`, {
           lang: I18nContext.current().lang,
         }),
       );
     }
-    const currentDateTime = moment().utc();
-    const dateMoment = moment(foundSession.date, 'YYYY-MM-DD');
-    const timeMoment = moment(foundSession.fromTime, 'HH:mm:ssZ');
+    // if (foundSession.sessionRequestStatus !== SESSION_REQUEST_STATUSES_ENUM.PENDING) {
+    //   throw new BadRequestException(
+    //     this.i18n.t(`errors.NOT_ALLOWED_TO_CHANGE_STATUS`, {
+    //       lang: I18nContext.current().lang,
+    //     }),
+    //   );
+    // }
+
+    // const currentDateTime = moment().utc();
+    // const dateMoment = moment(foundSession.date, 'YYYY-MM-DD');
+    // const timeMoment = moment(foundSession.fromTime, 'HH:mm:ssZ');
 
     // Combine date and time
-    const combinedDateTime = dateMoment.set({
-      hour: timeMoment.hours(),
-      minute: timeMoment.minutes(),
-      second: timeMoment.seconds(),
-      millisecond: timeMoment.milliseconds(),
-    });
-    const dateTimeAfterSubHours = combinedDateTime.subtract(
-      parseInt(`${foundSession.cancellationHours || 1}`, 10),
-      'hours',
-    );
-    if (dateTimeAfterSubHours.isBefore(currentDateTime)) {
-      throw new BadRequestException(
-        this.i18n.t(`errors.NOT_ALLOWED_TO_CANCEL_SESSION`, {
-          lang: I18nContext.current().lang,
-        }),
-      );
-    }
+    // const combinedDateTime = dateMoment.set({
+    //   hour: timeMoment.hours(),
+    //   minute: timeMoment.minutes(),
+    //   second: timeMoment.seconds(),
+    //   millisecond: timeMoment.milliseconds(),
+    // });
+    // const dateTimeAfterSubHours = combinedDateTime.subtract(
+    //   parseInt(`${foundSession.cancellationHours || 1}`, 10),
+    //   'hours',
+    // );
+    // if (dateTimeAfterSubHours.isBefore(currentDateTime)) {
+    //   throw new BadRequestException(
+    //     this.i18n.t(`errors.NOT_ALLOWED_TO_CANCEL_SESSION`, {
+    //       lang: I18nContext.current().lang,
+    //     }),
+    //   );
+    // }
     return foundSession;
   }
 

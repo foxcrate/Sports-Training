@@ -45,6 +45,7 @@
   "WRONG_PAGE_SIZE_ERROR": "قيمة حجم الصفحة غير صالحة ، يجب أن تكون القيمة من القيم المسموح بها",
   "WRONG_FILTER_TYPE": "نوع مرشح غير معروف",
   "WRONG_DATE_FORMAT": "تصميم التاريخ خطأ",
+  "PASSED_DATE": "هذا التاريخ قد قد مضى بالفعل",
   "NOT_FOUND_SESSION": "الجلسة المطلوبة غير موجودة",
   "NOT_FOUND_CANCELLING_REASON": "سبب الإلغاء غير موجود",
   "NOT_ALLOWED_USER_SESSION": "غير مسموح للمستخدم بعرض الجلسة",

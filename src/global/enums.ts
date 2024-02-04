@@ -37,13 +37,13 @@ export enum PROFILE_TYPES_ENUM {
 export enum SESSIONS_STATUSES_ENUM {
   ACTIVE = 'active',
   NOT_ACTIVE = 'notActive',
+  CANCELED = 'canceled',
 }
 
 export enum SESSION_REQUEST_STATUSES_ENUM {
   ACCEPTED = 'accepted',
   PENDING = 'pending',
   REJECTED = 'rejected',
-  CANCELED = 'canceled',
 }
 
 export enum CANCELED_BY_ENUM {

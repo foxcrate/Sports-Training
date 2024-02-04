@@ -67,6 +67,15 @@ export class SessionController {
     return this.sessionService.coachApproveSession(userId, sessionId);
   }
 
+  @Put('coach-decline-session/:sessionId')
+  async coachDeclineSession(
+    @Param(new JoiValidation(SessionIdParamValidations))
+    { sessionId }: TrainingSessionParamsDto,
+    @UserId() userId: number,
+  ): Promise<TrainingSessionResultDto> {
+    return this.sessionService.coachDeclineSession(userId, sessionId);
+  }
+
   @Put('coach-cancel-session/:sessionId')
   async coachCancelSession(
     @Param(new JoiValidation(SessionIdParamValidations))
@@ -83,8 +92,10 @@ export class SessionController {
     @Param(new JoiValidation(SessionIdParamValidations))
     { sessionId }: TrainingSessionParamsDto,
     @UserId() userId: number,
+    @Body(new JoiValidation(CoachCancelSessionValidations))
+    { cancelReasonId }: CoachCancelSessionDto,
   ): Promise<TrainingSessionResultDto> {
-    return this.sessionService.userCancelSession(userId, sessionId);
+    return this.sessionService.userCancelSession(userId, sessionId, cancelReasonId);
   }
 
   @Get('cancelling-reasons')

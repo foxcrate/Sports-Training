@@ -61,6 +61,7 @@ enum Level {
 enum SessionStatus {
   active
   notActive
+  canceled
 }
 
 enum SessionRequestType {
@@ -72,7 +73,6 @@ enum SessionRequestStatus {
   pending
   accepted
   rejected
-  canceled
 }
 
 enum CanceledByEnum {
@@ -327,6 +327,11 @@ model TrainerBookedSession {
 
   rates Rate[]
 
+  canceledBy CanceledByEnum?
+
+  cancellationReasons   CancellationReasons? @relation(fields: [cancellationReasonsId], references: [id], onDelete: SetNull)
+  cancellationReasonsId Int?
+
   user   User @relation(fields: [userId], references: [id])
   userId Int
 
@@ -350,13 +355,17 @@ model SessionRequest {
 
   type       SessionRequestType   @default(new)
   status     SessionRequestStatus @default(pending)
-  canceledBy CanceledByEnum?
-
-  cancellationReasons   CancellationReasons? @relation(fields: [cancellationReasonsId], references: [id], onDelete: Restrict)
-  cancellationReasonsId Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+}
+
+model CancellationReasons {
+  id             Int              @id @default(autoincrement())
+  name           String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @default(now())
+  trainerBookedSessions TrainerBookedSession[]
 }
 
 model TrainerProfileNotAvailableDays {
@@ -608,10 +617,4 @@ model Region {
 //   createdAt             DateTime              @default(now())
 // }
 
-model CancellationReasons {
-  id             Int              @id @default(autoincrement())
-  name           String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @default(now())
-  SessionRequest SessionRequest[]
-}
+

@@ -160,7 +160,7 @@ export class SessionModel {
     VALUES
   (
     ${trainerBookedSessionId},
-    ${SESSION_REQUEST_STATUSES_ENUM.ACCEPTED}
+    ${SESSION_REQUEST_STATUSES_ENUM.PENDING}
   )`;
   }
 
@@ -375,17 +375,31 @@ export class SessionModel {
   async updateCoachSessionStatus(
     bookedSessionId,
     bookedSessionStatus,
-    sessionRequestId,
-    sessionRequestStatus,
     canceledBy = null,
   ) {
-    return this.prisma.$transaction([
+    await this.prisma.$queryRaw`
+            UPDATE
+              TrainerBookedSession
+            SET
+              status = ${bookedSessionStatus}
+              ${canceledBy ? Prisma.sql`, canceledBy = ${canceledBy}` : Prisma.empty}
+            WHERE
+              id = ${bookedSessionId};
+          `;
+  }
+
+  async updateSessionRequest(
+    bookedSessionId: number,
+    bookedSessionStatus: string,
+    sessionRequestId: number,
+    sessionRequestStatus: string,
+  ) {
+    return await this.prisma.$transaction([
       this.prisma.$queryRaw`
             UPDATE
               SessionRequest
             SET
               status = ${sessionRequestStatus}
-              ${canceledBy ? Prisma.sql`, canceledBy = ${canceledBy}` : Prisma.empty}
             WHERE
               id = ${sessionRequestId};
           `,
@@ -398,26 +412,19 @@ export class SessionModel {
   async updateSetReasonCoachSessionStatus(
     bookedSessionId,
     bookedSessionStatus,
-    sessionRequestId,
-    sessionRequestStatus,
     cancellationReasonsId,
     canceledBy,
   ) {
-    return this.prisma.$transaction([
-      this.prisma.$queryRaw`
+    await this.prisma.$queryRaw`
           UPDATE
-            SessionRequest
+            TrainerBookedSession
           SET
-            status = ${sessionRequestStatus},
+            status = ${bookedSessionStatus},
             cancellationReasonsId = ${cancellationReasonsId},
             canceledBy = ${canceledBy}
           WHERE
-            id = ${sessionRequestId};
-        `,
-      this.prisma.$queryRaw`
-          UPDATE TrainerBookedSession SET status = ${bookedSessionStatus} WHERE id = ${bookedSessionId};
-        `,
-    ]);
+            id = ${bookedSessionId};
+        `;
   }
 
   async getDoctorTrainingSession(sessionId: number) {
