@@ -103,6 +103,9 @@ export class SessionService {
     userId: number,
     sessionId: number,
   ): Promise<TrainingSessionResultDto> {
+    //validate datetime
+    //validate existimg session at this time
+    //if deny delete session and request
     const coachSessionData: CoachSessionDataDto[] =
       (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
     const validCoachSession = this.validateChangeSessionRequest(userId, coachSessionData);
@@ -150,6 +153,7 @@ export class SessionService {
     sessionId: number,
     cancelReasonId: number,
   ): Promise<TrainingSessionResultDto> {
+    //datetime
     const [coachSessionData, cancelReasonData] = await Promise.all([
       this.sessionModel.getCoachSessionData(sessionId),
       this.sessionModel.getCancellingReason(cancelReasonId),
