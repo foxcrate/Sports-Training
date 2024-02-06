@@ -8,13 +8,13 @@ import { TrainerScheduleModel } from './trainer-schedule.model';
 import { SessionModule } from 'src/session/session.module';
 
 @Module({
-  imports: [forwardRef(() => TrainerProfileModule), SessionModule],
+  imports: [forwardRef(() => TrainerProfileModule), forwardRef(() => SessionModule)],
   controllers: [
     TrainerScheduleController,
     UserTrainerScheduleController,
     AdminTrainerScheduleController,
   ],
   providers: [TrainerScheduleService, TrainerScheduleModel],
-  exports: [TrainerScheduleModel],
+  exports: [TrainerScheduleModel, TrainerScheduleService],
 })
 export class TrainerScheduleModule {}

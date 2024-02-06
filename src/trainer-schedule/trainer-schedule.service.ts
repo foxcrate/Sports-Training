@@ -12,6 +12,7 @@ import { SessionModel } from 'src/session/session.model';
 import { UserSlotState } from './dtos/user-slot-state.dto';
 import { SessionCardDTO } from 'src/session/dtos/session-card.dto';
 import { SimplifiedFieldReturn } from 'src/field/dtos/field-simplified-return.dto';
+import { SESSIONS_STATUSES_ENUM } from 'src/global/enums';
 
 @Injectable()
 export class TrainerScheduleService {
@@ -147,7 +148,13 @@ export class TrainerScheduleService {
     );
     for (let i = 0; i < availableSlotsForDay.length; i++) {
       //check for trainer booked slots
-      if (!(await this.checkBookedSlot(availableSlotsForDay[i].id, dayDate))) {
+      if (
+        !(await this.checkBookedSlot(
+          availableSlotsForDay[i].id,
+          dayDate,
+          SESSIONS_STATUSES_ENUM.ACTIVE,
+        ))
+      ) {
         trainerFreeSlots.push({
           slotId: availableSlotsForDay[i].id,
           fromTime: availableSlotsForDay[i].fromTime,
@@ -268,7 +275,7 @@ export class TrainerScheduleService {
     }
 
     // check booked slots
-    if (await this.checkBookedSlot(slotId, dayDate)) {
+    if (await this.checkBookedSlot(slotId, dayDate, SESSIONS_STATUSES_ENUM.ACTIVE)) {
       throw new BadRequestException(
         this.i18n.t(`errors.BOOKED_SLOT`, {
           lang: I18nContext.current().lang,
@@ -278,8 +285,16 @@ export class TrainerScheduleService {
     return true;
   }
 
-  private async checkBookedSlot(slotId: number, dayDate: string): Promise<boolean> {
-    let bookedSlot = await this.sessionModel.getBookedSessionBySlotId(slotId, dayDate);
+  async checkBookedSlot(
+    slotId: number,
+    dayDate: string,
+    status: string = null,
+  ): Promise<boolean> {
+    let bookedSlot = await this.sessionModel.getBookedSessionBySlotId(
+      slotId,
+      dayDate,
+      status,
+    );
 
     if (bookedSlot) {
       return true;

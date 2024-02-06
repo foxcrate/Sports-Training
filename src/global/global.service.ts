@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
@@ -190,6 +194,20 @@ export class GlobalService {
     let datesArrayElements = datesArray.map((i) => moment(i).format('YYYY-MM-DD'));
 
     return new Set(datesArrayElements).size !== datesArrayElements.length;
+  }
+
+  validatePassedDateTime(date: string, time: string) {
+    let sessionDate = moment(date).format('YYYY-MM-DD');
+    let sessionTime = time;
+    let sessionDateTime = moment(`${sessionDate}T${sessionTime}`);
+
+    if (sessionDateTime <= moment()) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.PASSED_DATE`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
   }
 
   preparePrismaSql(sql: string): Prisma.Sql {

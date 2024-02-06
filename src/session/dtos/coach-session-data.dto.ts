@@ -7,4 +7,6 @@ export interface CoachSessionDataDto {
   bookedSessionStatus: SESSIONS_STATUSES_ENUM;
   sessionRequestType: string;
   sessionRequestStatus: SESSION_REQUEST_STATUSES_ENUM;
+  slotId: number;
+  date: string;
 }

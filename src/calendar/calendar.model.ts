@@ -29,7 +29,8 @@ export class CalendarModel {
             COUNT(*) AS bookedHoursCount 
           FROM TrainerBookedSession 
           WHERE
-            userId = ${userId}
+            status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
+            AND userId = ${userId}
             AND DATE( date ) BETWEEN '${startDate}' 
             AND '${endDate}' 
           GROUP BY
@@ -44,7 +45,8 @@ export class CalendarModel {
           FROM TrainerBookedSession tbs
           JOIN TrainerProfile tp ON tbs.trainerProfileId = tp.id
           WHERE
-            tp.userId = ${userId}
+            tbs.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
+            AND tp.userId = ${userId}
             AND DATE( date ) BETWEEN '${startDate}' 
             AND '${endDate}' 
           GROUP BY
@@ -133,7 +135,8 @@ export class CalendarModel {
             LEFT JOIN Slot ON Slot.id = tbs.slotId
             LEFT JOIN Field f ON Slot.fieldId = f.id
           WHERE
-            tbs.userId = ${userId} 
+            tbs.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
+            AND tbs.userId = ${userId} 
         `;
         if (status) {
           sql += ` AND tbs.status = '${status}' `;
@@ -182,7 +185,8 @@ export class CalendarModel {
             LEFT JOIN Slot ON Slot.id = tbs.slotId
             LEFT JOIN Field f ON Slot.fieldId = f.id
           WHERE
-            tp.userId = ${userId} 
+            tp.userId = ${userId}
+            AND tbs.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
         `;
         if (status) {
           sql += ` AND tbs.status = '${status}' `;

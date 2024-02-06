@@ -344,7 +344,7 @@ model TrainerBookedSession {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 
-  @@unique([date, slotId])
+  @@unique([date, slotId,userId])
 }
 
 model SessionRequest {

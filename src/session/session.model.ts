@@ -5,6 +5,7 @@ import { Prisma } from '@prisma/client';
 import { BookedSessionDTO } from './dtos/booked-session.dto';
 import { SessionCardDTO } from './dtos/session-card.dto';
 import { UserSessionDataDto } from './dtos/user-session-data.dto';
+import * as moment from 'moment-timezone';
 import {
   PROFILE_TYPES_ENUM,
   RATEABLE_TYPES_ENUM,
@@ -22,13 +23,14 @@ export class SessionModel {
   async getBookedSessionBySlotId(
     slotId: number,
     dayDate: string,
+    status: string = null,
   ): Promise<BookedSessionDTO> {
     let TheBookedSlot = await this.prisma.$queryRaw`
       SELECT *
       FROM TrainerBookedSession
       WHERE slotId = ${slotId}
       AND date = ${dayDate}
-      AND status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
+      ${status ? Prisma.sql`AND status = ${status}` : Prisma.empty}
     `;
     return TheBookedSlot[0];
   }
@@ -203,7 +205,7 @@ export class SessionModel {
   }
 
   async markSessionAsComplete(userId: number, theDateTime: string) {
-    console.log({ theDateTime });
+    // console.log({ theDateTime });
 
     let finishedSessionsIds = await this.prisma.$queryRaw`
       with timePassedSessions as (
@@ -225,6 +227,75 @@ export class SessionModel {
 
   async markChildsSessionsAsComplete(childsIds: number[], theDateTime: string) {
     //
+  }
+
+  async getPendingSessions(trainerProfileId: number) {
+    let todayDate = moment().format('YYYY-MM-DD');
+    let pendingSessions: any[] = await this.prisma.$queryRaw`
+      SELECT
+        TrainerBookedSession.id AS bookedSessionId,
+        SessionRequest.status AS sessionRequestStatus,
+        TrainerBookedSession.date AS date,
+        JSON_OBJECT(
+          'id',Slot.id,
+          'fromTime', Slot.fromTime,
+          'toTime', Slot.toTime
+          ) AS slot,
+       JSON_OBJECT(
+          'id',User.id,
+          'firstName', User.firstName,
+          'lasttName', User.lastName,
+          'profileImage', User.profileImage
+          ) AS user,
+        JSON_OBJECT(
+          'fieldId',Field.id,
+          'fieldRegionId', Region.id,
+          'fieldRegionName', Region.name
+          ) AS field,
+        CASE WHEN COUNT(Sport.id) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(JSON_OBJECT(
+          'id',Sport.id,
+          'name', Sport.name
+          ))
+        END AS sports
+      FROM TrainerBookedSession
+      JOIN TrainerProfile ON TrainerBookedSession.trainerProfileId = TrainerProfile.id
+      LEFT JOIN SessionRequest ON TrainerBookedSession.id = SessionRequest.trainerBookedSessionId
+      LEFT JOIN Slot ON Slot.id = TrainerBookedSession.slotId
+      LEFT JOIN User ON User.id = TrainerBookedSession.userId
+      LEFT JOIN Field ON Slot.fieldId = Field.id
+      LEFT JOIN Region ON Field.regionID = Region.id
+      LEFT JOIN TrainerProfileSports ON TrainerProfile.id = TrainerProfileSports.trainerProfileId
+      LEFT JOIN Sport ON TrainerProfileSports.sportId = Sport.id
+      WHERE TrainerBookedSession.trainerProfileId = ${trainerProfileId}
+      AND TrainerBookedSession.date >= ${todayDate}
+      AND SessionRequest.status = ${SESSION_REQUEST_STATUSES_ENUM.PENDING}
+      GROUP BY TrainerBookedSession.id
+    `;
+    return pendingSessions.map((session) => {
+      session.date = moment(session.date).format('YYYY-MM-DD');
+      session.slot.fromTime = moment(`1970-01-01T${session.slot.fromTime}`).format(
+        'hh:mm A',
+      );
+      session.slot.toTime = moment(`1970-01-01T${session.slot.toTime}`).format('hh:mm A');
+      return session;
+    });
+  }
+
+  async rejectRestOfSameDateSlotRequests(date: string, slotId: number) {
+    await this.prisma.$queryRaw`
+      UPDATE
+      SessionRequest
+      SET status = ${SESSION_REQUEST_STATUSES_ENUM.REJECTED}
+      WHERE trainerBookedSessionId IN (
+        SELECT id
+        FROM TrainerBookedSession
+        WHERE date = ${date}
+        AND slotId = ${slotId}
+        AND status = ${SESSIONS_STATUSES_ENUM.NOT_ACTIVE}
+      )
+    `;
   }
 
   // //
@@ -274,7 +345,6 @@ export class SessionModel {
         tbs.userId AS userId,
         sr.status AS status,
         tp.level AS coachLevel,
-        pp.level AS playerLevel,
         tp.userId AS coachUserId,
         tbs.date AS bookedDate,
         tbs.gmt AS gmt,
@@ -292,7 +362,6 @@ export class SessionModel {
       FROM
         TrainerBookedSession tbs
         JOIN TrainerProfile tp ON tbs.trainerProfileId = tp.id
-        JOIN PlayerProfile pp ON pp.userId = tbs.userId
         LEFT JOIN SessionRequest sr ON tbs.id = sr.trainerBookedSessionId
         LEFT JOIN Slot ON Slot.id = tbs.slotId
         LEFT JOIN Field f ON f.id = Slot.fieldId
@@ -311,15 +380,20 @@ export class SessionModel {
     return this.prisma.$queryRaw`
       SELECT
         tbs.id AS coachBookedSessionId,
+        Slot.id AS slotId,
+        Slot.fromTime AS fromTime,
+        Slot.toTime AS toTime,
         sr.id AS sessionRequestId,
         sr.status AS sessionRequestStatus,
         tbs.status AS bookedSessionStatus,
+        tbs.date AS date,
         sr.type AS sessionRequestType,
         tp.userId AS coachUserId
       FROM
         TrainerBookedSession tbs
         JOIN TrainerProfile tp ON tbs.trainerProfileId = tp.id
         LEFT JOIN SessionRequest sr ON tbs.id = sr.trainerBookedSessionId
+        LEFT JOIN Slot ON Slot.id = tbs.slotId
       WHERE
         tbs.id = ${sessionId}
       GROUP BY
@@ -337,6 +411,7 @@ export class SessionModel {
         sr.type AS sessionRequestType,
         tp.defaultCancellationTime AS cancellationHours,
         tbs.date AS date,
+        Slot.id AS slotId,
         Slot.fromTime AS fromTime,
         Slot.toTime AS toTime,
         tbs.userId AS userId

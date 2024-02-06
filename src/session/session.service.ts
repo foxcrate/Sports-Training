@@ -20,6 +20,8 @@ import {
 import { CoachSessionDataDto } from './dtos/coach-session-data.dto';
 import * as moment from 'moment-timezone';
 import { CancellingReasonDto } from './dtos/cancelling-reason.dto';
+import { TrainerScheduleService } from 'src/trainer-schedule/trainer-schedule.service';
+import { TrainerProfileModel } from 'src/trainer-profile/trainer-profile.model';
 
 @Injectable()
 export class SessionService {
@@ -27,6 +29,8 @@ export class SessionService {
     private readonly i18n: I18nService,
     private sessionModel: SessionModel,
     private playerProfileModel: PlayerProfileModel,
+    private trainerProfileModel: TrainerProfileModel,
+    private trainerScheduleService: TrainerScheduleService,
     private globalService: GlobalService,
   ) {}
 
@@ -89,6 +93,8 @@ export class SessionService {
     sessionId: number,
   ): Promise<TrainingSessionResultDto> {
     const coachSession = await this.sessionModel.getCoachingSession(sessionId);
+    // console.log({ coachSession });
+
     const validCoachSession = this.validateSessionExistence(coachSession);
     this.validateSessionViewUserRights(userId, validCoachSession.coachUserId);
     return this.formatCoachTrainingSession(validCoachSession);
@@ -99,16 +105,41 @@ export class SessionService {
     return this.formatCancellingReasons(cancellingReasons);
   }
 
+  async getPendingSessions(userId: number) {
+    let trainerProfile = await this.trainerProfileModel.getByUserId(userId);
+    return await this.sessionModel.getPendingSessions(trainerProfile.id);
+  }
+
   async coachApproveSession(
     userId: number,
     sessionId: number,
   ): Promise<TrainingSessionResultDto> {
-    //validate datetime
-    //validate existimg session at this time
     //if deny delete session and request
     const coachSessionData: CoachSessionDataDto[] =
       (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
-    const validCoachSession = this.validateChangeSessionRequest(userId, coachSessionData);
+
+    // console.log({ coachSessionData });
+
+    const validCoachSession = await this.validateChangeSessionRequest(
+      userId,
+      coachSessionData,
+    );
+
+    //validate if there is a booked session
+    if (
+      await this.trainerScheduleService.checkBookedSlot(
+        coachSessionData[0].slotId,
+        coachSessionData[0].date,
+        SESSIONS_STATUSES_ENUM.ACTIVE,
+      )
+    ) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.BOOKED_SLOT`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
     const { sessionRequestId, coachBookedSessionId } = validCoachSession;
     const [formattedSession] = await Promise.all([
       this.getCoachingSession(userId, sessionId),
@@ -119,6 +150,10 @@ export class SessionService {
         SESSION_REQUEST_STATUSES_ENUM.ACCEPTED,
       ),
     ]);
+    await this.sessionModel.rejectRestOfSameDateSlotRequests(
+      coachSessionData[0].date,
+      coachSessionData[0].slotId,
+    );
     return {
       ...formattedSession,
       status: SESSION_REQUEST_STATUSES_ENUM.ACCEPTED,
@@ -131,7 +166,10 @@ export class SessionService {
   ): Promise<TrainingSessionResultDto> {
     const coachSessionData: CoachSessionDataDto[] =
       (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
-    const validCoachSession = this.validateChangeSessionRequest(userId, coachSessionData);
+    const validCoachSession = await this.validateChangeSessionRequest(
+      userId,
+      coachSessionData,
+    );
     const { sessionRequestId, coachBookedSessionId } = validCoachSession;
     const [formattedSession] = await Promise.all([
       this.getCoachingSession(userId, sessionId),
@@ -153,11 +191,11 @@ export class SessionService {
     sessionId: number,
     cancelReasonId: number,
   ): Promise<TrainingSessionResultDto> {
-    //datetime
     const [coachSessionData, cancelReasonData] = await Promise.all([
       this.sessionModel.getCoachSessionData(sessionId),
       this.sessionModel.getCancellingReason(cancelReasonId),
     ]);
+
     const [validCoachSession, validCancellingReason] = [
       this.validateCancelRequest(userId, coachSessionData),
       this.validateCancellingReasonExistence(cancelReasonData),
@@ -217,8 +255,10 @@ export class SessionService {
 
   // async markSessionAsComplete(theDateTime: string) {}
 
-  validateChangeSessionRequest(userId, sessionData) {
-    const foundSession = this.validateSessionExistence(sessionData);
+  async validateChangeSessionRequest(userId, sessionData) {
+    // console.log('ours');
+
+    const foundSession = await this.validateSessionExistence(sessionData);
     this.validateSessionViewUserRights(userId, foundSession.coachUserId);
     // if (!foundSession.sessionRequestId) {
     //   throw new BadRequestException(
@@ -234,6 +274,12 @@ export class SessionService {
     //     }),
     //   );
     // }
+
+    this.globalService.validatePassedDateTime(
+      sessionData[0].date,
+      sessionData[0].fromTime,
+    );
+
     if (foundSession.sessionRequestStatus !== SESSION_REQUEST_STATUSES_ENUM.PENDING) {
       throw new BadRequestException(
         this.i18n.t(`errors.NOT_ALLOWED_TO_CHANGE_STATUS`, {
@@ -245,14 +291,19 @@ export class SessionService {
   }
 
   validateCancelRequest(userId, sessionData) {
+    this.globalService.validatePassedDateTime(
+      sessionData[0].date,
+      sessionData[0].fromTime,
+    );
+
     const foundSession = this.validateSessionExistence(sessionData);
     this.validateSessionViewUserRights(userId, foundSession.coachUserId);
     // if (!foundSession.sessionRequestId) {
-    //   throw new BadRequestException(
-    //     this.i18n.t(`errors.NOT_FOUND_SESSION_REQUEST`, {
-    //       lang: I18nContext.current().lang,
-    //     }),
-    //   );
+    // throw new BadRequestException(
+    //   this.i18n.t(`errors.NOT_FOUND_SESSION_REQUEST`, {
+    //     lang: I18nContext.current().lang,
+    //   }),
+    // );
     // }
     if (foundSession.bookedSessionStatus !== SESSIONS_STATUSES_ENUM.ACTIVE) {
       throw new BadRequestException(
@@ -272,6 +323,11 @@ export class SessionService {
   }
 
   validateUserSession(userId, sessionData) {
+    this.globalService.validatePassedDateTime(
+      sessionData[0].date,
+      sessionData[0].fromTime,
+    );
+
     const foundSession: UserSessionDataDto = this.validateSessionExistence(sessionData);
     // console.log({ userId });
     // console.log({ foundSession });
@@ -325,6 +381,8 @@ export class SessionService {
   }
 
   validateSessionExistence(sessionData) {
+    // console.log({ sessionData });
+
     if (!(Array.isArray(sessionData) && sessionData.length === 1)) {
       throw new NotFoundException(
         this.i18n.t(`errors.NOT_FOUND_SESSION`, { lang: I18nContext.current().lang }),

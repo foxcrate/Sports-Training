@@ -49,6 +49,13 @@ export class SessionController {
     return this.sessionService.getTrainingSession(userId, sessionId, type);
   }
 
+  @Get('get-pending-sessions')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async getPendingSessions1(@UserId() userId: number) {
+    return await this.sessionService.getPendingSessions(userId);
+  }
+
   @Get('coaching-session/:sessionId')
   async getCoachingSession(
     @Param(new JoiValidation(SessionIdParamValidations))

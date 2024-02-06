@@ -406,7 +406,7 @@ export class AuthService {
         complete: true,
       });
 
-      console.log({ header });
+      // console.log({ header });
 
       const kid = header.kid;
       const publicKey = (await this.key(kid)).getPublicKey();
