@@ -114,6 +114,12 @@ export class GlobalService {
     return allAgeGroups;
   }
 
+  async getAllFeedbacks(): Promise<[]> {
+    let allFeedbacks = await this.globalModel.allFeedbacks();
+
+    return allFeedbacks;
+  }
+
   isTimeAvailable(startTime, endTime, targetTime) {
     // Create Date objects for the start, end, and target times
     let start = new Date(startTime);

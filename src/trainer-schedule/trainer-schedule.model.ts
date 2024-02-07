@@ -470,7 +470,7 @@ export class TrainerScheduleModel {
 
   private async deleteNotBookedScheduleSlots(scheduleId: number) {
     //get schedule slot ids
-    let allSlotsIds = await this.prisma.$queryRaw`
+    let allSlotsIds: any[] = await this.prisma.$queryRaw`
     SELECT
     JSON_ARRAYAGG(id) as ids
     FROM
@@ -480,28 +480,30 @@ export class TrainerScheduleModel {
     `;
 
     // get ids of booked slots
-    let bookedSlotsIds: any = await this.prisma.$queryRaw`
-    SELECT
-    JSON_ARRAYAGG(slotId) as ids
-    FROM
-    TrainerBookedSession
-    WHERE
-    slotId IN (${Prisma.join(allSlotsIds[0].ids)})
-    `;
-
-    // get not booked slotIds
-    let notBookedSlotsIds = allSlotsIds[0].ids.filter(
-      (element) => !bookedSlotsIds[0].ids?.includes(element),
-    );
-
-    //delete the rest of slots (whose don't connect to a trainerBookedSession)
-
-    if (notBookedSlotsIds?.length > 0) {
-      await this.prisma.$queryRaw`
-      DELETE
-      FROM Slot AS s
-      WHERE s.id IN(${Prisma.join(notBookedSlotsIds)})
+    if (allSlotsIds[0].ids) {
+      let bookedSlotsIds: any = await this.prisma.$queryRaw`
+      SELECT
+      JSON_ARRAYAGG(slotId) as ids
+      FROM
+      TrainerBookedSession
+      WHERE
+      slotId IN (${Prisma.join(allSlotsIds[0].ids)})
       `;
+
+      // get not booked slotIds
+      let notBookedSlotsIds = allSlotsIds[0].ids.filter(
+        (element) => !bookedSlotsIds[0].ids?.includes(element),
+      );
+
+      //delete the rest of slots (whose don't connect to a trainerBookedSession)
+
+      if (notBookedSlotsIds?.length > 0) {
+        await this.prisma.$queryRaw`
+        DELETE
+        FROM Slot AS s
+        WHERE s.id IN(${Prisma.join(notBookedSlotsIds)})
+        `;
+      }
     }
   }
 

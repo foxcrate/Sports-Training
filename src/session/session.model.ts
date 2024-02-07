@@ -23,6 +23,7 @@ export class SessionModel {
   async getBookedSessionBySlotId(
     slotId: number,
     dayDate: string,
+    userId: number = null,
     status: string = null,
   ): Promise<BookedSessionDTO> {
     let TheBookedSlot = await this.prisma.$queryRaw`
@@ -30,6 +31,7 @@ export class SessionModel {
       FROM TrainerBookedSession
       WHERE slotId = ${slotId}
       AND date = ${dayDate}
+      ${userId ? Prisma.sql`AND userId = ${userId}` : Prisma.empty}
       ${status ? Prisma.sql`AND status = ${status}` : Prisma.empty}
     `;
     return TheBookedSlot[0];

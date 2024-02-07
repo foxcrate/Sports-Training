@@ -38,6 +38,14 @@ export class GlobalController {
   async getAllAgeGroups() {
     return await this.globalService.getAllAgeGroups();
   }
+
+  @Get('feedback')
+  @Roles(AvailableRoles.User)
+  @UseGuards(AuthGuard, RoleGuard)
+  @Version('1')
+  async getAllFeedbacks() {
+    return await this.globalService.getAllFeedbacks();
+  }
 }
 
 //   {

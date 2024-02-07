@@ -606,6 +606,15 @@ model Region {
   updatedAt DateTime @default(now())
 }
 
+model Feedback {
+  id Int @id @default(autoincrement())
+
+  content String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
 // model Internationalization{
 //   id                    Int                 @id @default(autoincrement())
 

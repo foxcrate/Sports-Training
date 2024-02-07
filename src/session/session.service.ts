@@ -130,6 +130,7 @@ export class SessionService {
       await this.trainerScheduleService.checkBookedSlot(
         coachSessionData[0].slotId,
         coachSessionData[0].date,
+        null,
         SESSIONS_STATUSES_ENUM.ACTIVE,
       )
     ) {

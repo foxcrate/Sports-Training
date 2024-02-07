@@ -152,6 +152,7 @@ export class TrainerScheduleService {
         !(await this.checkBookedSlot(
           availableSlotsForDay[i].id,
           dayDate,
+          null,
           SESSIONS_STATUSES_ENUM.ACTIVE,
         ))
       ) {
@@ -275,7 +276,14 @@ export class TrainerScheduleService {
     }
 
     // check booked slots
-    if (await this.checkBookedSlot(slotId, dayDate, SESSIONS_STATUSES_ENUM.ACTIVE)) {
+    if (
+      await this.checkBookedSlot(
+        slotId,
+        dayDate,
+        userId,
+        SESSIONS_STATUSES_ENUM.NOT_ACTIVE,
+      )
+    ) {
       throw new BadRequestException(
         this.i18n.t(`errors.BOOKED_SLOT`, {
           lang: I18nContext.current().lang,
@@ -288,11 +296,13 @@ export class TrainerScheduleService {
   async checkBookedSlot(
     slotId: number,
     dayDate: string,
+    userId: number = null,
     status: string = null,
   ): Promise<boolean> {
     let bookedSlot = await this.sessionModel.getBookedSessionBySlotId(
       slotId,
       dayDate,
+      userId,
       status,
     );
 

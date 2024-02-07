@@ -23,6 +23,18 @@ export class GlobalModel {
     return allAgeGroups;
   }
 
+  async allFeedbacks(): Promise<[]> {
+    let allFeedbacks: [] = await this.prisma.$queryRaw`
+        SELECT
+        id,
+        content
+        FROM
+        Feedback
+      `;
+
+    return allFeedbacks;
+  }
+
   async getOneAgeGroup(ageGroupId: number): Promise<any> {
     let allAgeGroups: any[] = await this.prisma.$queryRaw`
         SELECT
