@@ -76,7 +76,42 @@ export class DoctorClinicService {
     return deletedClinic;
   }
 
+  async availableUpcomingWeek(id: number) {
+    let theDoctorClinic = await this.doctorClinicModel.getByID(id);
+    let availableDays = [];
+
+    let endDate = moment().endOf('week');
+
+    let toDay = moment();
+
+    while (toDay < endDate) {
+      let dayName = toDay.format('dddd');
+
+      if (theDoctorClinic.availableWeekDays.includes(dayName)) {
+        availableDays.push(moment(toDay).format('YYYY-MM-DD'));
+      }
+
+      toDay.add(1, 'days');
+    }
+
+    if (theDoctorClinic.doctorClinicNotAvailableDays) {
+      let arrayOfNotAvailableDays = theDoctorClinic.doctorClinicNotAvailableDays.map(
+        (i) => {
+          return moment(i.dayDate).format('YYYY-MM-DD');
+        },
+      );
+
+      availableDays = this.getClinicRealAvailableDays(
+        availableDays,
+        arrayOfNotAvailableDays,
+      );
+    }
+
+    return availableDays;
+  }
+
   async doctorClinicDayAvailableHours(
+    userId,
     doctorClinicId: number,
     day: string,
   ): Promise<FreeSlots[]> {
@@ -114,6 +149,19 @@ export class DoctorClinicService {
       return this.globalSerice.getLocalTime12(moment(i.fromDateTime));
     });
 
+    //get user booked hours
+    let userBookedHours = await this.doctorClinicModel.getUserBookedHours(
+      userId,
+      dateString,
+    );
+
+    if (userBookedHours) {
+      let mappedUserBookedHours = userBookedHours.map((i) => {
+        return this.globalSerice.getLocalTime12(moment(i));
+      });
+      mappedDoctorClinicBookedHours.push(...mappedUserBookedHours);
+    }
+
     let startTimeDate = `${dateString} ${theDoctorClinic.availableDayHours.from}`;
     let endTimeDate = `${dateString} ${theDoctorClinic.availableDayHours.to}`;
 
@@ -123,40 +171,6 @@ export class DoctorClinicService {
       endTimeDate,
     );
     return availableHours;
-  }
-
-  async availableUpcomingWeek(id: number) {
-    let theDoctorClinic = await this.doctorClinicModel.getByID(id);
-    let availableDays = [];
-
-    let endDate = moment().endOf('week');
-
-    let toDay = moment();
-
-    while (toDay < endDate) {
-      let dayName = toDay.format('dddd');
-
-      if (theDoctorClinic.availableWeekDays.includes(dayName)) {
-        availableDays.push(moment(toDay).format('YYYY-MM-DD'));
-      }
-
-      toDay.add(1, 'days');
-    }
-
-    if (theDoctorClinic.doctorClinicNotAvailableDays) {
-      let arrayOfNotAvailableDays = theDoctorClinic.doctorClinicNotAvailableDays.map(
-        (i) => {
-          return moment(i.dayDate).format('YYYY-MM-DD');
-        },
-      );
-
-      availableDays = this.getClinicRealAvailableDays(
-        availableDays,
-        arrayOfNotAvailableDays,
-      );
-    }
-
-    return availableDays;
   }
 
   async reserveSlot(doctorClinicId: number, userId: number, reqBody): Promise<any> {
@@ -202,6 +216,19 @@ export class DoctorClinicService {
     let mappedDoctorClinicBookedHours = doctorClinicBookedHours.map((i) => {
       return moment(i.fromDateTime).format('HH:mm');
     });
+
+    //get user booked hours
+    let userBookedHours = await this.doctorClinicModel.getUserBookedHours(
+      userId,
+      dateOnly,
+    );
+
+    if (userBookedHours) {
+      let mappedUserBookedHours = userBookedHours.map((i) => {
+        return moment(i).format('HH:mm');
+      });
+      mappedDoctorClinicBookedHours.push(...mappedUserBookedHours);
+    }
 
     for (let i = 0; i < localDayTimes.length; i++) {
       if (mappedDoctorClinicBookedHours.includes(localDayTimes[i])) {

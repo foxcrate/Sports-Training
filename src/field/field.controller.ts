@@ -37,8 +37,13 @@ export class FieldController {
   @UseGuards(AuthGuard, RoleGuard)
   async fieldDayAvailableHours1(
     @Param(new JoiValidation(FieldAvailableHoursValidation)) params,
+    @Request() req: ExpressRequest,
   ) {
-    return await this.fieldService.fieldDayAvailableHours(params.id, params.date);
+    return await this.fieldService.fieldDayAvailableHours(
+      req['id'],
+      params.id,
+      params.date,
+    );
   }
 
   @Get('/:id/available-upcoming-week')

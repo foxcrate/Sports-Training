@@ -546,6 +546,18 @@ export class FieldModel {
     `;
   }
 
+  async getUserBookedHours(userId: number, dayDate: string): Promise<string[]> {
+    let userBookedHours = await this.prisma.$queryRaw`
+      SELECT
+      JSON_ARRAYAGG(fromDateTime) AS times
+      FROM FieldsBookedHours
+      WHERE userId = ${userId}
+      AND DATE(fromDateTime) = ${dayDate}
+    `;
+
+    return userBookedHours[0].times;
+  }
+
   async selectPendingFields(): Promise<FieldBookingDetailsDTO[]> {
     // return 'alo';
 

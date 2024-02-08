@@ -69,47 +69,6 @@ export class FieldService {
     return deletedField;
   }
 
-  async fieldDayAvailableHours(fieldId: number, day: string): Promise<FreeSlots[]> {
-    let fieldExist = await this.fieldModel.getByID(fieldId);
-    let dayDate = moment(day);
-
-    let dateString = this.globalSerice.getDate(dayDate);
-    let dayName = this.globalSerice.getDayName(dayDate);
-
-    let theField = await this.fieldModel.fieldBookingDetailsForSpecificDate(
-      fieldId,
-      dateString,
-    );
-
-    // throw error if date not available
-    if (theField.fieldNotAvailableDays && theField.fieldNotAvailableDays.length > 0) {
-      throw new BadRequestException(
-        this.i18n.t(`errors.DAY_NOT_AVAILABLE`, {
-          lang: I18nContext.current().lang,
-        }),
-      );
-    }
-
-    //throw error if week day not available
-    this.checkWeekDayIsAvailable(theField.availableWeekDays, dayName);
-
-    let fieldBookedHours = theField.fieldBookedHours ? theField.fieldBookedHours : [];
-
-    let mappedFieldBookedHours = fieldBookedHours.map((i) => {
-      return this.globalSerice.getLocalTime12(moment(i.fromDateTime));
-    });
-
-    let startTimeDate = `${dateString} ${theField.availableDayHours.from}`;
-    let endTimeDate = `${dateString} ${theField.availableDayHours.to}`;
-
-    let availableHours = this.getFreeSlots(
-      mappedFieldBookedHours,
-      startTimeDate,
-      endTimeDate,
-    );
-    return availableHours;
-  }
-
   async availableUpcomingWeek(id: number) {
     let theField = await this.fieldModel.getByID(id);
     let availableDays = [];
@@ -142,8 +101,64 @@ export class FieldService {
     return availableDays;
   }
 
+  async fieldDayAvailableHours(
+    userId: number,
+    fieldId: number,
+    day: string,
+  ): Promise<FreeSlots[]> {
+    await this.fieldModel.getByID(fieldId);
+    let dayDate = moment(day);
+
+    let dateString = this.globalSerice.getDate(dayDate);
+    let dayName = this.globalSerice.getDayName(dayDate);
+
+    let theField = await this.fieldModel.fieldBookingDetailsForSpecificDate(
+      fieldId,
+      dateString,
+    );
+
+    // throw error if date not available
+    if (theField.fieldNotAvailableDays && theField.fieldNotAvailableDays.length > 0) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.DAY_NOT_AVAILABLE`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
+    //throw error if week day not available
+    this.checkWeekDayIsAvailable(theField.availableWeekDays, dayName);
+
+    let fieldBookedHours = theField.fieldBookedHours ? theField.fieldBookedHours : [];
+
+    let mappedFieldBookedHours = fieldBookedHours.map((i) => {
+      return this.globalSerice.getLocalTime12(moment(i.fromDateTime));
+    });
+    // console.log({ mappedFieldBookedHours });
+
+    //get user booked hours
+    let userBookedHours = await this.fieldModel.getUserBookedHours(userId, dateString);
+
+    if (userBookedHours) {
+      let mappedUserBookedHours = userBookedHours.map((i) => {
+        return this.globalSerice.getLocalTime12(moment(i));
+      });
+      mappedFieldBookedHours.push(...mappedUserBookedHours);
+    }
+
+    let startTimeDate = `${dateString} ${theField.availableDayHours.from}`;
+    let endTimeDate = `${dateString} ${theField.availableDayHours.to}`;
+
+    let availableHours = this.getFreeSlots(
+      mappedFieldBookedHours,
+      startTimeDate,
+      endTimeDate,
+    );
+    return availableHours;
+  }
+
   async reserveSlot(fieldId: number, userId: number, reqBody): Promise<any> {
-    let fieldExist = await this.fieldModel.getByID(fieldId);
+    await this.fieldModel.getByID(fieldId);
     let dayDate = moment(reqBody.dayDate);
     let dateOnly = this.globalSerice.getDate(dayDate);
     let dayTimesArray = reqBody.dayTimes;
@@ -179,6 +194,16 @@ export class FieldService {
     let mappedFieldBookedHours = fieldBookedHours.map((i) => {
       return moment(i.fromDateTime).format('HH:mm:ss');
     });
+
+    //get user booked hours
+    let userBookedHours = await this.fieldModel.getUserBookedHours(userId, dateOnly);
+
+    if (userBookedHours) {
+      let mappedUserBookedHours = userBookedHours.map((i) => {
+        return moment(i).format('HH:mm:ss');
+      });
+      mappedFieldBookedHours.push(...mappedUserBookedHours);
+    }
 
     for (let i = 0; i < localDayTimes.length; i++) {
       if (mappedFieldBookedHours.includes(localDayTimes[i])) {

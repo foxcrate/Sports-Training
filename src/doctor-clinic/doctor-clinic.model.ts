@@ -553,6 +553,18 @@ export class DoctorClinicModel {
     `;
   }
 
+  async getUserBookedHours(userId: number, dayDate: string): Promise<string[]> {
+    let userBookedHours = await this.prisma.$queryRaw`
+      SELECT
+      JSON_ARRAYAGG(fromDateTime) AS times
+      FROM DoctorClinicsBookedHours
+      WHERE userId = ${userId}
+      AND DATE(fromDateTime) = ${dayDate}
+    `;
+
+    return userBookedHours[0].times;
+  }
+
   async selectPendingDoctorClinics(): Promise<DoctorClinicBookingDetailsDTO[]> {
     let theDoctorClinic: DoctorClinicBookingDetailsDTO[] = await this.prisma.$queryRaw`
       WITH DoctorClinicDetailsWithBookedHours AS (

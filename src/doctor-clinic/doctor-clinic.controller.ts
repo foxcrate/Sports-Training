@@ -37,8 +37,10 @@ export class DoctorClinicController {
   @UseGuards(AuthGuard, RoleGuard)
   async doctorClinicDayAvailableHours1(
     @Param(new JoiValidation(DoctorClinicAvailableHoursValidation)) params,
+    @Request() req: ExpressRequest,
   ) {
     return await this.doctorClinicService.doctorClinicDayAvailableHours(
+      req['id'],
       params.id,
       params.date,
     );
