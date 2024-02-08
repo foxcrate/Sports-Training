@@ -29,8 +29,7 @@ export class CalendarModel {
             COUNT(*) AS bookedHoursCount 
           FROM TrainerBookedSession 
           WHERE
-            status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
-            AND userId = ${userId}
+            userId = ${userId}
             AND DATE( date ) BETWEEN '${startDate}' 
             AND '${endDate}' 
           GROUP BY
@@ -45,8 +44,7 @@ export class CalendarModel {
           FROM TrainerBookedSession tbs
           JOIN TrainerProfile tp ON tbs.trainerProfileId = tp.id
           WHERE
-            tbs.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
-            AND tp.userId = ${userId}
+            tp.userId = ${userId}
             AND DATE( date ) BETWEEN '${startDate}' 
             AND '${endDate}' 
           GROUP BY
