@@ -7,6 +7,9 @@ import { GlobalService } from 'src/global/global.service';
 import {
   CANCELED_BY_ENUM,
   HOME_SEARCH_TYPES_ENUM,
+  NOTIFICATION_ABOUT,
+  NOTIFICATION_SENT_TO,
+  NOTIFICATION_TYPE,
   SESSIONS_STATUSES_ENUM,
   SESSION_REQUEST_STATUSES_ENUM,
 } from 'src/global/enums';
@@ -22,6 +25,7 @@ import * as moment from 'moment-timezone';
 import { CancellingReasonDto } from './dtos/cancelling-reason.dto';
 import { TrainerScheduleService } from 'src/trainer-schedule/trainer-schedule.service';
 import { TrainerProfileModel } from 'src/trainer-profile/trainer-profile.model';
+import { NotificationModel } from 'src/notification/notification.model';
 
 @Injectable()
 export class SessionService {
@@ -30,6 +34,7 @@ export class SessionService {
     private sessionModel: SessionModel,
     private playerProfileModel: PlayerProfileModel,
     private trainerProfileModel: TrainerProfileModel,
+    private notificationModel: NotificationModel,
     private trainerScheduleService: TrainerScheduleService,
     private globalService: GlobalService,
   ) {}
@@ -155,6 +160,17 @@ export class SessionService {
       coachSessionData[0].date,
       coachSessionData[0].slotId,
     );
+
+    // create notification
+    await this.notificationModel.createOne(
+      coachSessionData[0].userId,
+      coachSessionData[0].coachBookedSessionId,
+      NOTIFICATION_SENT_TO.PLAYER_PROFILE,
+      NOTIFICATION_ABOUT.TRAINER_SESSION,
+      NOTIFICATION_TYPE.ACCEPT,
+      'Coach accepted your session',
+    );
+
     return {
       ...formattedSession,
       status: SESSION_REQUEST_STATUSES_ENUM.ACCEPTED,
@@ -181,6 +197,17 @@ export class SessionService {
         SESSION_REQUEST_STATUSES_ENUM.REJECTED,
       ),
     ]);
+
+    // create notification
+    await this.notificationModel.createOne(
+      coachSessionData[0].userId,
+      coachSessionData[0].coachBookedSessionId,
+      NOTIFICATION_SENT_TO.PLAYER_PROFILE,
+      NOTIFICATION_ABOUT.TRAINER_SESSION,
+      NOTIFICATION_TYPE.REJECT,
+      'Coach rejected your session',
+    );
+
     return {
       ...formattedSession,
       status: SESSION_REQUEST_STATUSES_ENUM.REJECTED,

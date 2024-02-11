@@ -5,6 +5,7 @@ import { PlayerProfileModule } from 'src/player-profile/player-profile.module';
 import { SessionModel } from './session.model';
 import { TrainerScheduleModule } from 'src/trainer-schedule/trainer-schedule.module';
 import { TrainerProfileModule } from 'src/trainer-profile/trainer-profile.module';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   controllers: [SessionController],
@@ -13,6 +14,7 @@ import { TrainerProfileModule } from 'src/trainer-profile/trainer-profile.module
     TrainerProfileModule,
     PlayerProfileModule,
     forwardRef(() => TrainerScheduleModule),
+    NotificationModule,
   ],
   exports: [SessionModel],
 })

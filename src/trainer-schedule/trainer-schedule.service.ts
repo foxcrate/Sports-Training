@@ -12,7 +12,13 @@ import { SessionModel } from 'src/session/session.model';
 import { UserSlotState } from './dtos/user-slot-state.dto';
 import { SessionCardDTO } from 'src/session/dtos/session-card.dto';
 import { SimplifiedFieldReturn } from 'src/field/dtos/field-simplified-return.dto';
-import { SESSIONS_STATUSES_ENUM } from 'src/global/enums';
+import {
+  NOTIFICATION_ABOUT,
+  NOTIFICATION_SENT_TO,
+  NOTIFICATION_TYPE,
+  SESSIONS_STATUSES_ENUM,
+} from 'src/global/enums';
+import { NotificationModel } from 'src/notification/notification.model';
 
 @Injectable()
 export class TrainerScheduleService {
@@ -22,6 +28,7 @@ export class TrainerScheduleService {
     private readonly i18n: I18nService,
     private trainerProfileModel: TrainerProfileModel,
     private sessionModel: SessionModel,
+    private notificationModel: NotificationModel,
   ) {}
 
   async getAll(userId: number): Promise<ScheduleSlotsDetailsDTO[]> {
@@ -189,8 +196,19 @@ export class TrainerScheduleService {
       slotId,
     );
 
+    let theTrainerProfile = await this.trainerProfileModel.getByID(trainerProfileId);
+
     await this.sessionModel.createNewTrainerSessionRequest(trainerBookedSession.id);
-    // send firebase notification
+
+    // create notification
+    await this.notificationModel.createOne(
+      theTrainerProfile.userId,
+      trainerBookedSession.id,
+      NOTIFICATION_SENT_TO.TRAINER_PROFILE,
+      NOTIFICATION_ABOUT.TRAINER_SESSION,
+      NOTIFICATION_TYPE.REQUEST,
+      'User requested for a session',
+    );
 
     let trainerBookedSessionCard = await this.sessionModel.getTrainerBookedSessionCard(
       trainerBookedSession.id,

@@ -34,6 +34,21 @@ export enum PROFILE_TYPES_ENUM {
   CHILD = 'child',
 }
 
+export enum NOTIFICATION_SENT_TO {
+  PLAYER_PROFILE = 'playerProfile',
+  TRAINER_PROFILE = 'trainerProfile',
+}
+
+export enum NOTIFICATION_ABOUT {
+  TRAINER_SESSION = 'trainerSession',
+}
+
+export enum NOTIFICATION_TYPE {
+  REQUEST = 'request',
+  ACCEPT = 'accept',
+  REJECT = 'reject',
+}
+
 export enum SESSIONS_STATUSES_ENUM {
   ACTIVE = 'active',
   NOT_ACTIVE = 'notActive',

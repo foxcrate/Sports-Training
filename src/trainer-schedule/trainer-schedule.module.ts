@@ -6,9 +6,14 @@ import { AdminTrainerScheduleController } from './admin-trainer-schedule.control
 import { TrainerScheduleService } from './trainer-schedule.service';
 import { TrainerScheduleModel } from './trainer-schedule.model';
 import { SessionModule } from 'src/session/session.module';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
-  imports: [forwardRef(() => TrainerProfileModule), forwardRef(() => SessionModule)],
+  imports: [
+    forwardRef(() => TrainerProfileModule),
+    forwardRef(() => SessionModule),
+    NotificationModule,
+  ],
   controllers: [
     TrainerScheduleController,
     UserTrainerScheduleController,

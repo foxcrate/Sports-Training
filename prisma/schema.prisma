@@ -52,6 +52,21 @@ enum Provider {
   native
 }
 
+enum NotificationSentTo{
+  playerProfile
+  trainerProfile
+}
+
+enum NotificationAbout{
+  trainerSession
+}
+
+enum NotificationType{
+  request
+  accept
+  reject
+}
+
 enum Level {
   beginner
   intermediate
@@ -107,6 +122,7 @@ model User {
   parentsChilds         ParentsChilds[]            @relation("ParentsChilds")
   childsParents         ParentsChilds[]            @relation("ChildsParents")
   rates                 Rate[]
+  notifications Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
@@ -326,6 +342,8 @@ model TrainerBookedSession {
   sessionRequest SessionRequest?
 
   rates Rate[]
+
+  notifications Notification[]
 
   canceledBy CanceledByEnum?
 
@@ -615,6 +633,29 @@ model Feedback {
   updatedAt DateTime @default(now())
 }
 
+model Notification {
+  id Int @id @default(autoincrement())
+
+  sentTo  NotificationSentTo?
+
+  about NotificationAbout?
+
+  type  NotificationType?
+
+  content String?
+
+  seen Boolean @default(false)
+  
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+  
+  trainerBookedSession   TrainerBookedSession? @relation(fields: [trainerBookedSessionId], references: [id], onDelete: Cascade)
+  trainerBookedSessionId Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
 // model Internationalization{
 //   id                    Int                 @id @default(autoincrement())
 
@@ -625,5 +666,3 @@ model Feedback {
 
 //   createdAt             DateTime              @default(now())
 // }
-
-

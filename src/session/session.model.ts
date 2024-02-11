@@ -390,6 +390,7 @@ export class SessionModel {
         tbs.status AS bookedSessionStatus,
         tbs.date AS date,
         sr.type AS sessionRequestType,
+        tbs.userId AS userId,
         tp.userId AS coachUserId
       FROM
         TrainerBookedSession tbs
