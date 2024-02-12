@@ -12,6 +12,7 @@ import {
   SESSIONS_STATUSES_ENUM,
   SESSION_REQUEST_STATUSES_ENUM,
 } from 'src/global/enums';
+import { SessionRequestDTO } from './dtos/session-request.dto';
 
 @Injectable()
 export class SessionModel {
@@ -35,6 +36,35 @@ export class SessionModel {
       ${status ? Prisma.sql`AND status = ${status}` : Prisma.empty}
     `;
     return TheBookedSlot[0];
+  }
+
+  async getSessionRequestByid(
+    sessionRequestId: number,
+  ): Promise<SessionRequestDTO> {
+    let sessionRequest = await this.prisma.$queryRaw`
+      SELECT *
+      FROM SessionRequest
+      WHERE id = ${sessionRequestId}
+    `;
+    return sessionRequest[0];
+  }
+
+  async getBookedSessionIdByRequestId(
+    sessionRequestId: number,
+  ): Promise<number> {
+    let sessionId = await this.prisma.$queryRaw`
+      SELECT trainerBookedSessionId AS id
+      FROM SessionRequest
+      WHERE id = ${sessionRequestId}
+    `;
+    if (!sessionId[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.SESSION_REQUEST_NOT_FOUND`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+    return sessionId[0].id;
   }
 
   async getBookedSessionBySessionId(sessionId: number): Promise<BookedSessionDTO> {
@@ -168,6 +198,27 @@ export class SessionModel {
   )`;
   }
 
+  async createChangeSessionSlotRequest(trainerBookedSessionId: number,newSessionDate:string,
+    newSlotId:number) {
+    await this.prisma.$queryRaw`
+    INSERT INTO SessionRequest
+    (
+      trainerBookedSessionId,
+      status,
+      type,
+      newSessionDate,
+      newSlotId
+    )
+    VALUES
+  (
+    ${trainerBookedSessionId},
+    ${SESSION_REQUEST_STATUSES_ENUM.PENDING},
+    'change',
+    ${newSessionDate},
+    ${newSlotId},
+  )`;
+  }
+
   async createTrainerBookedSession(
     userId: number,
     dayDate: string,
@@ -235,6 +286,7 @@ export class SessionModel {
     let todayDate = moment().format('YYYY-MM-DD');
     let pendingSessions: any[] = await this.prisma.$queryRaw`
       SELECT
+        SessionRequest.id AS sessionRequestId,  
         TrainerBookedSession.id AS bookedSessionId,
         SessionRequest.status AS sessionRequestStatus,
         TrainerBookedSession.date AS date,

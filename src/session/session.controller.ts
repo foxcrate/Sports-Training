@@ -24,6 +24,10 @@ import { SessionIdParamValidations } from './validations/session-id.validations'
 import { CoachCancelSessionDto } from './dtos/coach-cancel-session.dto.ts';
 import { CoachCancelSessionValidations } from './validations/coach-cancel-session.validations';
 import { SessionTypeValidations } from './validations/session-type.validations';
+import { RequestSlotChangeValidation } from './validations/request-slot-change.validation';
+import { RequestSlotChangeDto } from './dtos/request-slot-change.dto';
+import { SessionRequestIdValidations } from './validations/session-request-id.validation';
+import { SessionRequestIdDto } from './dtos/session-request-id.dto';
 
 @Roles(AvailableRoles.User)
 @UseGuards(AuthGuard, RoleGuard)
@@ -38,6 +42,16 @@ export class SessionController {
   ) {
     return await this.sessionService.playerRateTrainer(userId, reqBody);
   }
+
+  @Post('player-request-slot-change')
+  async playerRequestSlotChange1(
+    @Body(new JoiValidation(RequestSlotChangeValidation)) reqBody: RequestSlotChangeDto,
+    @UserId() userId: number,
+  ) {
+    return await this.sessionService.playerRequestSlotChange(userId,reqBody);
+  }
+
+  
 
   @Get('training-session/:sessionId')
   async getTrainingSession(
@@ -67,20 +81,20 @@ export class SessionController {
 
   @Put('coach-approve-session/:sessionId')
   async coachApproveSession(
-    @Param(new JoiValidation(SessionIdParamValidations))
-    { sessionId }: TrainingSessionParamsDto,
+    @Param(new JoiValidation(SessionRequestIdValidations))
+    { sessionRequestId }: SessionRequestIdDto,
     @UserId() userId: number,
   ): Promise<TrainingSessionResultDto> {
-    return this.sessionService.coachApproveSession(userId, sessionId);
+    return this.sessionService.coachApproveSession(userId, sessionRequestId);
   }
 
   @Put('coach-decline-session/:sessionId')
   async coachDeclineSession(
-    @Param(new JoiValidation(SessionIdParamValidations))
-    { sessionId }: TrainingSessionParamsDto,
+    @Param(new JoiValidation(SessionRequestIdValidations))
+    { sessionRequestId }: SessionRequestIdDto,
     @UserId() userId: number,
   ): Promise<TrainingSessionResultDto> {
-    return this.sessionService.coachDeclineSession(userId, sessionId);
+    return this.sessionService.coachDeclineSession(userId, sessionRequestId);
   }
 
   @Put('coach-cancel-session/:sessionId')

@@ -374,6 +374,9 @@ model SessionRequest {
   type       SessionRequestType   @default(new)
   status     SessionRequestStatus @default(pending)
 
+  newSessionDate  Int?
+  newSlotId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 }

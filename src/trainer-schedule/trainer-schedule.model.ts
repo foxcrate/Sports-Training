@@ -374,6 +374,7 @@ export class TrainerScheduleModel {
     }
   }
 
+
   private async checkTrainerProfileExistence(trainerProfileId: number): Promise<boolean> {
     let foundedTrainerProfile: ReturnTrainerProfileDto = await this.prisma.$queryRaw`
     SELECT *

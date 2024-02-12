@@ -26,6 +26,8 @@ import { CancellingReasonDto } from './dtos/cancelling-reason.dto';
 import { TrainerScheduleService } from 'src/trainer-schedule/trainer-schedule.service';
 import { TrainerProfileModel } from 'src/trainer-profile/trainer-profile.model';
 import { NotificationModel } from 'src/notification/notification.model';
+import { RequestSlotChangeDto } from './dtos/request-slot-change.dto';
+import { TrainerScheduleModel } from 'src/trainer-schedule/trainer-schedule.model';
 
 @Injectable()
 export class SessionService {
@@ -36,6 +38,7 @@ export class SessionService {
     private trainerProfileModel: TrainerProfileModel,
     private notificationModel: NotificationModel,
     private trainerScheduleService: TrainerScheduleService,
+    private trainerScheduleModel: TrainerScheduleModel,
     private globalService: GlobalService,
   ) {}
 
@@ -115,11 +118,47 @@ export class SessionService {
     return await this.sessionModel.getPendingSessions(trainerProfile.id);
   }
 
+  async playerRequestSlotChange(userId:number,reqBody:RequestSlotChangeDto){
+    await this.playerProfileModel.getOneByUserId(userId)
+    await this.validateRequestChangeSlot(userId,reqBody.sessionId,reqBody.newSlotId,reqBody.newDate)
+    await this.sessionModel.createChangeSessionSlotRequest(reqBody.sessionId,reqBody.newDate,reqBody.newSlotId)
+  }
+
+  async validateRequestChangeSlot(userId:number,sessionId:number,newSlotId:number,newDate:string){
+    let bookedSession = await this.sessionModel.getBookedSessionBySessionId(sessionId)
+    if(bookedSession.userId !== userId){
+      throw new BadRequestException(
+        this.i18n.t(`errors.NOT_ALLOWED_USER_SESSION`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+    //validate slot existance
+    await this.trainerScheduleModel.getSlotById(newSlotId);
+
+    //validate if there is a booked session
+    if (
+      await this.trainerScheduleService.checkBookedSlot(
+        newSlotId,
+        newDate,
+        null,
+        SESSIONS_STATUSES_ENUM.ACTIVE,
+      )
+    ) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.BOOKED_SLOT`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+  }
+
   async coachApproveSession(
     userId: number,
-    sessionId: number,
+    sessionRequestId1: number,
   ): Promise<TrainingSessionResultDto> {
-    //if deny delete session and request
+    let sessionId = await this.sessionModel.getBookedSessionIdByRequestId(sessionRequestId1)
+    
     const coachSessionData: CoachSessionDataDto[] =
       (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
 
@@ -179,8 +218,9 @@ export class SessionService {
 
   async coachDeclineSession(
     userId: number,
-    sessionId: number,
+    sessionRequestId1: number,
   ): Promise<TrainingSessionResultDto> {
+    let sessionId = await this.sessionModel.getBookedSessionIdByRequestId(sessionRequestId1)
     const coachSessionData: CoachSessionDataDto[] =
       (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
     const validCoachSession = await this.validateChangeSessionRequest(

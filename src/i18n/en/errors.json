@@ -17,6 +17,7 @@
   "SCHEDULE_NOT_FOUND": "Schedule not found",
   "AGE_GROUP_NOT_FOUND": "Age Group not found",
   "BOOKED_SESSION_NOT_FOUND": "Booked Session not found",
+  "SESSION_REQUEST_NOT_FOUND": "Session Request not found",
   "WRONG_TRAINER_SESSION_MIX": "This session don't belong to this trainer",
   "ACCOUNT_ALREADY_ACTIVATED": "Account already activated",
   "PROFILE_EXISTED": "Profile already exist",
