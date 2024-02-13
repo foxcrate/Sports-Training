@@ -19,6 +19,7 @@ import {
   SESSIONS_STATUSES_ENUM,
 } from 'src/global/enums';
 import { NotificationModel } from 'src/notification/notification.model';
+import { FieldModel } from 'src/field/field.model';
 
 @Injectable()
 export class TrainerScheduleService {
@@ -28,6 +29,7 @@ export class TrainerScheduleService {
     private readonly i18n: I18nService,
     private trainerProfileModel: TrainerProfileModel,
     private sessionModel: SessionModel,
+    private fieldModel: FieldModel,
     private notificationModel: NotificationModel,
   ) {}
 
@@ -61,7 +63,7 @@ export class TrainerScheduleService {
     //////////
     reqBody.slots = this.slotsTimeTo24(reqBody.slots);
     await this.validateCreateScheduleMonths(trainerProfile.id, reqBody);
-    this.groupingAndValidatingScheduleSlots(reqBody.slots);
+    await this.groupingAndValidatingScheduleSlots(reqBody.slots);
     return await this.trainerScheduleModel.create(timezone, trainerProfile.id, reqBody);
   }
 
@@ -86,7 +88,7 @@ export class TrainerScheduleService {
       schedule.trainerProfileId,
       reqBody,
     );
-    this.groupingAndValidatingScheduleSlots(reqBody.slots);
+    await this.groupingAndValidatingScheduleSlots(reqBody.slots);
     return await this.trainerScheduleModel.update(timezone, schedule.id, reqBody);
   }
 
@@ -535,7 +537,23 @@ export class TrainerScheduleService {
     return true;
   }
 
-  private groupingAndValidatingScheduleSlots(slots: SlotDetailsDto[]) {
+  private async groupingAndValidatingScheduleSlots(slots: SlotDetailsDto[]) {
+    // validate fields existence
+    let slotsFieldsIds = slots.map((slot) => {
+      return slot.fieldId;
+    });
+    let uniqueSlotsFieldsIds = [...new Set(slotsFieldsIds)];
+
+    let foundedFields = await this.fieldModel.getManyFields(uniqueSlotsFieldsIds);
+
+    if (foundedFields.length !== uniqueSlotsFieldsIds.length) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.NOT_EXISTED_FIELD`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
     let slotsGroupedByDay = this.groupSlotsByWeekday(slots);
 
     for (const key in slotsGroupedByDay) {

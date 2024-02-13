@@ -28,6 +28,11 @@ export enum ACCEPTANCE_STATUSES_ENUM {
   DECLINED = 'declined',
 }
 
+export enum SESSION_REQUEST_TYPE {
+  NEW = 'new',
+  CHANGE = 'change',
+}
+
 export enum PROFILE_TYPES_ENUM {
   PLAYER = 'player',
   TRAINER = 'trainer',

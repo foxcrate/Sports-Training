@@ -817,4 +817,17 @@ export class FieldModel {
 
     return await this.getByID(fieldId);
   }
+
+  async getManyFields(idsArray: number[]) {
+    let fields = [];
+    if (idsArray.length >= 1) {
+      fields = await this.prisma.$queryRaw`
+      SELECT id,name
+      FROM Field
+      WHERE id IN (${Prisma.join(idsArray)})
+    `;
+    }
+
+    return fields;
+  }
 }

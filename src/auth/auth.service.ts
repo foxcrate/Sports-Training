@@ -99,6 +99,14 @@ export class AuthService {
     return 'OTP sent successfully';
   }
 
+  async sendMobileOtp(mobileNumber: string) {
+    let theUser = await this.userModel.getByMobileNumber(mobileNumber);
+
+    await this.saveOTP(theUser.mobileNumber, '1234');
+    //send otp
+    return 'OTP sent successfully';
+  }
+
   async sendForgetPasswordOtp(mobileNumber: string) {
     await this.userService.findByMobile(mobileNumber);
 
@@ -128,6 +136,18 @@ export class AuthService {
 
     //return token to user
     return await this.userModel.updateMobile(userId, data.mobileNumber);
+  }
+
+  async verifyMobileOtp(data: VerifyOtpDto) {
+    //throw error if not passed
+    await this.checkSavedOTP(data.mobileNumber, data.otp);
+
+    let theUser = await this.userModel.getByMobileNumber(data.mobileNumber);
+
+    await this.deletePastOTP(data.mobileNumber);
+
+    //return token to user
+    return this.generateNormalAndRefreshJWTToken(AvailableRoles.Child, theUser.id);
   }
 
   async verifyForgetPasswordOTP(data: VerifyOtpDto) {
@@ -286,6 +306,8 @@ export class AuthService {
   }
 
   generateNormalAndRefreshJWTToken(authType: string, authId: number) {
+    console.log({ authType });
+
     let tokenPayload = {
       authType: authType,
       id: authId,

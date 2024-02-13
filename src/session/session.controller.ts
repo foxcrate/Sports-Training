@@ -43,15 +43,18 @@ export class SessionController {
     return await this.sessionService.playerRateTrainer(userId, reqBody);
   }
 
-  @Post('player-request-slot-change')
+  @Post('player-request-slot-change/:sessionId')
   async playerRequestSlotChange1(
+    @Param(new JoiValidation(SessionIdParamValidations)) params,
     @Body(new JoiValidation(RequestSlotChangeValidation)) reqBody: RequestSlotChangeDto,
     @UserId() userId: number,
   ) {
-    return await this.sessionService.playerRequestSlotChange(userId,reqBody);
+    return await this.sessionService.playerRequestSlotChange(
+      userId,
+      params.sessionId,
+      reqBody,
+    );
   }
-
-  
 
   @Get('training-session/:sessionId')
   async getTrainingSession(
@@ -79,22 +82,22 @@ export class SessionController {
     return this.sessionService.getCoachingSession(userId, sessionId);
   }
 
-  @Put('coach-approve-session/:sessionId')
+  @Put('coach-approve-session-request/:sessionRequestId')
   async coachApproveSession(
     @Param(new JoiValidation(SessionRequestIdValidations))
     { sessionRequestId }: SessionRequestIdDto,
     @UserId() userId: number,
   ): Promise<TrainingSessionResultDto> {
-    return this.sessionService.coachApproveSession(userId, sessionRequestId);
+    return this.sessionService.coachApproveRequest(userId, sessionRequestId);
   }
 
-  @Put('coach-decline-session/:sessionId')
+  @Put('coach-decline-session-request/:sessionRequestId')
   async coachDeclineSession(
     @Param(new JoiValidation(SessionRequestIdValidations))
     { sessionRequestId }: SessionRequestIdDto,
     @UserId() userId: number,
   ): Promise<TrainingSessionResultDto> {
-    return this.sessionService.coachDeclineSession(userId, sessionRequestId);
+    return this.sessionService.coachDeclineRequest(userId, sessionRequestId);
   }
 
   @Put('coach-cancel-session/:sessionId')

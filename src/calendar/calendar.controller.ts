@@ -13,7 +13,7 @@ import { SessionsFiltersValidation } from './validations/sessions-filters.valida
 import { SessionsFiltersDto } from './dto/sessions-filters.dto';
 import { DateSessionsResultDto } from './dto/date-sessions-result.dto';
 
-@Roles(AvailableRoles.User)
+@Roles(AvailableRoles.User, AvailableRoles.Child)
 @UseGuards(AuthGuard, RoleGuard)
 @Controller({ path: 'calendar', version: '1' })
 export class CalendarController {

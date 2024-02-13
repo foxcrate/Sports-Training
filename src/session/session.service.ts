@@ -12,6 +12,7 @@ import {
   NOTIFICATION_TYPE,
   SESSIONS_STATUSES_ENUM,
   SESSION_REQUEST_STATUSES_ENUM,
+  SESSION_REQUEST_TYPE,
 } from 'src/global/enums';
 import { UserSessionDataDto } from './dtos/user-session-data.dto';
 import {
@@ -118,15 +119,33 @@ export class SessionService {
     return await this.sessionModel.getPendingSessions(trainerProfile.id);
   }
 
-  async playerRequestSlotChange(userId:number,reqBody:RequestSlotChangeDto){
-    await this.playerProfileModel.getOneByUserId(userId)
-    await this.validateRequestChangeSlot(userId,reqBody.sessionId,reqBody.newSlotId,reqBody.newDate)
-    await this.sessionModel.createChangeSessionSlotRequest(reqBody.sessionId,reqBody.newDate,reqBody.newSlotId)
+  async playerRequestSlotChange(
+    userId: number,
+    sessionId: number,
+    reqBody: RequestSlotChangeDto,
+  ) {
+    await this.playerProfileModel.getOneByUserId(userId);
+    await this.validateRequestChangeSlot(
+      userId,
+      sessionId,
+      reqBody.newSlotId,
+      reqBody.newDate,
+    );
+    await this.sessionModel.createChangeSessionSlotRequest(
+      sessionId,
+      reqBody.newDate,
+      reqBody.newSlotId,
+    );
   }
 
-  async validateRequestChangeSlot(userId:number,sessionId:number,newSlotId:number,newDate:string){
-    let bookedSession = await this.sessionModel.getBookedSessionBySessionId(sessionId)
-    if(bookedSession.userId !== userId){
+  async validateRequestChangeSlot(
+    userId: number,
+    sessionId: number,
+    newSlotId: number,
+    newDate: string,
+  ) {
+    let bookedSession = await this.sessionModel.getBookedSessionBySessionId(sessionId);
+    if (bookedSession.userId !== userId) {
       throw new BadRequestException(
         this.i18n.t(`errors.NOT_ALLOWED_USER_SESSION`, {
           lang: I18nContext.current().lang,
@@ -153,12 +172,48 @@ export class SessionService {
     }
   }
 
-  async coachApproveSession(
+  async coachApproveRequest(
     userId: number,
-    sessionRequestId1: number,
+    sessionRequestId: number,
   ): Promise<TrainingSessionResultDto> {
-    let sessionId = await this.sessionModel.getBookedSessionIdByRequestId(sessionRequestId1)
-    
+    let sessionRequest = await this.sessionModel.getSessionRequestByid(sessionRequestId);
+    if (sessionRequest.type === SESSION_REQUEST_TYPE.NEW) {
+      return await this.coachApproveNewSession(
+        userId,
+        sessionRequest.trainerBookedSessionId,
+      );
+    } else if (sessionRequest.type === SESSION_REQUEST_TYPE.CHANGE) {
+      return await this.coachApproveChangeSessionSlot(
+        userId,
+        sessionRequest.trainerBookedSessionId,
+        sessionRequest.newSlotId,
+        sessionRequest.newSessionDate,
+      );
+    }
+  }
+
+  async coachDeclineRequest(
+    userId: number,
+    sessionRequestId: number,
+  ): Promise<TrainingSessionResultDto> {
+    let sessionRequest = await this.sessionModel.getSessionRequestByid(sessionRequestId);
+    if (sessionRequest.type === SESSION_REQUEST_TYPE.NEW) {
+      return await this.coachDeclineNewSession(
+        userId,
+        sessionRequest.trainerBookedSessionId,
+      );
+    } else if (sessionRequest.type === SESSION_REQUEST_TYPE.CHANGE) {
+      return await this.coachDeclineChangeSessionSlot(
+        userId,
+        sessionRequest.trainerBookedSessionId,
+      );
+    }
+  }
+
+  async coachApproveNewSession(
+    userId: number,
+    sessionId: number,
+  ): Promise<TrainingSessionResultDto> {
     const coachSessionData: CoachSessionDataDto[] =
       (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
 
@@ -188,14 +243,18 @@ export class SessionService {
     const { sessionRequestId, coachBookedSessionId } = validCoachSession;
     const [formattedSession] = await Promise.all([
       this.getCoachingSession(userId, sessionId),
-      this.sessionModel.updateSessionRequest(
+      this.sessionModel.updateSessionAndRequest(
         coachBookedSessionId,
         SESSIONS_STATUSES_ENUM.ACTIVE,
         sessionRequestId,
         SESSION_REQUEST_STATUSES_ENUM.ACCEPTED,
       ),
     ]);
-    await this.sessionModel.rejectRestOfSameDateSlotRequests(
+    // await this.sessionModel.rejectRestOfSameDateSlotRequests(
+    //   coachSessionData[0].date,
+    //   coachSessionData[0].slotId,
+    // );
+    await this.rejectRestOfSameDateSlotRequests(
       coachSessionData[0].date,
       coachSessionData[0].slotId,
     );
@@ -216,11 +275,10 @@ export class SessionService {
     };
   }
 
-  async coachDeclineSession(
+  async coachDeclineNewSession(
     userId: number,
-    sessionRequestId1: number,
+    sessionId: number,
   ): Promise<TrainingSessionResultDto> {
-    let sessionId = await this.sessionModel.getBookedSessionIdByRequestId(sessionRequestId1)
     const coachSessionData: CoachSessionDataDto[] =
       (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
     const validCoachSession = await this.validateChangeSessionRequest(
@@ -230,7 +288,7 @@ export class SessionService {
     const { sessionRequestId, coachBookedSessionId } = validCoachSession;
     const [formattedSession] = await Promise.all([
       this.getCoachingSession(userId, sessionId),
-      this.sessionModel.updateSessionRequest(
+      this.sessionModel.updateSessionAndRequest(
         coachBookedSessionId,
         SESSIONS_STATUSES_ENUM.NOT_ACTIVE,
         sessionRequestId,
@@ -252,6 +310,119 @@ export class SessionService {
       ...formattedSession,
       status: SESSION_REQUEST_STATUSES_ENUM.REJECTED,
     };
+  }
+
+  async coachApproveChangeSessionSlot(
+    userId: number,
+    sessionId: number,
+    newSlotId: number,
+    newDate: string,
+  ): Promise<TrainingSessionResultDto> {
+    const coachSessionData: CoachSessionDataDto[] =
+      (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
+
+    // console.log({ coachSessionData });
+
+    const validCoachSession = await this.validateChangeSessionRequest(
+      userId,
+      coachSessionData,
+    );
+
+    //validate if there is a booked session
+    if (
+      await this.trainerScheduleService.checkBookedSlot(
+        newSlotId,
+        newDate,
+        null,
+        SESSIONS_STATUSES_ENUM.ACTIVE,
+      )
+    ) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.BOOKED_SLOT`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
+    const { sessionRequestId, coachBookedSessionId } = validCoachSession;
+
+    await this.sessionModel.updateSessionTiming(coachBookedSessionId, newDate, newSlotId);
+    await this.sessionModel.updateSessionRequest(
+      sessionRequestId,
+      SESSION_REQUEST_STATUSES_ENUM.ACCEPTED,
+    );
+    const formattedSession = await this.getCoachingSession(userId, sessionId);
+    await this.rejectRestOfSameDateSlotRequests(newDate, newSlotId);
+
+    // create notification
+    await this.notificationModel.createOne(
+      coachSessionData[0].userId,
+      coachSessionData[0].coachBookedSessionId,
+      NOTIFICATION_SENT_TO.PLAYER_PROFILE,
+      NOTIFICATION_ABOUT.TRAINER_SESSION,
+      NOTIFICATION_TYPE.ACCEPT,
+      'Coach accepted your new timing to session',
+    );
+
+    return {
+      ...formattedSession,
+      status: SESSION_REQUEST_STATUSES_ENUM.ACCEPTED,
+    };
+  }
+
+  async coachDeclineChangeSessionSlot(
+    userId: number,
+    sessionId: number,
+  ): Promise<TrainingSessionResultDto> {
+    const coachSessionData: CoachSessionDataDto[] =
+      (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
+
+    // console.log({ coachSessionData });
+
+    const validCoachSession = await this.validateChangeSessionRequest(
+      userId,
+      coachSessionData,
+    );
+
+    const { sessionRequestId } = validCoachSession;
+
+    await this.sessionModel.updateSessionRequest(
+      sessionRequestId,
+      SESSION_REQUEST_STATUSES_ENUM.REJECTED,
+    );
+    const formattedSession = await this.getCoachingSession(userId, sessionId);
+
+    // create notification
+    await this.notificationModel.createOne(
+      coachSessionData[0].userId,
+      coachSessionData[0].coachBookedSessionId,
+      NOTIFICATION_SENT_TO.PLAYER_PROFILE,
+      NOTIFICATION_ABOUT.TRAINER_SESSION,
+      NOTIFICATION_TYPE.REJECT,
+      'Coach rejected your new timing to session',
+    );
+
+    return {
+      ...formattedSession,
+      status: SESSION_REQUEST_STATUSES_ENUM.REJECTED,
+    };
+  }
+
+  async rejectRestOfSameDateSlotRequests(newDate: string, newSlotId: number) {
+    // get all user who booked this slot
+    let usersIds = await this.sessionModel.getAllBookedUsersIds(newDate, newSlotId);
+
+    // notify the rejection to all users
+    await this.notificationModel.createMany(
+      usersIds,
+      null,
+      NOTIFICATION_SENT_TO.PLAYER_PROFILE,
+      NOTIFICATION_ABOUT.TRAINER_SESSION,
+      NOTIFICATION_TYPE.REJECT,
+      'Coach rejected your new timing to session',
+    );
+
+    await this.sessionModel.rejectRestOfSameDateSlotRequests(newDate, newSlotId);
   }
 
   async coachCancelSession(

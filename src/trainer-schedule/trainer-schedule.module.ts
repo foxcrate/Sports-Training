@@ -7,12 +7,14 @@ import { TrainerScheduleService } from './trainer-schedule.service';
 import { TrainerScheduleModel } from './trainer-schedule.model';
 import { SessionModule } from 'src/session/session.module';
 import { NotificationModule } from 'src/notification/notification.module';
+import { FieldModule } from 'src/field/field.module';
 
 @Module({
   imports: [
     forwardRef(() => TrainerProfileModule),
     forwardRef(() => SessionModule),
     NotificationModule,
+    FieldModule,
   ],
   controllers: [
     TrainerScheduleController,

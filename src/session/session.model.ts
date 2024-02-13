@@ -38,9 +38,7 @@ export class SessionModel {
     return TheBookedSlot[0];
   }
 
-  async getSessionRequestByid(
-    sessionRequestId: number,
-  ): Promise<SessionRequestDTO> {
+  async getSessionRequestByid(sessionRequestId: number): Promise<SessionRequestDTO> {
     let sessionRequest = await this.prisma.$queryRaw`
       SELECT *
       FROM SessionRequest
@@ -49,9 +47,7 @@ export class SessionModel {
     return sessionRequest[0];
   }
 
-  async getBookedSessionIdByRequestId(
-    sessionRequestId: number,
-  ): Promise<number> {
+  async getBookedSessionIdByRequestId(sessionRequestId: number): Promise<number> {
     let sessionId = await this.prisma.$queryRaw`
       SELECT trainerBookedSessionId AS id
       FROM SessionRequest
@@ -198,25 +194,37 @@ export class SessionModel {
   )`;
   }
 
-  async createChangeSessionSlotRequest(trainerBookedSessionId: number,newSessionDate:string,
-    newSlotId:number) {
+  async createChangeSessionSlotRequest(
+    trainerBookedSessionId: number,
+    newSessionDate: string,
+    newSlotId: number,
+  ) {
+    //   await this.prisma.$queryRaw`
+    //   INSERT INTO SessionRequest
+    //   (
+    //     trainerBookedSessionId,
+    //     status,
+    //     type,
+    //     newSessionDate,
+    //     newSlotId
+    //   )
+    //   VALUES
+    // (
+    //   ${trainerBookedSessionId},
+    //   ${SESSION_REQUEST_STATUSES_ENUM.PENDING},
+    //   'change',
+    //   ${newSessionDate},
+    //   ${newSlotId},
+    // )`;
     await this.prisma.$queryRaw`
-    INSERT INTO SessionRequest
-    (
-      trainerBookedSessionId,
-      status,
-      type,
-      newSessionDate,
-      newSlotId
-    )
-    VALUES
-  (
-    ${trainerBookedSessionId},
-    ${SESSION_REQUEST_STATUSES_ENUM.PENDING},
-    'change',
-    ${newSessionDate},
-    ${newSlotId},
-  )`;
+    UPDATE SessionRequest
+    SET
+    status = ${SESSION_REQUEST_STATUSES_ENUM.PENDING},
+    type = 'change',
+    newSessionDate = ${newSessionDate},
+    newSlotId = ${newSlotId}
+    WHERE trainerBookedSessionId = ${trainerBookedSessionId};
+    `;
   }
 
   async createTrainerBookedSession(
@@ -287,9 +295,29 @@ export class SessionModel {
     let pendingSessions: any[] = await this.prisma.$queryRaw`
       SELECT
         SessionRequest.id AS sessionRequestId,  
+        SessionRequest.type AS type,  
         TrainerBookedSession.id AS bookedSessionId,
         SessionRequest.status AS sessionRequestStatus,
         TrainerBookedSession.date AS date,
+        CASE
+        WHEN SessionRequest.type = 'change' THEN
+        SessionRequest.newSessionDate
+        END
+        AS newSessionDate,
+        CASE
+        WHEN SessionRequest.type = 'change' THEN
+        (
+          SELECT JSON_OBJECT(
+          'id',InnerSessionRequest.newSlotId,
+          'fromTime', Slot.fromTime,
+          'toTime', Slot.toTime
+          )
+          FROM SessionRequest AS InnerSessionRequest
+          LEFT JOIN Slot ON Slot.id = InnerSessionRequest.newSlotId
+          WHERE InnerSessionRequest.id = SessionRequest.id
+        )
+        END
+        AS newSlot,
         JSON_OBJECT(
           'id',Slot.id,
           'fromTime', Slot.fromTime,
@@ -333,6 +361,15 @@ export class SessionModel {
         'hh:mm A',
       );
       session.slot.toTime = moment(`1970-01-01T${session.slot.toTime}`).format('hh:mm A');
+      if (session.type === 'change') {
+        session.newSessionDate = moment(session.newSessionDate).format('YYYY-MM-DD');
+        session.newSlot.fromTime = moment(
+          `1970-01-01T${session.newSlot.fromTime}`,
+        ).format('hh:mm A');
+        session.newSlot.toTime = moment(`1970-01-01T${session.newSlot.toTime}`).format(
+          'hh:mm A',
+        );
+      }
       return session;
     });
   }
@@ -435,6 +472,8 @@ export class SessionModel {
       SELECT
         tbs.id AS coachBookedSessionId,
         Slot.id AS slotId,
+        sr.newSlotId AS newSlotId,
+        sr.newSessionDate AS newDate,
         Slot.fromTime AS fromTime,
         Slot.toTime AS toTime,
         sr.id AS sessionRequestId,
@@ -518,7 +557,42 @@ export class SessionModel {
           `;
   }
 
-  async updateSessionRequest(
+  async updateSessionRequest(sessionRequestId, sessionRequestStatus) {
+    await this.prisma.$queryRaw`
+      UPDATE
+        SessionRequest
+      SET
+        status = ${sessionRequestStatus}
+      WHERE
+        id = ${sessionRequestId};
+    `;
+  }
+
+  async updateSessionTiming(sessionId: number, dayDate: string, slotId: number) {
+    await this.prisma.$queryRaw`
+      UPDATE
+        TrainerBookedSession
+      SET
+        date = ${dayDate},
+        slotId = ${slotId}
+      WHERE
+        id = ${sessionId};
+    `;
+  }
+
+  async getAllBookedUsersIds(date: string, slotId: number) {
+    let usersIds = await this.prisma.$queryRaw`
+      SELECT JSON_ARRAYAGG(userId) AS usersIds
+      FROM TrainerBookedSession
+      WHERE date = ${date}
+      AND slotId = ${slotId}
+      AND status = 'notActive'
+    `;
+
+    return usersIds[0].usersIds ? usersIds[0].usersIds : [];
+  }
+
+  async updateSessionAndRequest(
     bookedSessionId: number,
     bookedSessionStatus: string,
     sessionRequestId: number,

@@ -66,6 +66,15 @@ export class AuthController {
     return await this.authService.sendChangeMobileOtp(sendOTPData.mobileNumber);
   }
 
+  @Post('user/send-mobile-otp')
+  @Version('1')
+  @Roles('user', 'child')
+  async sendMobileOtp1(
+    @Body(new JoiValidation(SendOTPValidation)) sendOTPData: SendOTPDto,
+  ) {
+    return await this.authService.sendMobileOtp(sendOTPData.mobileNumber);
+  }
+
   @Post('user/create-password')
   @Version('1')
   @Roles('user')
@@ -109,12 +118,20 @@ export class AuthController {
     return await this.authService.verifyChangeMobileOTP(verifyOtpData, req['id']);
   }
 
+  @Post('user/verify-mobile-otp')
+  @Version('1')
+  @Roles('user', 'child')
+  async verifyMobileOtp1(
+    @Body(new JoiValidation(VerifyOtpValidation)) verifyOtpData: VerifyOtpDto,
+  ) {
+    return await this.authService.verifyMobileOtp(verifyOtpData);
+  }
+
   @Post('user/verify-forget-password-otp')
   @Version('1')
   @Roles('user')
   async verifyForgetPasswordOtp1(
     @Body(new JoiValidation(VerifyOtpValidation)) verifyOtpData: VerifyOtpDto,
-    @Request() req: ExpressRequest,
   ) {
     return await this.authService.verifyForgetPasswordOTP(verifyOtpData);
   }

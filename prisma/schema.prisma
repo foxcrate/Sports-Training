@@ -374,8 +374,8 @@ model SessionRequest {
   type       SessionRequestType   @default(new)
   status     SessionRequestStatus @default(pending)
 
-  newSessionDate  Int?
-  newSlotId String?
+  newSessionDate  DateTime? @db.Date
+  newSlotId Int?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
