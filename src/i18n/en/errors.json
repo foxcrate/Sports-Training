@@ -12,6 +12,7 @@
   "UPLOAD_IMAGE_ERROR": "Error in uploading image",
   "SENDING_NOTIFICATION_ERROR": "Error in sending notification",
   "RECORD_NOT_FOUND": "Record not found",
+  "USER_NOT_FOUND": "User not found",
   "PLAYER_PROFILE_NOT_FOUND": "Player Profile not found",
   "TRAINER_PROFILE_NOT_FOUND": "Trainer Profile not found",
   "SCHEDULE_NOT_FOUND": "Schedule not found",

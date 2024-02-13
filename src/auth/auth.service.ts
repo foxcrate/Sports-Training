@@ -101,6 +101,11 @@ export class AuthService {
 
   async sendMobileOtp(mobileNumber: string) {
     let theUser = await this.userModel.getByMobileNumber(mobileNumber);
+    if (!theUser) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.USER_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
+    }
 
     await this.saveOTP(theUser.mobileNumber, '1234');
     //send otp
@@ -143,6 +148,12 @@ export class AuthService {
     await this.checkSavedOTP(data.mobileNumber, data.otp);
 
     let theUser = await this.userModel.getByMobileNumber(data.mobileNumber);
+
+    if (!theUser) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.USER_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
+    }
 
     await this.deletePastOTP(data.mobileNumber);
 
