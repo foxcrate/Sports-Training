@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards, UsePipes } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, UsePipes, Version } from '@nestjs/common';
 import { HomeService } from './home.service';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { RoleGuard } from 'src/guards/role.guard';
@@ -10,13 +10,17 @@ import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 import { SearchResultsDto } from './dto/search-result.dto';
 import { PaginationTransformPipe } from 'src/pipes/pagination-transform.pipe';
 
-@Roles(AvailableRoles.User)
-@UseGuards(AuthGuard, RoleGuard)
-@Controller({ path: 'home', version: '1' })
+// @Roles(AvailableRoles.User)
+// @UseGuards(AuthGuard, RoleGuard)
+// @Controller({ path: 'home', version: '1' })
+@Controller('home')
 export class HomeController {
   constructor(private homeService: HomeService) {}
 
   @Post('search')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(PaginationTransformPipe)
   async getSearchResults(
     @Body(new JoiValidation(SearchFiltersValidation)) filters: SearchFiltersDto,

@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Version } from '@nestjs/common';
 import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 import { Roles } from 'src/decorators/roles.decorator';
 import { AuthGuard } from 'src/guards/auth.guard';
@@ -13,13 +13,17 @@ import { SessionsFiltersValidation } from './validations/sessions-filters.valida
 import { SessionsFiltersDto } from './dto/sessions-filters.dto';
 import { DateSessionsResultDto } from './dto/date-sessions-result.dto';
 
-@Roles(AvailableRoles.User, AvailableRoles.Child)
-@UseGuards(AuthGuard, RoleGuard)
-@Controller({ path: 'calendar', version: '1' })
+// @Roles(AvailableRoles.User, AvailableRoles.Child)
+// @UseGuards(AuthGuard, RoleGuard)
+// @Controller({ path: 'calendar', version: '1' })
+@Controller('calendar')
 export class CalendarController {
   constructor(private calenderService: CalendarService) {}
 
   @Get('dates-count')
+  @Version('1')
+  @Roles('user', 'child')
+  @UseGuards(AuthGuard, RoleGuard)
   async getDatesCounts(
     @Query(new JoiValidation(DatesCountFiltersValidation)) filters: DatesCountFiltersDto,
     @UserId() userId: number,
@@ -28,6 +32,9 @@ export class CalendarController {
   }
 
   @Get('date-sessions')
+  @Version('1')
+  @Roles('user', 'child')
+  @UseGuards(AuthGuard, RoleGuard)
   async getDateSessions(
     @Query(new JoiValidation(SessionsFiltersValidation)) filters: SessionsFiltersDto,
     @UserId() userId: number,

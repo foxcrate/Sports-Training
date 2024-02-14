@@ -24,7 +24,7 @@ export class PlayerProfileController {
 
   @Get()
   @Version('1')
-  @Roles('user')
+  @Roles('user', 'child')
   @UseGuards(AuthGuard, RoleGuard)
   // @UsePipes(new JoiValidation(AddPlayerProfileValidation))
   async getOne1(@Body() reqBody, @Request() req: ExpressRequest) {
@@ -67,13 +67,5 @@ export class PlayerProfileController {
   @UseGuards(AuthGuard, RoleGuard)
   async delete1(@Request() req: ExpressRequest) {
     return await this.playerProfileService.delete(req['id']);
-  }
-
-  @Get('testHesham')
-  @Version('1')
-  // @Roles('user')
-  // @UseGuards(AuthGuard, RoleGuard)
-  async testHesham(@Request() req: ExpressRequest) {
-    // return this.playerProfileService.testHesham();
   }
 }

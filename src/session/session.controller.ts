@@ -7,6 +7,7 @@ import {
   Put,
   Query,
   UseGuards,
+  Version,
 } from '@nestjs/common';
 import { Roles } from 'src/decorators/roles.decorator';
 import { AuthGuard } from 'src/guards/auth.guard';
@@ -29,13 +30,17 @@ import { RequestSlotChangeDto } from './dtos/request-slot-change.dto';
 import { SessionRequestIdValidations } from './validations/session-request-id.validation';
 import { SessionRequestIdDto } from './dtos/session-request-id.dto';
 
-@Roles(AvailableRoles.User)
-@UseGuards(AuthGuard, RoleGuard)
-@Controller({ path: 'session', version: '1' })
+// @Roles(AvailableRoles.User)
+// @UseGuards(AuthGuard, RoleGuard)
+// @Controller({ path: 'session', version: '1' })
+@Controller('session')
 export class SessionController {
   constructor(private sessionService: SessionService) {}
 
   @Post('rate-trainer')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
   async rateSession1(
     @Body(new JoiValidation(RateTrainerValidation)) reqBody: RateTrainerDto,
     @UserId() userId: number,
@@ -44,6 +49,9 @@ export class SessionController {
   }
 
   @Post('player-request-slot-change/:sessionId')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
   async playerRequestSlotChange1(
     @Param(new JoiValidation(SessionIdParamValidations)) params,
     @Body(new JoiValidation(RequestSlotChangeValidation)) reqBody: RequestSlotChangeDto,
@@ -57,6 +65,9 @@ export class SessionController {
   }
 
   @Get('training-session/:sessionId')
+  @Version('1')
+  @Roles('user', 'child')
+  @UseGuards(AuthGuard, RoleGuard)
   async getTrainingSession(
     @Param(new JoiValidation(SessionIdParamValidations))
     { sessionId }: TrainingSessionParamsDto,
@@ -67,6 +78,7 @@ export class SessionController {
   }
 
   @Get('get-pending-sessions')
+  @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   async getPendingSessions1(@UserId() userId: number) {
@@ -74,6 +86,9 @@ export class SessionController {
   }
 
   @Get('coaching-session/:sessionId')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
   async getCoachingSession(
     @Param(new JoiValidation(SessionIdParamValidations))
     { sessionId }: TrainingSessionParamsDto,
@@ -83,6 +98,9 @@ export class SessionController {
   }
 
   @Put('coach-approve-session-request/:sessionRequestId')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
   async coachApproveSession(
     @Param(new JoiValidation(SessionRequestIdValidations))
     { sessionRequestId }: SessionRequestIdDto,
@@ -92,6 +110,9 @@ export class SessionController {
   }
 
   @Put('coach-decline-session-request/:sessionRequestId')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
   async coachDeclineSession(
     @Param(new JoiValidation(SessionRequestIdValidations))
     { sessionRequestId }: SessionRequestIdDto,
@@ -101,6 +122,9 @@ export class SessionController {
   }
 
   @Put('coach-cancel-session/:sessionId')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
   async coachCancelSession(
     @Param(new JoiValidation(SessionIdParamValidations))
     { sessionId }: TrainingSessionParamsDto,
@@ -112,6 +136,9 @@ export class SessionController {
   }
 
   @Put('user-cancel-session/:sessionId')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
   async userCancelSession(
     @Param(new JoiValidation(SessionIdParamValidations))
     { sessionId }: TrainingSessionParamsDto,
