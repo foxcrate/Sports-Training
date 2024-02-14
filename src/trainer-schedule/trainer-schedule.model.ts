@@ -82,7 +82,16 @@ export class TrainerScheduleModel {
       'fromTime', sl.fromTime,
       'toTime', sl.toTime,
       'cost', sl.cost,
-      'fieldId', sl.fieldId,
+      'field', (
+        SELECT JSON_OBJECT(
+          'id',Field.id,
+          'name',Field.name,
+          'location', Region.name
+        )
+        FROM Field
+        LEFT JOIN Region ON Region.id = Field.regionId
+        WHERE Field.id = sl.fieldId
+        ),
       'weekDayNumber', sl.weekDayNumber,
       'weekDayName', sl.weekDayName
       ))
@@ -373,7 +382,6 @@ export class TrainerScheduleModel {
       await this.deleteByID(null, allTrainerProfileSchedules[index].id);
     }
   }
-
 
   private async checkTrainerProfileExistence(trainerProfileId: number): Promise<boolean> {
     let foundedTrainerProfile: ReturnTrainerProfileDto = await this.prisma.$queryRaw`
