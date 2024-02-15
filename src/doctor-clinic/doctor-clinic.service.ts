@@ -41,6 +41,8 @@ export class DoctorClinicService {
     }
 
     reqBody.availableWeekDays = JSON.stringify(reqBody.availableWeekDays);
+    reqBody.startTime = this.globalSerice.timeTo24(reqBody.startTime);
+    reqBody.endTime = this.globalSerice.timeTo24(reqBody.endTime);
 
     return await this.doctorClinicModel.createByUser(userId, reqBody);
   }

@@ -317,8 +317,6 @@ export class AuthService {
   }
 
   generateNormalAndRefreshJWTToken(authType: string, authId: number) {
-    console.log({ authType });
-
     let tokenPayload = {
       authType: authType,
       id: authId,
