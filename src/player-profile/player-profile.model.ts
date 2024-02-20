@@ -118,7 +118,7 @@ export class PlayerProfileModel {
       )
     ) AS user
      FROM playerProfileWithSports AS pps
-    RIGHT JOIN UserDetails AS ud
+    LEFT JOIN UserDetails AS ud
     ON pps.userId = ud.id
     GROUP BY pps.id
     `;

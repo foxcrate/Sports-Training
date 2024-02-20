@@ -5,6 +5,7 @@ export class GeneralFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
+    const req = ctx.getRequest();
 
     // check if exception is HttpException
     try {
@@ -18,6 +19,13 @@ export class GeneralFilter implements ExceptionFilter {
         success: false,
         statusCode: 500,
         data: null,
+        authData: {
+          userId: req.userId,
+          role: req.authType,
+          playerProfileId: req.playerProfileId,
+          trainerProfileId: req.trainerProfileId,
+          childrenNumber: req.childrenNumber,
+        },
         error: {
           type: 'Server Error',
           message: 'Internal server error',
@@ -51,6 +59,13 @@ export class GeneralFilter implements ExceptionFilter {
         success: false,
         statusCode: status,
         data: null,
+        authData: {
+          userId: req.userId,
+          role: req.authType,
+          playerProfileId: req.playerProfileId,
+          trainerProfileId: req.trainerProfileId,
+          childrenNumber: req.childrenNumber,
+        },
         error: {
           type: 'Server Error',
           message: message,
@@ -61,6 +76,13 @@ export class GeneralFilter implements ExceptionFilter {
         success: false,
         statusCode: status,
         data: null,
+        authData: {
+          userId: req.userId,
+          role: req.authType,
+          playerProfileId: req.playerProfileId,
+          trainerProfileId: req.trainerProfileId,
+          childrenNumber: req.childrenNumber,
+        },
         error: {
           type: errorType,
           message: errorMessage,

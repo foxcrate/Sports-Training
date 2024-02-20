@@ -19,6 +19,7 @@ export class PrismaErrorsFilter implements ExceptionFilter {
   ) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse();
+    const req = ctx.getRequest();
     // let errorMessage = exception.message;
 
     console.log('--- PrismaError ---');
@@ -29,8 +30,15 @@ export class PrismaErrorsFilter implements ExceptionFilter {
       success: false,
       statusCode: 500,
       data: null,
+      authData: {
+        userId: req.userId,
+        role: req.authType,
+        playerProfileId: req.playerProfileId,
+        trainerProfileId: req.trainerProfileId,
+        childrenNumber: req.childrenNumber,
+      },
       error: {
-        type: 'Server Error',
+        type: 'Database Error',
         message: 'Internal server error',
       },
     });

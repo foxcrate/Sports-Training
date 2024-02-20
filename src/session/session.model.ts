@@ -120,7 +120,7 @@ export class SessionModel {
   (
     ${userId},
     ${trainerProfileId},
-    ${RATEABLE_TYPES_ENUM.TRAINER}
+    ${RATEABLE_TYPES_ENUM.TRAINER},
     ${ratingNumber},
     ${feedback},
     ${PROFILE_TYPES_ENUM.PLAYER}
@@ -403,7 +403,11 @@ export class SessionModel {
         tbs.gmt AS gmt,
         u.firstName AS firstName,
         u.lastName AS lastName,
+        u.mobileNumber AS mobileNumber,
         u.profileImage AS profileImage,
+        f.name AS fieldName,
+        f.longitude AS filedLongitude,
+        f.latitude AS filedLatitude,
         r.name AS region,
         CASE
           WHEN COUNT( tps.sportId ) > 0 THEN
@@ -441,7 +445,11 @@ export class SessionModel {
         tbs.gmt AS gmt,
         u.firstName AS firstName,
         u.lastName AS lastName,
+        u.mobileNumber AS mobileNumber,
         u.profileImage AS profileImage,
+        f.name AS fieldName,
+        f.longitude AS filedLongitude,
+        f.latitude AS filedLatitude,
         r.name AS region,
         CASE
           WHEN COUNT( tps.sportId ) > 0 THEN

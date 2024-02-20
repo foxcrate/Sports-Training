@@ -44,8 +44,16 @@ export class AuthGuard implements CanActivate {
       );
     }
 
-    request['authType'] = payload.authType;
     request['id'] = payload.id;
+    request['authType'] = payload.authType;
+
+    let userMetaData = await this.userModel.getUserMetaData(request['id']);
+
+    // console.log({ userMetaData });
+
+    request['playerProfileId'] = userMetaData.playerProfileId;
+    request['trainerProfileId'] = userMetaData.trainerProfileId;
+    request['childrenNumber'] = userMetaData.childrenNumber;
 
     if (!(await this.userAvailable(request['id']))) {
       throw new UnauthorizedException(

@@ -188,6 +188,32 @@ export class UserModel {
     return theUser[0];
   }
 
+  async getUserMetaData(userId: number): Promise<any> {
+    let userMetaData = await this.prisma.$queryRaw`
+      SELECT
+      User.id AS id,
+      CASE WHEN PlayerProfile.id = 0 THEN null
+      ELSE
+      PlayerProfile.id
+      END AS playerProfileId,
+      CASE WHEN TrainerProfile.id = 0 THEN null
+      ELSE
+      TrainerProfile.id
+      END AS trainerProfileId,
+      COUNT(ParentsChilds.id) AS childrenNumber
+      FROM User
+      LEFT JOIN PlayerProfile ON User.id = PlayerProfile.userId
+      LEFT JOIN TrainerProfile ON User.id = TrainerProfile.userId
+      LEFT JOIN ParentsChilds ON User.id = ParentsChilds.parentId
+      WHERE User.id = ${userId}
+      GROUP BY User.id
+    `;
+    // console.log(userMetaData);
+
+    userMetaData[0].childrenNumber = parseInt(userMetaData[0].childrenNumber, 16);
+    return userMetaData[0];
+  }
+
   async getNativeByMobileNumber(mobileNumber): Promise<NativeUserDto> {
     let theUser = await this.prisma.$queryRaw`
       SELECT
