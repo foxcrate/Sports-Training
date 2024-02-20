@@ -22,13 +22,7 @@ export class TransformInterceptor implements NestInterceptor {
         success: true,
         statusCode: statusCode,
         data: data,
-        authData: {
-          userId: req.userId,
-          role: req.authType,
-          playerProfileId: req.playerProfileId,
-          trainerProfileId: req.trainerProfileId,
-          childrenNumber: req.childrenNumber,
-        },
+        userRoles: req.userRoles,
         error: null,
       })),
     );

@@ -5,6 +5,7 @@ import { SignupUserDto } from './dtos/signup.dto';
 import { CompleteSignupUserDto } from './dtos/complete-signup.dto';
 import { NativeUserDto } from './dtos/native.dto';
 import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
+import { UserMetaData } from './dtos/user-meta-data.dto';
 
 @Injectable()
 export class UserModel {
@@ -188,10 +189,11 @@ export class UserModel {
     return theUser[0];
   }
 
-  async getUserMetaData(userId: number): Promise<any> {
+  async getUserMetaData(userId: number): Promise<UserMetaData> {
     let userMetaData = await this.prisma.$queryRaw`
       SELECT
       User.id AS id,
+      User.userType AS userType,
       CASE WHEN PlayerProfile.id = 0 THEN null
       ELSE
       PlayerProfile.id

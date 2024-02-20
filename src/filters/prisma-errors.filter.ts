@@ -30,13 +30,7 @@ export class PrismaErrorsFilter implements ExceptionFilter {
       success: false,
       statusCode: 500,
       data: null,
-      authData: {
-        userId: req.userId,
-        role: req.authType,
-        playerProfileId: req.playerProfileId,
-        trainerProfileId: req.trainerProfileId,
-        childrenNumber: req.childrenNumber,
-      },
+      userRoles: req.userRoles ? req.userRoles : null,
       error: {
         type: 'Database Error',
         message: 'Internal server error',

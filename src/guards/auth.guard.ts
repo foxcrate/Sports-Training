@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { IAuthToken } from 'src/auth/interfaces/auth-token.interface';
 import { UserModel } from 'src/user/user.model';
+import { USER_TYPES_ENUM } from 'src/global/enums';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -51,9 +52,26 @@ export class AuthGuard implements CanActivate {
 
     // console.log({ userMetaData });
 
-    request['playerProfileId'] = userMetaData.playerProfileId;
-    request['trainerProfileId'] = userMetaData.trainerProfileId;
-    request['childrenNumber'] = userMetaData.childrenNumber;
+    // console.log({ userMetaData });
+    let userRoles = [];
+    if (userMetaData.playerProfileId) {
+      userRoles.push('player');
+    }
+    if (userMetaData.trainerProfileId) {
+      userRoles.push('trainer');
+    }
+    if (userMetaData.childrenNumber > 0) {
+      userRoles.push('parent');
+    }
+    if (userMetaData.userType === USER_TYPES_ENUM.CHILD) {
+      userRoles.push('child');
+    }
+
+    request['userRoles'] = userRoles;
+
+    // request['playerProfileId'] = userMetaData.playerProfileId;
+    // request['trainerProfileId'] = userMetaData.trainerProfileId;
+    // request['childrenNumber'] = userMetaData.childrenNumber;
 
     if (!(await this.userAvailable(request['id']))) {
       throw new UnauthorizedException(

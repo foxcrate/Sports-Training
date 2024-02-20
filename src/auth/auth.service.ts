@@ -22,6 +22,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { VerifyOtpDto } from './dtos/verify-otp.dto';
 import { CompleteSignupUserDto } from 'src/user/dtos/complete-signup.dto';
 import { UserModel } from 'src/user/user.model';
+import { USER_TYPES_ENUM } from 'src/global/enums';
 
 @Injectable()
 export class AuthService {
@@ -120,7 +121,7 @@ export class AuthService {
     return 'OTP sent successfully';
   }
 
-  async verifySignupOTP(data: VerifyOtpDto) {
+  async verifySignupOTP(data: VerifyOtpDto, req) {
     //account already saved
     await this.userService.findRepeatedMobile(data.mobileNumber);
 
@@ -130,7 +131,7 @@ export class AuthService {
     await this.deletePastOTP(data.mobileNumber);
 
     //return token to user
-    return await this.signupUserAndReturnToken(data.mobileNumber);
+    return await this.signupUserAndReturnToken(data.mobileNumber, req);
   }
 
   async verifyChangeMobileOTP(data: VerifyOtpDto, userId: number) {
@@ -143,7 +144,7 @@ export class AuthService {
     return await this.userModel.updateMobile(userId, data.mobileNumber);
   }
 
-  async verifyMobileOtp(data: VerifyOtpDto) {
+  async verifyMobileOtp(data: VerifyOtpDto, req) {
     //throw error if not passed
     await this.checkSavedOTP(data.mobileNumber, data.otp);
 
@@ -158,10 +159,14 @@ export class AuthService {
     await this.deletePastOTP(data.mobileNumber);
 
     //return token to user
-    return this.generateNormalAndRefreshJWTToken(AvailableRoles.Child, theUser.id);
+    return await this.generateNormalAndRefreshJWTToken(
+      AvailableRoles.Child,
+      theUser.id,
+      req,
+    );
   }
 
-  async verifyForgetPasswordOTP(data: VerifyOtpDto) {
+  async verifyForgetPasswordOTP(data: VerifyOtpDto, req) {
     //throw error if not passed
     await this.checkSavedOTP(data.mobileNumber, data.otp);
 
@@ -169,7 +174,7 @@ export class AuthService {
 
     //return token to user
     let user = await this.userModel.getByMobileNumber(data.mobileNumber);
-    return this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id);
+    return await this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id, req);
   }
 
   private async saveOTP(mobileNumber: string, otp: string) {
@@ -230,12 +235,16 @@ export class AuthService {
     `;
   }
 
-  private async signupUserAndReturnToken(mobileNumber: string): Promise<any> {
+  private async signupUserAndReturnToken(mobileNumber: string, req): Promise<any> {
     let createdUser = await this.userService.createByMobile(mobileNumber);
-    return this.generateNormalAndRefreshJWTToken(AvailableRoles.User, createdUser.id);
+    return await this.generateNormalAndRefreshJWTToken(
+      AvailableRoles.User,
+      createdUser.id,
+      req,
+    );
   }
 
-  async userSignin(signinData: SigninUserDto): Promise<AuthTokensDTO> {
+  async userSignin(signinData: SigninUserDto, req): Promise<AuthTokensDTO> {
     const user = await this.userService.findByMobile(signinData.mobileNumber);
 
     if (!user.password) {
@@ -255,10 +264,10 @@ export class AuthService {
       );
     }
 
-    return this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id);
+    return await this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id, req);
   }
 
-  async childSignin(signinData: SigninUserDto): Promise<AuthTokensDTO> {
+  async childSignin(signinData: SigninUserDto, req): Promise<AuthTokensDTO> {
     const child = await this.userService.findByMobile(signinData.mobileNumber);
 
     if (!child.isActivated) {
@@ -278,10 +287,14 @@ export class AuthService {
       );
     }
 
-    return this.generateNormalAndRefreshJWTToken(AvailableRoles.Child, child.id);
+    return await this.generateNormalAndRefreshJWTToken(
+      AvailableRoles.Child,
+      child.id,
+      req,
+    );
   }
 
-  refreshToken(refreshToken: string) {
+  async refreshToken(refreshToken: string, req) {
     let payload: IAuthToken = this.verifyRefreshToken(refreshToken);
     if (payload.id === null) {
       throw new UnauthorizedException(
@@ -306,6 +319,27 @@ export class AuthService {
       tokenType: 'refresh',
     };
 
+    let userMetaData = await this.userModel.getUserMetaData(payload.id);
+
+    let userRoles = [];
+
+    if (userMetaData.playerProfileId) {
+      userRoles.push('player');
+    }
+    if (userMetaData.trainerProfileId) {
+      userRoles.push('trainer');
+    }
+    if (userMetaData.childrenNumber > 0) {
+      userRoles.push('parent');
+    }
+    if (userMetaData.userType === USER_TYPES_ENUM.CHILD) {
+      userRoles.push('child');
+    }
+
+    req['id'] = payload.id;
+    req['authType'] = payload.authType;
+    req['userRoles'] = userRoles;
+
     return {
       token: this.jwtService.sign(tokenPayload, {
         expiresIn: '7d',
@@ -316,7 +350,7 @@ export class AuthService {
     };
   }
 
-  generateNormalAndRefreshJWTToken(authType: string, authId: number) {
+  async generateNormalAndRefreshJWTToken(authType: string, authId: number, req) {
     let tokenPayload = {
       authType: authType,
       id: authId,
@@ -328,6 +362,26 @@ export class AuthService {
       id: authId,
       tokenType: 'refresh',
     };
+
+    let userMetaData = await this.userModel.getUserMetaData(authId);
+    let userRoles = [];
+
+    if (userMetaData.playerProfileId) {
+      userRoles.push('player');
+    }
+    if (userMetaData.trainerProfileId) {
+      userRoles.push('trainer');
+    }
+    if (userMetaData.childrenNumber > 0) {
+      userRoles.push('parent');
+    }
+    if (userMetaData.userType === USER_TYPES_ENUM.CHILD) {
+      userRoles.push('child');
+    }
+
+    req['id'] = authId;
+    req['authType'] = authType;
+    req['userRoles'] = userRoles;
 
     return {
       token: this.jwtService.sign(tokenPayload, {

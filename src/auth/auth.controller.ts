@@ -103,8 +103,9 @@ export class AuthController {
   @Version('1')
   async verifyOtp1(
     @Body(new JoiValidation(VerifyOtpValidation)) verifyOtpData: VerifyOtpDto,
+    @Request() req: ExpressRequest,
   ) {
-    return await this.authService.verifySignupOTP(verifyOtpData);
+    return await this.authService.verifySignupOTP(verifyOtpData, req);
   }
 
   @Post('user/verify-change-mobile-otp')
@@ -123,8 +124,9 @@ export class AuthController {
   @Roles('user', 'child')
   async verifyMobileOtp1(
     @Body(new JoiValidation(VerifyOtpValidation)) verifyOtpData: VerifyOtpDto,
+    @Request() req: ExpressRequest,
   ) {
-    return await this.authService.verifyMobileOtp(verifyOtpData);
+    return await this.authService.verifyMobileOtp(verifyOtpData, req);
   }
 
   @Post('user/verify-forget-password-otp')
@@ -132,8 +134,9 @@ export class AuthController {
   @Roles('user')
   async verifyForgetPasswordOtp1(
     @Body(new JoiValidation(VerifyOtpValidation)) verifyOtpData: VerifyOtpDto,
+    @Request() req: ExpressRequest,
   ) {
-    return await this.authService.verifyForgetPasswordOTP(verifyOtpData);
+    return await this.authService.verifyForgetPasswordOTP(verifyOtpData, req);
   }
 
   @Post('user/complete-signup')
@@ -151,22 +154,24 @@ export class AuthController {
   @Version('1')
   async userSignin1(
     @Body(new JoiValidation(UserSigninValidation)) signinData: SigninUserDto,
+    @Request() req: ExpressRequest,
   ) {
-    return await this.authService.userSignin(signinData);
+    return await this.authService.userSignin(signinData, req);
   }
 
   @Post('/child/signin')
   @Version('1')
   async childSignin(
     @Body(new JoiValidation(UserSigninValidation)) signinData: SigninUserDto,
+    @Request() req: ExpressRequest,
   ) {
-    return await this.authService.childSignin(signinData);
+    return await this.authService.childSignin(signinData, req);
   }
 
   @Get('refresh-token')
   @Version('1')
   async refreshToken(@Body('refreshToken') refreshToken, @Request() req: ExpressRequest) {
-    return await this.authService.refreshToken(refreshToken);
+    return await this.authService.refreshToken(refreshToken, req);
   }
 
   @Post('google-data')

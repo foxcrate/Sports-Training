@@ -33,6 +33,12 @@ export enum SESSION_REQUEST_TYPE {
   CHANGE = 'change',
 }
 
+export enum USER_TYPES_ENUM {
+  PLAYER = 'user',
+  TRAINER = 'admin',
+  CHILD = 'child',
+}
+
 export enum PROFILE_TYPES_ENUM {
   PLAYER = 'player',
   TRAINER = 'trainer',
