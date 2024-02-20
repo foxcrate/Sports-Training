@@ -150,6 +150,9 @@ export class SessionController {
   }
 
   @Get('cancelling-reasons')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
   async getCancellingReasons(): Promise<CancellingReasonDto[]> {
     return this.sessionService.getCancellingReasons();
   }
