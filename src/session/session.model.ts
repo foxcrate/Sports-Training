@@ -539,7 +539,7 @@ export class SessionModel {
   }
 
   async getCancellingReason(id) {
-    return this.prisma.$queryRaw`
+    let reason = await this.prisma.$queryRaw`
       SELECT
         *
       FROM
@@ -547,6 +547,7 @@ export class SessionModel {
       WHERE
         id = ${id}
     `;
+    return reason[0];
   }
 
   async updateCoachSessionStatus(
@@ -605,6 +606,7 @@ export class SessionModel {
     bookedSessionStatus: string,
     sessionRequestId: number,
     sessionRequestStatus: string,
+    declineReasonId: number = null,
   ) {
     return await this.prisma.$transaction([
       this.prisma.$queryRaw`
@@ -612,6 +614,11 @@ export class SessionModel {
               SessionRequest
             SET
               status = ${sessionRequestStatus}
+              ${
+                declineReasonId
+                  ? Prisma.sql`,declineReasonId = ${declineReasonId}`
+                  : Prisma.empty
+              }
             WHERE
               id = ${sessionRequestId};
           `,
@@ -621,18 +628,12 @@ export class SessionModel {
     ]);
   }
 
-  async updateSetReasonCoachSessionStatus(
-    bookedSessionId,
-    bookedSessionStatus,
-    cancellationReasonsId,
-    canceledBy,
-  ) {
+  async cancelSession(bookedSessionId, canceledBy) {
     await this.prisma.$queryRaw`
           UPDATE
             TrainerBookedSession
           SET
-            status = ${bookedSessionStatus},
-            cancellationReasonsId = ${cancellationReasonsId},
+            status = ${SESSIONS_STATUSES_ENUM.CANCELED},
             canceledBy = ${canceledBy}
           WHERE
             id = ${bookedSessionId};
