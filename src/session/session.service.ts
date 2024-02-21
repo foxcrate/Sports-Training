@@ -195,12 +195,24 @@ export class SessionService {
   async coachDeclineRequest(
     userId: number,
     sessionRequestId: number,
+    declineReasonId: number,
   ): Promise<TrainingSessionResultDto> {
     let sessionRequest = await this.sessionModel.getSessionRequestByid(sessionRequestId);
+
+    let declineReasonData = await this.sessionModel.getCancellingReason(declineReasonId);
+    if (!declineReasonData) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.NOT_FOUND_DECLINE_REASON`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
     if (sessionRequest.type === SESSION_REQUEST_TYPE.NEW) {
       return await this.coachDeclineNewSession(
         userId,
         sessionRequest.trainerBookedSessionId,
+        declineReasonData.id,
       );
     } else if (sessionRequest.type === SESSION_REQUEST_TYPE.CHANGE) {
       return await this.coachDeclineChangeSessionSlot(
@@ -278,6 +290,7 @@ export class SessionService {
   async coachDeclineNewSession(
     userId: number,
     sessionId: number,
+    declineReasonId: number,
   ): Promise<TrainingSessionResultDto> {
     const coachSessionData: CoachSessionDataDto[] =
       (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
@@ -293,6 +306,7 @@ export class SessionService {
         SESSIONS_STATUSES_ENUM.NOT_ACTIVE,
         sessionRequestId,
         SESSION_REQUEST_STATUSES_ENUM.REJECTED,
+        declineReasonId,
       ),
     ]);
 
@@ -428,26 +442,21 @@ export class SessionService {
   async coachCancelSession(
     userId: number,
     sessionId: number,
-    cancelReasonId: number,
   ): Promise<TrainingSessionResultDto> {
-    const [coachSessionData, cancelReasonData] = await Promise.all([
-      this.sessionModel.getCoachSessionData(sessionId),
-      this.sessionModel.getCancellingReason(cancelReasonId),
-    ]);
+    const coachSessionData = await this.sessionModel.getCoachSessionData(sessionId);
+    if (!coachSessionData[0]) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.BOOKED_SESSION_NOT_FOUND`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
 
-    const [validCoachSession, validCancellingReason] = [
-      this.validateCancelRequest(userId, coachSessionData),
-      this.validateCancellingReasonExistence(cancelReasonData),
-    ];
-    const { sessionRequestId, coachBookedSessionId } = validCoachSession;
+    const validCoachSession = this.validateCancelRequest(userId, coachSessionData);
+    const { coachBookedSessionId } = validCoachSession;
     const [formattedSession] = await Promise.all([
       this.getCoachingSession(userId, sessionId),
-      this.sessionModel.updateSetReasonCoachSessionStatus(
-        coachBookedSessionId,
-        SESSIONS_STATUSES_ENUM.CANCELED,
-        validCancellingReason.id,
-        CANCELED_BY_ENUM.TRAINER,
-      ),
+      this.sessionModel.cancelSession(coachBookedSessionId, CANCELED_BY_ENUM.TRAINER),
     ]);
     return {
       ...formattedSession,
@@ -458,33 +467,24 @@ export class SessionService {
   async userCancelSession(
     userId: number,
     sessionId: number,
-    cancelReasonId: number,
   ): Promise<TrainingSessionResultDto> {
     // const sessionData: UserSessionDataDto[] =
     //   await this.sessionModel.getUserSessionData(sessionId);
-    const [sessionData, cancelReasonData] = await Promise.all([
-      await this.sessionModel.getUserSessionData(sessionId),
-      this.sessionModel.getCancellingReason(cancelReasonId),
-    ]);
+    const sessionData = await this.sessionModel.getUserSessionData(sessionId);
+    if (!sessionData[0]) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.BOOKED_SESSION_NOT_FOUND`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
     // const validSession = this.validateUserSession(userId, sessionData);
-    const [validSession, validCancellingReason] = [
-      this.validateUserSession(userId, sessionData),
-      this.validateCancellingReasonExistence(cancelReasonData),
-    ];
-    const { sessionRequestId, bookedSessionId } = validSession;
+    const validSession = await this.validateUserSession(userId, sessionData);
+    const { bookedSessionId } = validSession;
     const [formattedSession] = await Promise.all([
       this.getTrainingSession(userId, sessionId, HOME_SEARCH_TYPES_ENUM.COACHES),
-      // this.sessionModel.updateCoachSessionStatus(
-      //   bookedSessionId,
-      //   SESSIONS_STATUSES_ENUM.CANCELED,
-      //   CANCELED_BY_ENUM.PLAYER,
-      // ),
-      this.sessionModel.updateSetReasonCoachSessionStatus(
-        bookedSessionId,
-        SESSIONS_STATUSES_ENUM.CANCELED,
-        validCancellingReason.id,
-        CANCELED_BY_ENUM.PLAYER,
-      ),
+      this.sessionModel.cancelSession(bookedSessionId, CANCELED_BY_ENUM.PLAYER),
     ]);
     return {
       ...formattedSession,

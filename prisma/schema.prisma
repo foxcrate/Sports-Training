@@ -371,6 +371,9 @@ model SessionRequest {
   trainerBookedSession   TrainerBookedSession @relation(fields: [trainerBookedSessionId], references: [id], onDelete: Cascade)
   trainerBookedSessionId Int                  @unique
 
+  cancelReason   CancellationReasons? @relation(fields: [declineReasonId], references: [id], onDelete: SetNull)
+  declineReasonId Int?
+
   type       SessionRequestType   @default(new)
   status     SessionRequestStatus @default(pending)
 
@@ -387,6 +390,7 @@ model CancellationReasons {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @default(now())
   trainerBookedSessions TrainerBookedSession[]
+  sessionRequest SessionRequest[]
 }
 
 model TrainerProfileNotAvailableDays {

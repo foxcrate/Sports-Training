@@ -17,13 +17,12 @@ import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { RateTrainerValidation } from './validations/rate-trainer.validation';
 import { RateTrainerDto } from './dtos/rate-trainer.dto';
 import { SessionService } from './session.service';
-import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 import { CancellingReasonDto } from './dtos/cancelling-reason.dto';
 import { TrainingSessionResultDto } from './dtos/training-session-result.dto';
 import { TrainingSessionParamsDto } from './dtos/training-session-params.dto';
 import { SessionIdParamValidations } from './validations/session-id.validations';
-import { CoachCancelSessionDto } from './dtos/coach-cancel-session.dto.ts';
-import { CoachCancelSessionValidations } from './validations/coach-cancel-session.validations';
+import { CoachDeclineSessionDto } from './dtos/coach-decline-session.dto.ts';
+import { CoachDeclineSessionValidations } from './validations/coach-decline-session.validations';
 import { SessionTypeValidations } from './validations/session-type.validations';
 import { RequestSlotChangeValidation } from './validations/request-slot-change.validation';
 import { RequestSlotChangeDto } from './dtos/request-slot-change.dto';
@@ -117,23 +116,27 @@ export class SessionController {
     @Param(new JoiValidation(SessionRequestIdValidations))
     { sessionRequestId }: SessionRequestIdDto,
     @UserId() userId: number,
+    @Body(new JoiValidation(CoachDeclineSessionValidations))
+    { declineReasonId }: CoachDeclineSessionDto,
   ): Promise<TrainingSessionResultDto> {
-    return this.sessionService.coachDeclineRequest(userId, sessionRequestId);
+    return this.sessionService.coachDeclineRequest(
+      userId,
+      sessionRequestId,
+      declineReasonId,
+    );
   }
 
-  @Put('coach-cancel-session/:sessionId')
-  @Version('1')
-  @Roles('user')
-  @UseGuards(AuthGuard, RoleGuard)
-  async coachCancelSession(
-    @Param(new JoiValidation(SessionIdParamValidations))
-    { sessionId }: TrainingSessionParamsDto,
-    @Body(new JoiValidation(CoachCancelSessionValidations))
-    { cancelReasonId }: CoachCancelSessionDto,
-    @UserId() userId: number,
-  ): Promise<TrainingSessionResultDto> {
-    return this.sessionService.coachCancelSession(userId, sessionId, cancelReasonId);
-  }
+  // @Put('coach-cancel-session/:sessionId')
+  // @Version('1')
+  // @Roles('user')
+  // @UseGuards(AuthGuard, RoleGuard)
+  // async coachCancelSession(
+  //   @Param(new JoiValidation(SessionIdParamValidations))
+  //   { sessionId }: TrainingSessionParamsDto,
+  //   @UserId() userId: number,
+  // ): Promise<TrainingSessionResultDto> {
+  //   return this.sessionService.coachCancelSession(userId, sessionId);
+  // }
 
   @Put('user-cancel-session/:sessionId')
   @Version('1')
@@ -143,10 +146,8 @@ export class SessionController {
     @Param(new JoiValidation(SessionIdParamValidations))
     { sessionId }: TrainingSessionParamsDto,
     @UserId() userId: number,
-    @Body(new JoiValidation(CoachCancelSessionValidations))
-    { cancelReasonId }: CoachCancelSessionDto,
   ): Promise<TrainingSessionResultDto> {
-    return this.sessionService.userCancelSession(userId, sessionId, cancelReasonId);
+    return this.sessionService.userCancelSession(userId, sessionId);
   }
 
   @Get('cancelling-reasons')
