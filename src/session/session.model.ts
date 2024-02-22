@@ -589,16 +589,21 @@ export class SessionModel {
     `;
   }
 
-  async getAllBookedUsersIds(date: string, slotId: number) {
-    let usersIds = await this.prisma.$queryRaw`
-      SELECT JSON_ARRAYAGG(userId) AS usersIds
+  async getAllBookedUsersSessionsIds(date: string, slotId: number) {
+    let result = await this.prisma.$queryRaw`
+      SELECT JSON_ARRAYAGG(
+        JSON_OBJECT(
+          "userId",TrainerBookedSession.userId,
+          "sessionId",TrainerBookedSession.id
+        )
+      ) AS usersIdsWithsessionsIds
       FROM TrainerBookedSession
       WHERE date = ${date}
       AND slotId = ${slotId}
       AND status = 'notActive'
     `;
 
-    return usersIds[0].usersIds ? usersIds[0].usersIds : [];
+    return result[0].usersIdsWithsessionsIds ? result[0].usersIdsWithsessionsIds : [];
   }
 
   async updateSessionAndRequest(

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { NOTIFICATION_SENT_TO } from 'src/global/enums';
 
 @Injectable()
 export class NotificationModel {
@@ -8,9 +9,61 @@ export class NotificationModel {
 
   async getAll(userId: number): Promise<any> {
     let userNotifications = await this.prisma.$queryRaw`
-    SELECT *
+    SELECT
+    Notification.id,
+    Notification.sentTo,
+    Notification.about,
+    Notification.type,
+    Notification.content,
+    Notification.seen,
+    DATE_FORMAT(TrainerBookedSession.date,'%Y-%m-%d') AS sessionDate,
+    CASE
+      WHEN Notification.sentTo = ${NOTIFICATION_SENT_TO.PLAYER_PROFILE}
+      THEN
+      (
+        SELECT
+         JSON_OBJECT(
+          "id",User.id,
+          "firstName",User.firstName,
+          "lastName",User.lastName,
+          "profileImage",User.profileImage,
+          "mobileNumber",User.mobileNumber
+        )
+        FROM TrainerProfile
+        LEFT JOIN TrainerBookedSession ON TrainerBookedSession.trainerProfileId = TrainerProfile.id
+        LEFT JOIN User ON TrainerProfile.userId = User.id
+        WHERE TrainerProfile.id = TrainerBookedSession.trainerProfileId
+        GROUP BY TrainerProfile.id
+      )
+      ELSE NULL
+    END AS trainerInformation,
+    CASE
+      WHEN Notification.sentTo = ${NOTIFICATION_SENT_TO.TRAINER_PROFILE}
+      THEN
+      (
+        SELECT
+         JSON_OBJECT(
+          "id",User.id,
+          "firstName",User.firstName,
+          "lastName",User.lastName,
+          "profileImage",User.profileImage,
+          "mobileNumber",User.mobileNumber
+        )
+        FROM User
+        WHERE id = TrainerBookedSession.userId
+      )
+      ELSE NULL
+    END AS playerInformation,
+    JSON_OBJECT(
+      "id",Slot.id,
+      "fromTime",Slot.fromTime,
+      "toTime",Slot.toTime
+    ) AS Slot
     FROM Notification
-    WHERE userId = ${userId}
+    LEFT JOIN User ON User.id = Notification.userId
+    LEFT JOIN TrainerBookedSession ON TrainerBookedSession.id = Notification.trainerBookedSessionId
+    LEFT JOIN Slot ON Slot.id = TrainerBookedSession.slotId
+    WHERE Notification.userId = ${userId}
     `;
 
     await this.prisma.$queryRaw`
@@ -64,20 +117,26 @@ export class NotificationModel {
   }
 
   async createMany(
-    usersIds: number[],
-    trainerBookedSessionId: number,
+    usersSessionsIds: any[],
     sentTo: string,
     about: string,
     type: string,
     content: string,
   ) {
     let arrayToPush = [];
-    if (usersIds.length <= 0) {
+    if (usersSessionsIds.length <= 0) {
       return;
     }
 
-    for (let i = 0; i < usersIds.length; i++) {
-      arrayToPush.push([sentTo, about, type, content, usersIds[i]]);
+    for (let i = 0; i < usersSessionsIds.length; i++) {
+      arrayToPush.push([
+        sentTo,
+        about,
+        type,
+        content,
+        usersSessionsIds[i].sessionId,
+        usersSessionsIds[i].userId,
+      ]);
     }
 
     await this.prisma.$queryRaw`
@@ -87,6 +146,7 @@ export class NotificationModel {
       about,
       type,
       content,
+      trainerBookedSessionId,
       userId
     )
     VALUES

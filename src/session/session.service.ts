@@ -424,12 +424,14 @@ export class SessionService {
 
   async rejectRestOfSameDateSlotRequests(newDate: string, newSlotId: number) {
     // get all user who booked this slot
-    let usersIds = await this.sessionModel.getAllBookedUsersIds(newDate, newSlotId);
+    let usersSessionsIds = await this.sessionModel.getAllBookedUsersSessionsIds(
+      newDate,
+      newSlotId,
+    );
 
     // notify the rejection to all users
     await this.notificationModel.createMany(
-      usersIds,
-      null,
+      usersSessionsIds,
       NOTIFICATION_SENT_TO.PLAYER_PROFILE,
       NOTIFICATION_ABOUT.TRAINER_SESSION,
       NOTIFICATION_TYPE.REJECT,
