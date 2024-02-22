@@ -1,4 +1,4 @@
-export const ALLOWED_PAGE_SIZES = [10, 20, 50];
+export const ALLOWED_PAGE_SIZES = [5, 10, 20, 50];
 
 export const RATES_ENUM = {
   '0': { eq: 0 },

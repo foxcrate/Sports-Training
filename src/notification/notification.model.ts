@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { NOTIFICATION_SENT_TO } from 'src/global/enums';
+import { PaginationParams } from 'src/global/dtos/pagination-params.dto';
 
 @Injectable()
 export class NotificationModel {
   constructor(private prisma: PrismaService) {}
 
-  async getAll(userId: number): Promise<any> {
+  async getAll(userId: number, paginationParams: PaginationParams): Promise<any> {
     let userNotifications = await this.prisma.$queryRaw`
     SELECT
     Notification.id,
@@ -61,6 +62,7 @@ export class NotificationModel {
     LEFT JOIN TrainerBookedSession ON TrainerBookedSession.id = Notification.trainerBookedSessionId
     LEFT JOIN Slot ON Slot.id = TrainerBookedSession.slotId
     WHERE Notification.userId = ${userId}
+    LIMIT ${paginationParams.limit} OFFSET ${paginationParams.offset};
     `;
 
     await this.prisma.$queryRaw`

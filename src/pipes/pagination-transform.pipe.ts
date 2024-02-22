@@ -32,7 +32,7 @@ export class PaginationTransformPipe implements PipeTransform<any, any> {
   }
 
   private transformPageSize(pageSize: any): number {
-    const parsedPageSize = parseInt(pageSize || `${ALLOWED_PAGE_SIZES[0]}`, 10);
+    const parsedPageSize = parseInt(pageSize || `${ALLOWED_PAGE_SIZES[2]}`, 10);
     if (isNaN(parsedPageSize) || !ALLOWED_PAGE_SIZES.includes(parsedPageSize)) {
       throw new BadRequestException(
         this.i18n.t(`errors.WRONG_PAGE_SIZE_ERROR`, { lang: I18nContext.current().lang }),
