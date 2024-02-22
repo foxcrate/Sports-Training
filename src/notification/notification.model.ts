@@ -51,6 +51,7 @@ export class NotificationModel {
         )
         FROM User
         WHERE id = TrainerBookedSession.userId
+        GROUP BY User.id
       )
       ELSE NULL
     END AS playerInformation,
