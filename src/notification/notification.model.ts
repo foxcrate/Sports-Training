@@ -29,11 +29,8 @@ export class NotificationModel {
           "profileImage",User.profileImage,
           "mobileNumber",User.mobileNumber
         )
-        FROM TrainerBookedSession
-        LEFT JOIN TrainerProfile ON TrainerBookedSession.trainerProfileId = TrainerProfile.id
-        LEFT JOIN User ON TrainerProfile.userId = User.id
-        WHERE TrainerProfile.id = TrainerBookedSession.trainerProfileId
-        GROUP BY TrainerBookedSession.id
+        FROM User
+        WHERE User.id = ( select userId from TrainerProfile where TrainerProfile.id = TrainerBookedSession.trainerProfileId )
       )
       ELSE NULL
     END AS trainerInformation,
@@ -51,7 +48,6 @@ export class NotificationModel {
         )
         FROM User
         WHERE id = TrainerBookedSession.userId
-        GROUP BY User.id
       )
       ELSE NULL
     END AS playerInformation,
