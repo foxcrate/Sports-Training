@@ -26,7 +26,7 @@ export class SportController {
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(AddSportValidation))
   async create1(@Body() reqBody, @Request() req: ExpressRequest) {
-    return await this.sportService.create(reqBody, req['id']);
+    return await this.sportService.create(reqBody);
   }
 
   @Get()

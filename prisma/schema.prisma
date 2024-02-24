@@ -608,6 +608,8 @@ model Sport {
   id Int @id @default(autoincrement())
 
   name String?
+  
+  name_ar String?
 
   playerProfiles  PlayerProfileSports[]
   trainerProfiles TrainerProfileSports[]
@@ -621,6 +623,8 @@ model Region {
   id Int @id @default(autoincrement())
 
   name String?
+
+  name_ar String?
 
   playerProfile  PlayerProfile[]
   trainerProfile TrainerProfile[]

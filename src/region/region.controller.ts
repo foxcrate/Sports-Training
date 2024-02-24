@@ -26,7 +26,7 @@ export class RegionController {
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(AddRegionValidation))
   async create1(@Body() reqBody, @Request() req: ExpressRequest) {
-    return await this.regionService.create(reqBody, req['id']);
+    return await this.regionService.create(reqBody);
   }
 
   @Get()

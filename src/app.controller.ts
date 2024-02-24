@@ -66,7 +66,6 @@ export class AppController {
     // return { currentDate, startDate, endDate, status };
   }
 
-  @Get('/testFirebase')
   async testFirebase() {
     let id = 4;
     let doctorClinic = await this.prisma.$queryRaw`
@@ -156,45 +155,21 @@ export class AppController {
     return theField[0];
   }
 
-  async testSQL() {
-    let id = 25;
-    let theField = await this.prisma.$queryRaw`
+  @Get('/test')
+  async test() {
+    let y = 'Region';
+    let c = false;
+
+    let x = await this.prisma.$queryRaw`
     SELECT
-      f.id,
-      f.name,
-      f.availableWeekDays AS availableWeekDays,
-      f.availableDayHours AS availableDayHours,
-      fbh.fieldBookedHours AS fieldBookedHours,
-      GROUP_CONCAT(DISTINCT STR_TO_DATE(fnad.dayDate,'%Y-%m-%d') )
-      AS
-      fieldNotAvailableDays
-      FROM Field AS f
-      INNER JOIN FieldNotAvailableDays AS fnad ON f.id = fnad.fieldId
-      INNER JOIN (
-        SELECT
-        id,
-        fieldId AS fieldId,
-        CASE
-        WHEN COUNT(fbh.id ) = 0 THEN null
-        ELSE
-        JSON_ARRAYAGG( JSON_OBJECT(
-          'id',fbh.id,
-          'fromDateTime', fbh.fromDateTime,
-          'userId',fbh.userId
-          ))
-        END
-        AS
-        fieldBookedHours
-        FROM
-        FieldsBookedHours as fbh
-        GROUP BY 
-        fbh.id
-      ) AS fbh ON f.id = fbh.fieldId
-      
-      GROUP BY f.id,fbh.id
+    CASE
+    WHEN ${c} = true THEN name
+    WHEN ${c} = false THEN id
+    END AS id
+    FROM Region
     `;
 
-    return theField[0];
+    return x[0];
   }
 
   @Get('/testSQL')
