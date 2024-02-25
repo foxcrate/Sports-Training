@@ -203,7 +203,8 @@ export class TrainerProfileModel {
       ELSE
       JSON_OBJECT(
         'id',r.id,
-        'name', r.name)
+        'name', MAX(RegionTranslation.name)
+        )
     END AS region,
     JSON_OBJECT(
       'id',ud.id,
@@ -226,6 +227,8 @@ export class TrainerProfileModel {
     LEFT JOIN trainerProfileFields AS tpf ON tpws.trainerProfileId = tpf.trainerProfileId
     LEFT JOIN userDetails AS ud ON tpws.userId = ud.id
     LEFT JOIN Region AS r ON tpws.regionId = r.id
+    LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = r.id
+    AND RegionTranslation.language = ${I18nContext.current().lang}
     GROUP BY tpws.trainerProfileId
     ;`;
     return trainerProfileDetails[0];

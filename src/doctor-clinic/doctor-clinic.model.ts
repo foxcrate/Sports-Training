@@ -225,7 +225,7 @@ export class DoctorClinicModel {
         ELSE
         JSON_OBJECT(
           'id',r.id,
-          'name', r.name)
+          'name', MAX(RegionTranslation.name))
         END AS region,
         CASE
         WHEN COUNT(dcs.id ) = 0 THEN null
@@ -239,6 +239,8 @@ export class DoctorClinicModel {
       LEFT JOIN NotAvailableDays as nad
       ON nad.doctorClinicId = cwbhafaaag.id
       LEFT JOIN Region AS r ON cwbhafaaag.regionId = r.id
+      LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = r.id
+      AND RegionTranslation.language = ${I18nContext.current().lang}
       LEFT JOIN
       DoctorClinicSpecialization AS dcs
       ON

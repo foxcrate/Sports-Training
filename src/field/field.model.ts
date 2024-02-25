@@ -70,17 +70,16 @@ export class FieldModel {
       ELSE
       JSON_ARRAYAGG(JSON_OBJECT(
         'id',rg.id,
-        'name', rg.name
+        'name', RegionTranslation.name
         ))
       END AS region,
       fdwbh.availableWeekDays AS availableWeekDays,
       fdwbh.availableDayHours AS availableDayHours,
       fdwbh.fieldBookedHours AS fieldBookedHours
     FROM FieldDetailsWithBookedHours AS fdwbh
-    LEFT JOIN
-    Region AS rg
-    ON
-    fdwbh.regionId = rg.id
+    LEFT JOIN Region AS rg ON fdwbh.regionId = rg.id
+    LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = rg.id
+    AND RegionTranslation.language = ${I18nContext.current().lang}
     GROUP BY  fdwbh.id
     )
     SELECT 
@@ -134,7 +133,7 @@ export class FieldModel {
         ELSE
         JSON_OBJECT(
           'id',region.id,
-          'name', region.name
+          'name', MAX(RegionTranslation.name)
           )
         END AS region,
         f.acceptanceStatus,
@@ -167,10 +166,9 @@ export class FieldModel {
       Sport AS s
       ON
       f.sportId = s.id
-      LEFT JOIN
-      Region AS region
-      ON
-      f.regionId = region.id
+      LEFT JOIN Region AS region ON f.regionId = region.id
+      LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = f.regionId
+      AND RegionTranslation.language = ${I18nContext.current().lang}
       WHERE
       f.id = ${id}
       GROUP BY f.id
@@ -359,6 +357,93 @@ export class FieldModel {
         .format('hh:mm A'),
     };
     return cardFormat;
+  }
+
+  async getFieldDetails(
+    fieldId: number,
+    dayDate: string,
+  ): Promise<FieldBookingDetailsDTO> {
+    let theField = await this.prisma.$queryRaw`
+    WITH FieldDetailsWithBookedHours AS (
+      SELECT
+        f.id,
+        f.name,
+        f.acceptanceStatus,
+        CASE WHEN AVG(r.ratingNumber) IS NULL THEN 5
+          ELSE
+          ROUND(AVG(r.ratingNumber),1)
+          END 
+          AS RatingNumber,
+        f.availableWeekDays AS availableWeekDays,
+        f.availableDayHours AS availableDayHours,
+        CASE
+        WHEN COUNT(fbh.id ) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(JSON_OBJECT(
+          'id',fbh.id,
+          'fromDateTime', fbh.fromDateTime,
+          'userId',fbh.userId
+          ))
+        END AS fieldBookedHours
+      FROM Field AS f
+      LEFT JOIN
+      FieldsBookedHours AS fbh
+      ON
+      f.id = fbh.fieldId
+      LEFT JOIN
+      Rate AS r
+      ON
+      f.id = r.fieldId
+      WHERE
+      f.id = ${fieldId}
+      GROUP BY f.id
+    )
+    SELECT 
+      fdwbh.id,
+      fdwbh.name,
+      fdwbh.acceptanceStatus,
+      fdwbh.ratingNumber,
+      fdwbh.availableWeekDays AS availableWeekDays,
+      fdwbh.availableDayHours AS availableDayHours,
+      fdwbh.fieldBookedHours AS fieldBookedHours,
+      CASE
+      WHEN COUNT(fnad.id ) = 0 THEN null
+      ELSE
+      JSON_ARRAYAGG(JSON_OBJECT(
+        'id',fnad.id,
+        'dayDate', fnad.dayDate
+        ))
+      END AS fieldNotAvailableDays
+    FROM FieldDetailsWithBookedHours AS fdwbh
+    LEFT JOIN
+    FieldNotAvailableDays AS fnad
+    ON
+    fdwbh.id = fnad.fieldId
+    AND
+    DATE_FORMAT(fnad.dayDate,'%Y-%m-%d') = ${dayDate}
+    GROUP BY  fdwbh.id
+    `;
+
+    if (!theField[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
+    }
+
+    return theField[0];
+  }
+
+  async getManyFields(idsArray: number[]) {
+    let fields = [];
+    if (idsArray.length >= 1) {
+      fields = await this.prisma.$queryRaw`
+      SELECT id,name
+      FROM Field
+      WHERE id IN (${Prisma.join(idsArray)})
+    `;
+    }
+
+    return fields;
   }
 
   async create(reqBody: FieldCreateDto): Promise<FieldReturnDto> {
@@ -697,80 +782,6 @@ export class FieldModel {
     return theField[0];
   }
 
-  async getFieldDetails(
-    fieldId: number,
-    dayDate: string,
-  ): Promise<FieldBookingDetailsDTO> {
-    let theField = await this.prisma.$queryRaw`
-    WITH FieldDetailsWithBookedHours AS (
-      SELECT
-        f.id,
-        f.name,
-        f.acceptanceStatus,
-        CASE WHEN AVG(r.ratingNumber) IS NULL THEN 5
-          ELSE
-          ROUND(AVG(r.ratingNumber),1)
-          END 
-          AS RatingNumber,
-        f.availableWeekDays AS availableWeekDays,
-        f.availableDayHours AS availableDayHours,
-        CASE
-        WHEN COUNT(fbh.id ) = 0 THEN null
-        ELSE
-        JSON_ARRAYAGG(JSON_OBJECT(
-          'id',fbh.id,
-          'fromDateTime', fbh.fromDateTime,
-          'userId',fbh.userId
-          ))
-        END AS fieldBookedHours
-      FROM Field AS f
-      LEFT JOIN
-      FieldsBookedHours AS fbh
-      ON
-      f.id = fbh.fieldId
-      LEFT JOIN
-      Rate AS r
-      ON
-      f.id = r.fieldId
-      WHERE
-      f.id = ${fieldId}
-      GROUP BY f.id
-    )
-    SELECT 
-      fdwbh.id,
-      fdwbh.name,
-      fdwbh.acceptanceStatus,
-      fdwbh.ratingNumber,
-      fdwbh.availableWeekDays AS availableWeekDays,
-      fdwbh.availableDayHours AS availableDayHours,
-      fdwbh.fieldBookedHours AS fieldBookedHours,
-      CASE
-      WHEN COUNT(fnad.id ) = 0 THEN null
-      ELSE
-      JSON_ARRAYAGG(JSON_OBJECT(
-        'id',fnad.id,
-        'dayDate', fnad.dayDate
-        ))
-      END AS fieldNotAvailableDays
-    FROM FieldDetailsWithBookedHours AS fdwbh
-    LEFT JOIN
-    FieldNotAvailableDays AS fnad
-    ON
-    fdwbh.id = fnad.fieldId
-    AND
-    DATE_FORMAT(fnad.dayDate,'%Y-%m-%d') = ${dayDate}
-    GROUP BY  fdwbh.id
-    `;
-
-    if (!theField[0]) {
-      throw new NotFoundException(
-        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
-      );
-    }
-
-    return theField[0];
-  }
-
   async insertFieldBookedHour(fieldId: number, userId, dateTime: string) {
     await this.prisma.$queryRaw`
     INSERT INTO FieldsBookedHours
@@ -816,18 +827,5 @@ export class FieldModel {
     `;
 
     return await this.getByID(fieldId);
-  }
-
-  async getManyFields(idsArray: number[]) {
-    let fields = [];
-    if (idsArray.length >= 1) {
-      fields = await this.prisma.$queryRaw`
-      SELECT id,name
-      FROM Field
-      WHERE id IN (${Prisma.join(idsArray)})
-    `;
-    }
-
-    return fields;
   }
 }

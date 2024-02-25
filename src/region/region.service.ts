@@ -11,7 +11,7 @@ export class RegionService {
     private readonly i18n: I18nService,
   ) {}
   async create(createData: RegionCreateDto): Promise<RegionReturnDto> {
-    await this.findRepeated(createData.name);
+    await this.findRepeated(createData.name_en);
 
     let newRegion = await this.regionModel.create(createData);
 

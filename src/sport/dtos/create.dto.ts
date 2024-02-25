@@ -1,3 +1,4 @@
 export class CreateSportDto {
-  name: string;
+  name_en: string;
+  name_ar: string;
 }

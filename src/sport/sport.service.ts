@@ -11,7 +11,7 @@ export class SportService {
     private readonly i18n: I18nService,
   ) {}
   async create(createData: CreateSportDto): Promise<ReturnSportDto> {
-    await this.findRepeated(createData.name);
+    await this.findRepeated(createData.name_en);
 
     let newSport = await this.sportModel.create(createData);
     return newSport[0];

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { I18nContext } from 'nestjs-i18n';
 import { ReturnPlayerProfileDto } from './dtos/return.dto';
 import { SportService } from 'src/sport/sport.service';
 import { PlayerProfileCreateDto } from './dtos/create.dto';
@@ -83,7 +84,8 @@ export class PlayerProfileModel {
       ELSE
       JSON_OBJECT(
         'id',r.id,
-        'name', r.name)
+        'name', MAX(RegionTranslation.name)
+        )
       END AS region,
       pp.userId AS userId,
       CASE 
@@ -95,6 +97,8 @@ export class PlayerProfileModel {
       END AS sports
       FROM PlayerProfile AS pp
       LEFT JOIN Region AS r ON pp.regionId = r.id
+      LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = r.id
+      AND RegionTranslation.language = ${I18nContext.current().lang}
       LEFT JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
       LEFT JOIN Sport AS s ON pps.sportId = s.id
       WHERE pp.userId = ${userId}

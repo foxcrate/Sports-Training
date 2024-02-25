@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { ReturnSportDto } from './dtos/return.dto';
+import { I18nContext } from 'nestjs-i18n';
 import { CreateSportDto } from './dtos/create.dto';
 
 @Injectable()
@@ -10,9 +11,14 @@ export class SportModel {
 
   async getAll(): Promise<ReturnSportDto[]> {
     let allSports: ReturnSportDto[] = await this.prisma.$queryRaw`
-    SELECT *
+    SELECT
+    Sport.id,
+    SportTranslation.name AS name
     FROM Sport
-      `;
+    LEFT JOIN SportTranslation
+    ON SportTranslation.sportId = Sport.id
+    AND SportTranslation.language = ${I18nContext.current().lang}
+    `;
 
     return allSports;
   }
@@ -42,13 +48,33 @@ export class SportModel {
     INSERT INTO Sport
       (name)
       VALUES
-    (${createData.name})`;
+    (${createData.name_en})`;
 
     let newSport: ReturnSportDto[] = await this.prisma.$queryRaw`
     SELECT
     *
     FROM Sport
-    WHERE Sport.name = ${createData.name}
+    WHERE Sport.name = ${createData.name_en}
+    `;
+
+    await this.prisma.$queryRaw`
+    INSERT INTO SportTranslation
+      (
+        sportId,
+      language,
+      name
+      )
+      VALUES
+    (
+      ${newSport[0].id},
+      'en',
+      ${createData.name_en}
+    ),
+    (
+      ${newSport[0].id},
+      'ar',
+      ${createData.name_ar}
+    )
     `;
 
     return newSport;

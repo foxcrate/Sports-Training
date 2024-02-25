@@ -86,10 +86,12 @@ export class TrainerScheduleModel {
         SELECT JSON_OBJECT(
           'id',Field.id,
           'name',Field.name,
-          'location', Region.name
+          'location',  MAX(RegionTranslation.name)
         )
         FROM Field
         LEFT JOIN Region ON Region.id = Field.regionId
+        LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = Region.id
+        AND RegionTranslation.language = ${I18nContext.current().lang}
         WHERE Field.id = sl.fieldId
         ),
       'weekDayNumber', sl.weekDayNumber,

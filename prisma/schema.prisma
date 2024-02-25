@@ -52,6 +52,11 @@ enum Provider {
   native
 }
 
+enum LanguageEnum{
+  en
+  ar
+}
+
 enum NotificationSentTo{
   playerProfile
   trainerProfile
@@ -608,15 +613,25 @@ model Sport {
   id Int @id @default(autoincrement())
 
   name String?
-  
-  name_ar String?
 
   playerProfiles  PlayerProfileSports[]
   trainerProfiles TrainerProfileSports[]
   fields          Field[]
+  sportTranslation          SportTranslation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+}
+
+model SportTranslation{
+  id Int @id @default(autoincrement())
+
+  name  String?
+
+  language  LanguageEnum?
+
+  sport   Sport? @relation(fields: [sportId], references: [id])
+  sportId Int?
 }
 
 model Region {
@@ -624,15 +639,25 @@ model Region {
 
   name String?
 
-  name_ar String?
-
   playerProfile  PlayerProfile[]
   trainerProfile TrainerProfile[]
   fields         Field[]
   doctorClinc    DoctorClinic[]
+  regionTranslation    RegionTranslation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+}
+
+model RegionTranslation{
+  id Int @id @default(autoincrement())
+
+  name  String?
+
+  language  LanguageEnum?
+
+  region   Region? @relation(fields: [regionId], references: [id])
+  regionId Int?
 }
 
 model Feedback {

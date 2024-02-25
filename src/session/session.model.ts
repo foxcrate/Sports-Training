@@ -332,7 +332,7 @@ export class SessionModel {
         JSON_OBJECT(
           'fieldId',Field.id,
           'fieldRegionId', Region.id,
-          'fieldRegionName', Region.name
+          'fieldRegionName', MAX(RegionTranslation.name)
           ) AS field,
         CASE WHEN COUNT(Sport.id) = 0 THEN null
         ELSE
@@ -348,6 +348,8 @@ export class SessionModel {
       LEFT JOIN User ON User.id = TrainerBookedSession.userId
       LEFT JOIN Field ON Slot.fieldId = Field.id
       LEFT JOIN Region ON Field.regionID = Region.id
+      LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = Region.id
+      AND RegionTranslation.language = ${I18nContext.current().lang}
       LEFT JOIN TrainerProfileSports ON TrainerProfile.id = TrainerProfileSports.trainerProfileId
       LEFT JOIN Sport ON TrainerProfileSports.sportId = Sport.id
       WHERE TrainerBookedSession.trainerProfileId = ${trainerProfileId}
@@ -408,7 +410,7 @@ export class SessionModel {
         f.name AS fieldName,
         f.longitude AS filedLongitude,
         f.latitude AS filedLatitude,
-        r.name AS region,
+        MAX(RegionTranslation.name) AS region,
         CASE
           WHEN COUNT( tps.sportId ) > 0 THEN
           JSON_ARRAYAGG(s.name) ELSE NULL 
@@ -423,6 +425,8 @@ export class SessionModel {
         LEFT JOIN Slot ON Slot.id = tbs.slotId
         LEFT JOIN Field f ON f.id = Slot.fieldId
         LEFT JOIN Region r ON f.regionId = r.id
+        LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = r.id
+        AND RegionTranslation.language = ${I18nContext.current().lang}
         LEFT JOIN TrainerProfileSports tps ON tp.id = tps.trainerProfileId
         LEFT JOIN Sport s ON tps.sportId = s.id
         LEFT JOIN User u ON tp.userId = u.id
@@ -450,7 +454,7 @@ export class SessionModel {
         f.name AS fieldName,
         f.longitude AS filedLongitude,
         f.latitude AS filedLatitude,
-        r.name AS region,
+        MAX(RegionTranslation.name) AS region,
         CASE
           WHEN COUNT( tps.sportId ) > 0 THEN
           JSON_ARRAYAGG(s.name) ELSE NULL 
@@ -465,6 +469,8 @@ export class SessionModel {
         LEFT JOIN Slot ON Slot.id = tbs.slotId
         LEFT JOIN Field f ON f.id = Slot.fieldId
         LEFT JOIN Region r ON f.regionId = r.id
+        LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = r.id
+        AND RegionTranslation.language = ${I18nContext.current().lang}
         LEFT JOIN TrainerProfileSports tps ON tp.id = tps.trainerProfileId
         LEFT JOIN Sport s ON tps.sportId = s.id
         LEFT JOIN User u ON tbs.userId = u.id
@@ -654,7 +660,7 @@ export class SessionModel {
         dbh.gmt AS gmt,
         dc.name AS name,
         dc.profileImage AS profileImage,
-        r.name AS region,
+        MAX(RegionTranslation.name) AS region,
         s.name AS specialization,
         dc.slotDuration AS slotDuration,
         dc.cost AS cost 
@@ -662,6 +668,8 @@ export class SessionModel {
         DoctorClinicsBookedHours dbh
         JOIN DoctorClinic dc ON dbh.doctorClinicId = dc.id
         LEFT JOIN Region r ON dc.regionId = r.id
+        LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = r.id
+        AND RegionTranslation.language = ${I18nContext.current().lang}
         LEFT JOIN DoctorClinicSpecialization s ON dc.doctorClinicSpecializationId = s.id 
       WHERE
         dbh.id = ${sessionId}
@@ -679,7 +687,7 @@ export class SessionModel {
         fbh.gmt AS gmt,
         f.name AS name,
         f.profileImage AS profileImage,
-        r.name AS region,
+        MAX(RegionTranslation.name) AS region,
         s.name AS sport,
         f.slotDuration AS slotDuration,
         f.description AS description,
@@ -688,6 +696,8 @@ export class SessionModel {
         FieldsBookedHours fbh
         JOIN Field f ON fbh.fieldId = f.id
         LEFT JOIN Region r ON f.regionId = r.id
+        LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = r.id
+        AND RegionTranslation.language = ${I18nContext.current().lang}
         LEFT JOIN Sport s ON f.sportId = s.id 
       WHERE
         fbh.id = ${sessionId}
