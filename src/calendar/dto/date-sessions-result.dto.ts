@@ -1,8 +1,7 @@
+import { CALENDAR_TYPES_ENUM } from './calendar-types.enum';
+
 export type AllTypesResultDto = {
-  coachBookedHoursId: string | null;
-  playerBookedHoursId: string | null;
-  doctorBookedHoursId: string | null;
-  fieldBookedHoursId: string | null;
+  id: string | null;
   bookedHour: string;
   name: string;
   profileImage: string;
@@ -12,6 +11,7 @@ export type AllTypesResultDto = {
   specialization: string | null;
   startTime: string;
   sessionField: string | null;
+  type: CALENDAR_TYPES_ENUM;
 };
 
 export type DateSessionsResultDto = AllTypesResultDto[];

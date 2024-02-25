@@ -103,10 +103,7 @@ export class CalendarModel {
       case CALENDAR_TYPES_ENUM.PLAYERS:
         sql = `
           SELECT
-            NULL AS coachBookedHoursId,
-            tbs.id AS playerBookedHoursId,
-            NULL AS doctorBookedHoursId,
-            NULL AS fieldBookedHoursId,
+            tbs.id AS id,
             tbs.date AS bookedHour,
             tbs.gmt AS gmt,
             u.firstName AS NAME,
@@ -133,7 +130,7 @@ export class CalendarModel {
             LEFT JOIN Slot ON Slot.id = tbs.slotId
             LEFT JOIN Field f ON Slot.fieldId = f.id
           WHERE
-            tbs.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
+            tbs.status = '${SESSIONS_STATUSES_ENUM.ACTIVE}'
             AND tbs.userId = ${userId} 
         `;
         if (status) {
@@ -153,10 +150,7 @@ export class CalendarModel {
       case CALENDAR_TYPES_ENUM.COACHES:
         sql = `
           SELECT
-            tbs.id AS coachBookedHoursId,
-            NULL AS playerBookedHoursId,
-            NULL AS doctorBookedHoursId,
-            NULL AS fieldBookedHoursId,
+            tbs.id AS id,
             tbs.date AS bookedHour,
             tbs.gmt AS gmt,
             u.firstName AS NAME,
@@ -184,7 +178,7 @@ export class CalendarModel {
             LEFT JOIN Field f ON Slot.fieldId = f.id
           WHERE
             tp.userId = ${userId}
-            AND tbs.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
+            AND tbs.status = '${SESSIONS_STATUSES_ENUM.ACTIVE}'
         `;
         if (status) {
           sql += ` AND tbs.status = '${status}' `;
@@ -203,10 +197,7 @@ export class CalendarModel {
       case CALENDAR_TYPES_ENUM.DOCTORS:
         sql = `
           SELECT
-            NULL AS coachBookedHoursId,
-            NULL AS playerBookedHoursId,
-            dbh.id AS doctorBookedHoursId,
-            NULL AS fieldBookedHoursId,
+            dbh.id AS id,
             dbh.fromDateTime AS bookedHour,
             dbh.gmt AS gmt,
             dc.name AS name,
@@ -239,10 +230,7 @@ export class CalendarModel {
         // Fields as default
         sql = `
           SELECT
-            NULL AS coachBookedHoursId,
-            NULL AS playerBookedHoursId,
-            NULL AS doctorBookedHoursId,
-            fbh.id AS fieldBookedHoursId,
+            fbh.id AS id,
             fbh.fromDateTime AS bookedHour,
             fbh.gmt AS gmt,
             f.name AS name,
