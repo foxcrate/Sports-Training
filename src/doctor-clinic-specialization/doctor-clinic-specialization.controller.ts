@@ -36,6 +36,6 @@ export class DoctorClinicSpecializationController {
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(AddDoctorClinicSpecializationValidation))
   async create1(@Body() reqBody, @Request() req: ExpressRequest) {
-    return await this.doctorClinicSpecializationService.create(reqBody, req['id']);
+    return await this.doctorClinicSpecializationService.create(reqBody);
   }
 }

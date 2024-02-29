@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ReturnUserDto } from './dtos/return.dto';
 import { SignupUserDto } from './dtos/signup.dto';
+import { I18nContext } from 'nestjs-i18n';
 import { CompleteSignupUserDto } from './dtos/complete-signup.dto';
 import { NativeUserDto } from './dtos/native.dto';
 import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
@@ -20,13 +21,17 @@ export class UserModel {
       u.profileImage AS profileImage,
       u.email AS email,
       u.mobileNumber AS mobileNumber,
-      u.gender AS gender,
+      GenderTranslation.name AS gender,
       u.birthday AS birthday
       FROM ParentsChilds AS pc
       INNER JOIN User AS u
       ON pc.childId = u.id
       AND
       u.userType = 'child'
+      LEFT JOIN Gender ON u.genderId = Gender.id
+      LEFT JOIN GenderTranslation
+      ON GenderTranslation.genderId = Gender.id
+      AND GenderTranslation.language = ${I18nContext.current().lang}
       WHERE parentId = ${userId}
     `;
     return userChilds;
@@ -43,7 +48,7 @@ export class UserModel {
       userType,
       email,
       mobileNumber,
-      gender,
+      genderId,
       birthday
     )
     VALUES
@@ -55,7 +60,7 @@ export class UserModel {
       ${AvailableRoles.User},
       ${signupData.email},
       ${signupData.mobileNumber},
-      ${signupData.gender},
+      ${signupData.genderId},
       ${new Date(signupData.birthday)}
     )`;
   }
@@ -97,7 +102,7 @@ export class UserModel {
         firstName = ${data.firstName},
         lastName = ${data.lastName},
         email = ${data.email},
-        gender = ${data.gender},
+        genderId = ${data.genderId},
         profileImage = ${data.profileImage},
         birthday = ${new Date(data.birthday)}
         WHERE
@@ -156,16 +161,20 @@ export class UserModel {
   async getById(userId): Promise<ReturnUserDto> {
     let theUser = await this.prisma.$queryRaw`
       SELECT
-      id,
+        User.id,
         firstName,
         lastName,
         profileImage,
         email,
         mobileNumber,
-        gender,
+        GenderTranslation.name AS gender,
         birthday
       FROM User
-      WHERE id = ${userId}
+      LEFT JOIN Gender ON User.genderId = Gender.id
+      LEFT JOIN GenderTranslation
+      ON GenderTranslation.genderId = Gender.id
+      AND GenderTranslation.language = ${I18nContext.current().lang}
+      WHERE User.id = ${userId}
       LIMIT 1
     `;
     return theUser[0];
@@ -174,16 +183,20 @@ export class UserModel {
   async getByMobileNumber(mobileNumber): Promise<ReturnUserDto> {
     let theUser = await this.prisma.$queryRaw`
       SELECT
-      id,
+        User.id,
         firstName,
         lastName,
         profileImage,
         email,
         mobileNumber,
-        gender,
+        GenderTranslation.name AS gender,
         birthday
       FROM User
-      WHERE mobileNumber = ${mobileNumber}
+      LEFT JOIN Gender ON User.genderId = Gender.id
+      LEFT JOIN GenderTranslation
+      ON GenderTranslation.genderId = Gender.id
+      AND GenderTranslation.language = ${I18nContext.current().lang}
+      WHERE User.mobileNumber = ${mobileNumber}
       LIMIT 1
     `;
     return theUser[0];
@@ -230,16 +243,20 @@ export class UserModel {
   async getByEmail(email): Promise<ReturnUserDto> {
     let theUser = await this.prisma.$queryRaw`
       SELECT
-      id,
+        User.id,
         firstName,
         lastName,
         profileImage,
         email,
         mobileNumber,
-        gender,
+        GenderTranslation.name AS gender,
         birthday
       FROM User
-      WHERE email = ${email}
+      LEFT JOIN Gender ON User.genderId = Gender.id
+      LEFT JOIN GenderTranslation
+      ON GenderTranslation.genderId = Gender.id
+      AND GenderTranslation.language = ${I18nContext.current().lang}
+      WHERE User.email = ${email}
       LIMIT 1
     `;
     return theUser[0];
@@ -269,7 +286,7 @@ export class UserModel {
       profileImage,
       email,
       mobileNumber,
-      gender,
+      genderId,
       birthday)
       VALUES
     (${reqBody.firstName},
@@ -278,7 +295,7 @@ export class UserModel {
     ${reqBody.profileImage},
     ${reqBody.email},
     ${reqBody.mobileNumber},
-    ${reqBody.gender},
+    ${reqBody.genderId},
     ${reqBody.birthday})`;
 
     let theChild = await this.getByMobileNumber(reqBody.mobileNumber);

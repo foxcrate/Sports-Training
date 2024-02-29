@@ -1,8 +1,3 @@
-enum Gender {
-  Female = 'female',
-  Male = 'male',
-}
-
 export class SignupUserDto {
   firstName: string;
   lastName: string;
@@ -10,6 +5,6 @@ export class SignupUserDto {
   password: string;
   email: string;
   mobileNumber: string;
-  gender: Gender;
+  genderId: number;
   birthday: Date;
 }

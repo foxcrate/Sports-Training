@@ -1,5 +1,6 @@
 export class ReturnDoctorClinicSpecializationDto {
   id: number;
-  name: String;
+  name_en: String;
+  name_ar: String;
   createdAt: Date;
 }

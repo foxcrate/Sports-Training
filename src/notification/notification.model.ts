@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { NOTIFICATION_SENT_TO } from 'src/global/enums';
+import { I18nContext } from 'nestjs-i18n';
 import { PaginationParams } from 'src/global/dtos/pagination-params.dto';
 
 @Injectable()
@@ -15,9 +16,10 @@ export class NotificationModel {
     Notification.sentTo,
     Notification.about,
     Notification.type,
-    Notification.content,
+    NotificationContentTranslation.content,
     Notification.seen,
     DATE_FORMAT(TrainerBookedSession.date,'%Y-%m-%d') AS sessionDate,
+    TrainerBookedSession.id AS sessionId,
     CASE
       WHEN Notification.sentTo = ${NOTIFICATION_SENT_TO.PLAYER_PROFILE}
       THEN
@@ -61,6 +63,11 @@ export class NotificationModel {
     LEFT JOIN User ON User.id = Notification.userId
     LEFT JOIN TrainerBookedSession ON TrainerBookedSession.id = Notification.trainerBookedSessionId
     LEFT JOIN Slot ON Slot.id = TrainerBookedSession.slotId
+    LEFT JOIN NotificationContent
+    ON NotificationContent.id = Notification.notificationContentId
+    LEFT JOIN NotificationContentTranslation
+    ON NotificationContentTranslation.notificationContentId = NotificationContent.id
+    AND NotificationContentTranslation.language = ${I18nContext.current().lang}
     WHERE Notification.userId = ${userId}
     LIMIT ${paginationParams.limit} OFFSET ${paginationParams.offset};
     `;
@@ -91,7 +98,7 @@ export class NotificationModel {
     sentTo: string,
     about: string,
     type: string,
-    content: string,
+    notificationContentId: number,
   ) {
     await this.prisma.$queryRaw`
     INSERT INTO Notification
@@ -99,7 +106,7 @@ export class NotificationModel {
       sentTo,
       about,
       type,
-      content,
+      notificationContentId,
       trainerBookedSessionId,
       userId
     )
@@ -108,7 +115,7 @@ export class NotificationModel {
       ${sentTo},
       ${about},
       ${type},
-      ${content},
+      ${notificationContentId},
       ${trainerBookedSessionId},
       ${userId}
     )
@@ -120,7 +127,7 @@ export class NotificationModel {
     sentTo: string,
     about: string,
     type: string,
-    content: string,
+    notificationContentId: number,
   ) {
     let arrayToPush = [];
     if (usersSessionsIds.length <= 0) {
@@ -132,7 +139,7 @@ export class NotificationModel {
         sentTo,
         about,
         type,
-        content,
+        notificationContentId,
         usersSessionsIds[i].sessionId,
         usersSessionsIds[i].userId,
       ]);
@@ -144,7 +151,7 @@ export class NotificationModel {
       sentTo,
       about,
       type,
-      content,
+      notificationContentId,
       trainerBookedSessionId,
       userId
     )

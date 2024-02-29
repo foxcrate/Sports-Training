@@ -125,7 +125,7 @@ export class FieldModel {
         ELSE
         JSON_OBJECT(
           'id',s.id,
-          'name', s.name
+          'name', MAX(SportTranslation.name)
           )
         END AS sport,
         CASE
@@ -163,9 +163,9 @@ export class FieldModel {
       ON
       f.id = r.fieldId
       LEFT JOIN
-      Sport AS s
-      ON
-      f.sportId = s.id
+      Sport AS s ON f.sportId = s.id
+      LEFT JOIN SportTranslation ON SportTranslation.sportId = s.id
+        AND SportTranslation.language = ${I18nContext.current().lang}
       LEFT JOIN Region AS region ON f.regionId = region.id
       LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = f.regionId
       AND RegionTranslation.language = ${I18nContext.current().lang}
@@ -308,19 +308,23 @@ export class FieldModel {
       SELECT
       JSON_OBJECT(
         'id',s.id,
-        'name', s.name
+        'name', SportTranslation.name
       ) AS sportInfo
       FROM Sport AS s
-      WHERE id = ( select sportId FROM FieldTable )
+      LEFT JOIN SportTranslation ON SportTranslation.sportId = s.id
+        AND SportTranslation.language = ${I18nContext.current().lang}
+      WHERE s.id = ( select sportId FROM FieldTable )
     ),
     FieldRegionTable AS (
       SELECT
       JSON_OBJECT(
         'id',r.id,
-        'name', r.name
+        'name', RegionTranslation.name
       ) AS regionInfo
       FROM Region AS r
-      WHERE id = ( select regionId FROM FieldTable )
+      LEFT JOIN RegionTranslation ON RegionTranslation.regionId = r.id
+        AND RegionTranslation.language = ${I18nContext.current().lang}
+      WHERE r.id = ( select regionId FROM FieldTable )
     )
       SELECT f.name AS fieldName,
       f.profileImage AS fieldProfileImage,

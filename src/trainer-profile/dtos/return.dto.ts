@@ -1,12 +1,6 @@
-enum Level {
-  Beginner = 'beginner',
-  Intermediate = 'intermediate',
-  Advanced = 'advanced',
-}
-
 export class ReturnTrainerProfileDto {
   id: number;
-  level: Level;
+  levelId: number;
   ageGroupId: number;
   sessionDescription: String;
   cost: number;

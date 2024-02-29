@@ -1,5 +1,6 @@
 import * as Joi from 'joi';
 
 export const AddDoctorClinicSpecializationValidation = Joi.object({
-  name: Joi.string().required(),
+  name_en: Joi.string().required(),
+  name_ar: Joi.string().required(),
 });

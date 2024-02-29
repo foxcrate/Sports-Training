@@ -39,12 +39,36 @@ export class GlobalController {
     return await this.globalService.getAllAgeGroups();
   }
 
+  @Get('levels')
+  @Roles(AvailableRoles.User)
+  @UseGuards(AuthGuard, RoleGuard)
+  @Version('1')
+  async getAllLevels() {
+    return await this.globalService.getAllLevels();
+  }
+
+  @Get('genders')
+  @Roles(AvailableRoles.User)
+  @UseGuards(AuthGuard, RoleGuard)
+  @Version('1')
+  async getAllGenders() {
+    return await this.globalService.getAllGenders();
+  }
+
   @Get('feedback')
   @Roles(AvailableRoles.User)
   @UseGuards(AuthGuard, RoleGuard)
   @Version('1')
   async getAllFeedbacks() {
     return await this.globalService.getAllFeedbacks();
+  }
+
+  @Get('week-days')
+  @Roles(AvailableRoles.User)
+  @UseGuards(AuthGuard, RoleGuard)
+  @Version('1')
+  async getAllWeekdays() {
+    return await this.globalService.getAllWeekDays();
   }
 }
 

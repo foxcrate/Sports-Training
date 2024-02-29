@@ -38,6 +38,9 @@ export class TrainerScheduleModel {
     ON s.id = sm.ScheduleId
     LEFT JOIN Month AS m
     ON sm.monthId = m.id
+    LEFT JOIN MonthTranslation
+    ON MonthTranslation.monthId = m.id
+    AND MonthTranslation.language = ${I18nContext.current().lang}
     WHERE s.trainerProfileId = ${trainerProfileId}
     GROUP BY s.id;
     `;
@@ -61,6 +64,9 @@ export class TrainerScheduleModel {
     ON sch.id = sm.ScheduleId
     LEFT JOIN Month AS m
     ON sm.monthId = m.id
+    LEFT JOIN MonthTranslation
+    ON MonthTranslation.monthId = m.id
+    AND MonthTranslation.language = ${I18nContext.current().lang}
     WHERE sch.id = ${id}
     GROUP BY sch.id
     )
@@ -94,12 +100,16 @@ export class TrainerScheduleModel {
         AND RegionTranslation.language = ${I18nContext.current().lang}
         WHERE Field.id = sl.fieldId
         ),
-      'weekDayNumber', sl.weekDayNumber,
-      'weekDayName', sl.weekDayName
+      'weekDayNumber', WeekDay.dayNumber,
+      'weekDayName', WeekDayTranslation.dayName
       ))
     END AS ScheduleSlots
     FROM ScheduleWithMonths AS swm
     LEFT JOIN Slot AS sl
+    LEFT JOIN WeekDay ON sl.weekDayId = WeekDay.id
+      LEFT JOIN WeekDayTranslation
+      ON WeekDayTranslation.weekDayId = WeekDay.id
+      AND WeekDayTranslation.language = ${I18nContext.current().lang}
     ON swm.id = sl.ScheduleId
     GROUP BY swm.id
     `;
@@ -161,13 +171,16 @@ export class TrainerScheduleModel {
       WHEN COUNT(Month.id ) = 0 THEN null
       ELSE
       JSON_ARRAYAGG(JSON_OBJECT(
-        'name',Month.monthName,
+        'name',MonthTranslation.monthName,
         'number', Month.monthNumber
         ))
       END AS months
       FROM Schedule
       LEFT JOIN SchedulesMonths ON SchedulesMonths.scheduleId = Schedule.id
       LEFT JOIN Month ON Month.id = SchedulesMonths.monthId
+      LEFT JOIN MonthTranslation
+      ON MonthTranslation.monthId = Month.id
+      AND MonthTranslation.language = ${I18nContext.current().lang}
       WHERE Schedule.trainerProfileId = ${trainerProfileId}
       GROUP BY Schedule.id
     ),
@@ -186,12 +199,16 @@ export class TrainerScheduleModel {
         'toTime', Slot.toTime,
         'cost', Slot.cost,
         'fieldId', Slot.fieldId,
-        'weekDayNumber', Slot.weekDayNumber,
-        'weekDayName', Slot.weekDayName
+        'weekDayNumber', WeekDay.dayNumber,
+        'weekDayName', WeekDayTranslation.dayName
         ))
       END AS slots
       FROM Schedule
       LEFT JOIN Slot ON Slot.scheduleId = Schedule.id
+      LEFT JOIN WeekDay ON Slot.weekDayId = WeekDay.id
+      LEFT JOIN WeekDayTranslation
+      ON WeekDayTranslation.weekDayId = WeekDay.id
+      AND WeekDayTranslation.language = ${I18nContext.current().lang}
       LEFT JOIN SchedulesMonths ON SchedulesMonths.scheduleId = Schedule.id
       WHERE Schedule.trainerProfileId = ${trainerProfileId}
       AND Slot.fieldId = ${fieldId}
@@ -449,8 +466,7 @@ export class TrainerScheduleModel {
         moment(`${date}T${slotsArray[i].fromTime}`).utc().format('HH:mmZ'),
         moment(`${date}T${slotsArray[i].toTime}`).utc().format('HH:mmZ'),
         slotsArray[i].cost ? slotsArray[i].cost : theSchedule.trainerDefaultSlotCost,
-        slotsArray[i].weekDayNumber,
-        this.globalSerice.getDayNameByNumber(slotsArray[i].weekDayNumber),
+        await this.globalSerice.getIdByWeekDayNumber(slotsArray[i].weekDayNumber),
         slotsArray[i].fieldId,
         scheduleId,
       ]);
@@ -462,8 +478,7 @@ export class TrainerScheduleModel {
     fromTime,
     toTime,
     cost,
-    weekDayNumber,
-    weekDayName,
+    weekDayId,
     fieldId,
     scheduleId)
     VALUES

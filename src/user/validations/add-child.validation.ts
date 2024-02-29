@@ -6,6 +6,6 @@ export const AddChildValidation = Joi.object({
   profileImage: Joi.string(),
   email: Joi.string().email(),
   mobileNumber: Joi.string().required(),
-  gender: Joi.string().valid('female', 'male').required(),
+  genderId: Joi.number().required(),
   birthday: Joi.date().iso().required(),
 });

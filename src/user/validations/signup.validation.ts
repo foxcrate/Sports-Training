@@ -7,6 +7,6 @@ export const SignupValidation = Joi.object({
   password: Joi.string().required(),
   email: Joi.string().email().required(),
   mobileNumber: Joi.string().required(),
-  gender: Joi.string().valid('female', 'male').required(),
+  genderId: Joi.number().required(),
   birthday: Joi.date().iso().required(),
 });
