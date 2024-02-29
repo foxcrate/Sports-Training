@@ -8,6 +8,7 @@ import {
   CANCELED_BY_ENUM,
   HOME_SEARCH_TYPES_ENUM,
   NOTIFICATION_ABOUT,
+  NOTIFICATION_CONTENT,
   NOTIFICATION_SENT_TO,
   NOTIFICATION_TYPE,
   SESSIONS_STATUSES_ENUM,
@@ -29,6 +30,7 @@ import { TrainerProfileModel } from 'src/trainer-profile/trainer-profile.model';
 import { NotificationModel } from 'src/notification/notification.model';
 import { RequestSlotChangeDto } from './dtos/request-slot-change.dto';
 import { TrainerScheduleModel } from 'src/trainer-schedule/trainer-schedule.model';
+import { GlobalModel } from 'src/global/global.model';
 
 @Injectable()
 export class SessionService {
@@ -41,6 +43,7 @@ export class SessionService {
     private trainerScheduleService: TrainerScheduleService,
     private trainerScheduleModel: TrainerScheduleModel,
     private globalService: GlobalService,
+    private globalModel: GlobalModel,
   ) {}
 
   async playerRateTrainer(userId: number, reqBody: RateTrainerDto): Promise<boolean> {
@@ -115,6 +118,7 @@ export class SessionService {
   }
 
   async getPendingSessions(userId: number) {
+    // return await this.globalModel.getOneAgeGroup(1);
     let trainerProfile = await this.trainerProfileModel.getByUserId(userId);
     return await this.sessionModel.getPendingSessions(trainerProfile.id);
   }
@@ -278,7 +282,7 @@ export class SessionService {
       NOTIFICATION_SENT_TO.PLAYER_PROFILE,
       NOTIFICATION_ABOUT.TRAINER_SESSION,
       NOTIFICATION_TYPE.ACCEPT,
-      'Coach accepted your session',
+      NOTIFICATION_CONTENT.COACH_ACCEPTED_SESSION,
     );
 
     return {
@@ -317,7 +321,7 @@ export class SessionService {
       NOTIFICATION_SENT_TO.PLAYER_PROFILE,
       NOTIFICATION_ABOUT.TRAINER_SESSION,
       NOTIFICATION_TYPE.REJECT,
-      'Coach rejected your session',
+      NOTIFICATION_CONTENT.COACH_REJECTED_SESSION,
     );
 
     return {
@@ -375,7 +379,7 @@ export class SessionService {
       NOTIFICATION_SENT_TO.PLAYER_PROFILE,
       NOTIFICATION_ABOUT.TRAINER_SESSION,
       NOTIFICATION_TYPE.ACCEPT,
-      'Coach accepted your new timing to session',
+      NOTIFICATION_CONTENT.COACH_ACCEPTED_CHANGE_SESSION_TIME,
     );
 
     return {
@@ -413,7 +417,7 @@ export class SessionService {
       NOTIFICATION_SENT_TO.PLAYER_PROFILE,
       NOTIFICATION_ABOUT.TRAINER_SESSION,
       NOTIFICATION_TYPE.REJECT,
-      'Coach rejected your new timing to session',
+      NOTIFICATION_CONTENT.COACH_DECLINE_CHANGE_SESSION_TIME,
     );
 
     return {
@@ -435,7 +439,7 @@ export class SessionService {
       NOTIFICATION_SENT_TO.PLAYER_PROFILE,
       NOTIFICATION_ABOUT.TRAINER_SESSION,
       NOTIFICATION_TYPE.REJECT,
-      'Coach rejected your new timing to session',
+      NOTIFICATION_CONTENT.COACH_REJECTED_SESSION,
     );
 
     await this.sessionModel.rejectRestOfSameDateSlotRequests(newDate, newSlotId);

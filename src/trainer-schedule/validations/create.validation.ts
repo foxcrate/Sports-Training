@@ -12,17 +12,6 @@ export const AddScheduleValidation = Joi.object({
         .required(),
       cost: Joi.number(),
       weekDayNumber: Joi.number().valid(0, 1, 2, 3, 4, 5, 6).required(),
-      // weekDayName: Joi.string()
-      //   .valid(
-      //     'Sunday',
-      //     'Monday',
-      //     'Tuesday',
-      //     'Wednesday',
-      //     'Thursday',
-      //     'Friday',
-      //     'Saturday',
-      //   )
-      //   .required(),
       fieldId: Joi.number().required(),
     })
     .required()

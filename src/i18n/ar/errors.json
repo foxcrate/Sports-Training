@@ -40,6 +40,7 @@
   "WRONG_OTP": "رمز خاطئ",
   "DAY_NOT_AVAILABLE": "هذا اليوم غير متوفر",
   "WEEK_DAY_NOT_AVAILABLE": "هذا اليوم في الأسبوع غير متوفر",
+  "WEEK_DAY_NOT_EXIST": "هذا اليوم في الاسبوع غير موجود",
   "BOOKED_SLOT": "هذا المعاد محجوز بالفعل",
   "NOT_EXISTED_SLOT": "هذا المعاد غير موجود",
   "SERVER_ERROR": "حدث مشكلة في السيرفر، سوف تحل قريبا",

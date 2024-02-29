@@ -14,6 +14,7 @@ import { SessionCardDTO } from 'src/session/dtos/session-card.dto';
 import { SimplifiedFieldReturn } from 'src/field/dtos/field-simplified-return.dto';
 import {
   NOTIFICATION_ABOUT,
+  NOTIFICATION_CONTENT,
   NOTIFICATION_SENT_TO,
   NOTIFICATION_TYPE,
   SESSIONS_STATUSES_ENUM,
@@ -209,7 +210,7 @@ export class TrainerScheduleService {
       NOTIFICATION_SENT_TO.TRAINER_PROFILE,
       NOTIFICATION_ABOUT.TRAINER_SESSION,
       NOTIFICATION_TYPE.REQUEST,
-      'User requested for a session',
+      NOTIFICATION_CONTENT.USER_REQUESTED_SESSION,
     );
 
     let trainerBookedSessionCard = await this.sessionModel.getTrainerBookedSessionCard(

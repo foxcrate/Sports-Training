@@ -40,6 +40,7 @@
   "WRONG_OTP": "Wrong OTP",
   "DAY_NOT_AVAILABLE": "Day is not available",
   "WEEK_DAY_NOT_AVAILABLE": "Week day is not available",
+  "WEEK_DAY_NOT_EXIST": "Week day not exist",
   "BOOKED_SLOT": "This slot is already booked",
   "NOT_EXISTED_SLOT": "This slot is not exist",
   "SERVER_ERROR": "Server problem, it will be fixed soon",

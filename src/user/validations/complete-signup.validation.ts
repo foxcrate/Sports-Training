@@ -6,6 +6,6 @@ export const CompleteSignupValidation = Joi.object({
   // fcm_token: Joi.string(),
   profileImage: Joi.string(),
   email: Joi.string().email().required(),
-  gender: Joi.string().valid('female', 'male').required(),
+  genderId: Joi.number().required(),
   birthday: Joi.date().iso().required(),
 });

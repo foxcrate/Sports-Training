@@ -1,7 +1,7 @@
 import * as Joi from 'joi';
 
 export const AddTrainerProfileValidation = Joi.object({
-  level: Joi.string().valid('beginner', 'intermediate', 'advanced'),
+  levelId: Joi.number(),
   ageGroupId: Joi.number(),
   sessionDescription: Joi.string(),
   cost: Joi.number(),

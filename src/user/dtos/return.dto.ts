@@ -1,8 +1,3 @@
-enum Gender {
-  Female = 'female',
-  Male = 'male',
-}
-
 export class ReturnUserDto {
   id: number;
   firstName: string;
@@ -11,7 +6,7 @@ export class ReturnUserDto {
   profileImage: string;
   email: string;
   mobileNumber: string;
-  gender: Gender;
+  genderId: number;
   birthday: Date;
   createdAt: Date;
 }

@@ -12,8 +12,6 @@ import { GlobalService } from 'src/global/global.service';
 export class PlayerProfileService {
   constructor(
     private playerProfileModel: PlayerProfileModel,
-    private prisma: PrismaService,
-    private globalService: GlobalService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -29,16 +27,6 @@ export class PlayerProfileService {
     return playerProfileWithSports;
   }
 
-  // async create(createData: PlayerProfileCreateDto, userId) {
-  //   //throw an error if repeated
-
-  //   await this.findRepeated(userId);
-
-  //   await this.playerProfileModel.create(createData, userId);
-
-  //   return await this.playerProfileModel.getOneDetailedByUserId(userId);
-  // }
-
   async set(
     createData: PlayerProfileCreateDto,
     userId: number,
@@ -48,23 +36,6 @@ export class PlayerProfileService {
     await this.playerProfileModel.setById(createData, playerProfile.id);
     return await this.playerProfileModel.getOneDetailedByUserId(userId);
   }
-
-  // async update(
-  //   createData: PlayerProfileCreateDto,
-  //   userId,
-  // ): Promise<ReturnPlayerProfileDto> {
-  //   //check profile existence
-  //   let playerProfile = await this.playerProfileModel.getOneDetailedByUserId(userId);
-  //   if (!playerProfile) {
-  //     throw new NotFoundException(
-  //       this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
-  //     );
-  //   }
-
-  //   await this.playerProfileModel.updateById(createData, playerProfile.id);
-
-  //   return await this.playerProfileModel.getOneDetailedByUserId(userId);
-  // }
 
   async delete(userId): Promise<ReturnPlayerProfileDto> {
     //get deleted playerProfile

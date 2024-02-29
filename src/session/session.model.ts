@@ -151,10 +151,12 @@ export class SessionModel {
       ELSE
       JSON_ARRAYAGG(JSON_OBJECT(
         'id',s.id,
-        'name', s.name)) 
+        'name', SportTranslation.name)) 
       END AS sports
       FROM TrainerProfileSports
       LEFT JOIN Sport AS s ON TrainerProfileSports.sportId = s.id
+      LEFT JOIN SportTranslation AS SportTranslation ON SportTranslation.sportId = s.id
+        AND SportTranslation.language = ${I18nContext.current().lang}
       WHERE TrainerProfileSports.trainerProfileId = (SELECT trainerProfileId FROM TrainerSessionData)
     )
     SELECT
@@ -338,7 +340,7 @@ export class SessionModel {
         ELSE
         JSON_ARRAYAGG(JSON_OBJECT(
           'id',Sport.id,
-          'name', Sport.name
+          'name', SportTranslation.name
           ))
         END AS sports
       FROM TrainerBookedSession
@@ -352,6 +354,8 @@ export class SessionModel {
       AND RegionTranslation.language = ${I18nContext.current().lang}
       LEFT JOIN TrainerProfileSports ON TrainerProfile.id = TrainerProfileSports.trainerProfileId
       LEFT JOIN Sport ON TrainerProfileSports.sportId = Sport.id
+      LEFT JOIN SportTranslation AS SportTranslation ON SportTranslation.sportId = Sport.id
+        AND SportTranslation.language = ${I18nContext.current().lang}
       WHERE TrainerBookedSession.trainerProfileId = ${trainerProfileId}
       AND TrainerBookedSession.date >= ${todayDate}
       AND SessionRequest.status = ${SESSION_REQUEST_STATUSES_ENUM.PENDING}
@@ -399,7 +403,7 @@ export class SessionModel {
         tbs.id AS coachBookedSessionId,
         tbs.userId AS userId,
         sr.status AS status,
-        tp.level AS coachLevel,
+        MAX(LevelTranslation.name) AS coachLevel,
         tp.userId AS coachUserId,
         tbs.date AS bookedDate,
         tbs.gmt AS gmt,
@@ -413,7 +417,7 @@ export class SessionModel {
         MAX(RegionTranslation.name) AS region,
         CASE
           WHEN COUNT( tps.sportId ) > 0 THEN
-          JSON_ARRAYAGG(s.name) ELSE NULL 
+          JSON_ARRAYAGG(SportTranslation.name) ELSE NULL 
         END AS sports,
         Slot.fromTime AS fromTime,
         Slot.toTime AS toTime,
@@ -421,6 +425,9 @@ export class SessionModel {
       FROM
         TrainerBookedSession tbs
         JOIN TrainerProfile tp ON tbs.trainerProfileId = tp.id
+        LEFT JOIN Level ON tp.levelId = Level.id
+        LEFT JOIN LevelTranslation ON LevelTranslation.levelId = Level.id
+        AND LevelTranslation.language = ${I18nContext.current().lang}
         LEFT JOIN SessionRequest sr ON tbs.id = sr.trainerBookedSessionId
         LEFT JOIN Slot ON Slot.id = tbs.slotId
         LEFT JOIN Field f ON f.id = Slot.fieldId
@@ -429,6 +436,8 @@ export class SessionModel {
         AND RegionTranslation.language = ${I18nContext.current().lang}
         LEFT JOIN TrainerProfileSports tps ON tp.id = tps.trainerProfileId
         LEFT JOIN Sport s ON tps.sportId = s.id
+        LEFT JOIN SportTranslation AS SportTranslation ON SportTranslation.sportId = s.id
+        AND SportTranslation.language = ${I18nContext.current().lang}
         LEFT JOIN User u ON tp.userId = u.id
       WHERE
         tbs.id = ${sessionId}
@@ -443,7 +452,7 @@ export class SessionModel {
         tbs.id AS coachBookedSessionId,
         tbs.userId AS userId,
         sr.status AS status,
-        tp.level AS coachLevel,
+        MAX(LevelTranslation.name) AS coachLevel,
         tp.userId AS coachUserId,
         tbs.date AS bookedDate,
         tbs.gmt AS gmt,
@@ -457,7 +466,7 @@ export class SessionModel {
         MAX(RegionTranslation.name) AS region,
         CASE
           WHEN COUNT( tps.sportId ) > 0 THEN
-          JSON_ARRAYAGG(s.name) ELSE NULL 
+          JSON_ARRAYAGG(SportTranslation.name) ELSE NULL 
         END AS sports,
         Slot.fromTime AS fromTime,
         Slot.toTime AS toTime,
@@ -465,6 +474,9 @@ export class SessionModel {
       FROM
         TrainerBookedSession tbs
         JOIN TrainerProfile tp ON tbs.trainerProfileId = tp.id
+        LEFT JOIN Level ON tp.levelId = Level.id
+        LEFT JOIN LevelTranslation ON LevelTranslation.levelId = Level.id
+        AND LevelTranslation.language = ${I18nContext.current().lang}
         LEFT JOIN SessionRequest sr ON tbs.id = sr.trainerBookedSessionId
         LEFT JOIN Slot ON Slot.id = tbs.slotId
         LEFT JOIN Field f ON f.id = Slot.fieldId
@@ -473,6 +485,8 @@ export class SessionModel {
         AND RegionTranslation.language = ${I18nContext.current().lang}
         LEFT JOIN TrainerProfileSports tps ON tp.id = tps.trainerProfileId
         LEFT JOIN Sport s ON tps.sportId = s.id
+        LEFT JOIN SportTranslation AS SportTranslation ON SportTranslation.sportId = s.id
+        AND SportTranslation.language = ${I18nContext.current().lang}
         LEFT JOIN User u ON tbs.userId = u.id
       WHERE
         tbs.id = ${sessionId}
@@ -538,20 +552,28 @@ export class SessionModel {
   async getCancellingReasons() {
     return this.prisma.$queryRaw`
       SELECT
-        *
+        CancellationReasons.id,
+        CancellationReasonsTranslation.name AS name
       FROM
         CancellationReasons
+      LEFT JOIN CancellationReasonsTranslation
+      ON CancellationReasonsTranslation.cancellationReasonsId = CancellationReasons.id
+      AND CancellationReasonsTranslation.language = ${I18nContext.current().lang}
     `;
   }
 
   async getCancellingReason(id) {
     let reason = await this.prisma.$queryRaw`
       SELECT
-        *
+        CancellationReasons.id,
+        CancellationReasonsTranslation.name AS name
       FROM
         CancellationReasons
+      LEFT JOIN CancellationReasonsTranslation
+      ON CancellationReasonsTranslation.cancellationReasonsId = CancellationReasons.id
+      AND CancellationReasonsTranslation.language = ${I18nContext.current().lang}
       WHERE
-        id = ${id}
+      CancellationReasons.id = ${id}
     `;
     return reason[0];
   }
@@ -688,7 +710,7 @@ export class SessionModel {
         f.name AS name,
         f.profileImage AS profileImage,
         MAX(RegionTranslation.name) AS region,
-        s.name AS sport,
+        SportTranslation.name AS sport,
         f.slotDuration AS slotDuration,
         f.description AS description,
         f.cost AS cost 
@@ -699,6 +721,8 @@ export class SessionModel {
         LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = r.id
         AND RegionTranslation.language = ${I18nContext.current().lang}
         LEFT JOIN Sport s ON f.sportId = s.id 
+        LEFT JOIN SportTranslation AS SportTranslation ON SportTranslation.sportId = s.id
+        AND SportTranslation.language = ${I18nContext.current().lang}
       WHERE
         fbh.id = ${sessionId}
       GROUP BY

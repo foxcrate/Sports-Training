@@ -114,10 +114,28 @@ export class GlobalService {
     return allAgeGroups;
   }
 
+  async getAllLevels(): Promise<[]> {
+    let allLevels = await this.globalModel.allLevels();
+
+    return allLevels;
+  }
+
+  async getAllGenders(): Promise<[]> {
+    let allGenders = await this.globalModel.allGenders();
+
+    return allGenders;
+  }
+
   async getAllFeedbacks(): Promise<[]> {
     let allFeedbacks = await this.globalModel.allFeedbacks();
 
     return allFeedbacks;
+  }
+
+  async getAllWeekDays(): Promise<[]> {
+    let allWeekDays = await this.globalModel.allWeekDays();
+
+    return allWeekDays;
   }
 
   isTimeAvailable(startTime, endTime, targetTime) {
@@ -150,6 +168,11 @@ export class GlobalService {
         return this.weekDays[index];
       }
     }
+  }
+
+  async getIdByWeekDayNumber(weekDayNumber: number): Promise<number> {
+    let id = await this.globalModel.getIdByWeekDayNumber(weekDayNumber);
+    return id;
   }
 
   timeTo24(timeStr: string): string {
@@ -193,7 +216,8 @@ export class GlobalService {
   }
 
   getDate(dateTime: moment.Moment): string {
-    return dateTime.locale(I18nContext.current().lang).format('YYYY-MM-DD');
+    // return dateTime.locale(I18nContext.current().lang).format('YYYY-MM-DD');
+    return dateTime.format('YYYY-MM-DD');
   }
 
   checkRepeatedDates(datesArray) {

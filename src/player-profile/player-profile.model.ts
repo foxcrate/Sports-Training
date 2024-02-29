@@ -34,7 +34,7 @@ export class PlayerProfileModel {
     let playerProfileWithSports = await this.prisma.$queryRaw`
     SELECT
     pp.id AS id,
-    pp.level AS level,
+    MAX(LevelTranslation.name) AS level,
     pp.regionId AS regionId,
     pp.userId AS userId,
     u.id AS userId,
@@ -43,14 +43,22 @@ export class PlayerProfileModel {
     CASE 
     WHEN COUNT(s.id ) = 0 THEN null
     ELSE
-    JSON_ARRAYAGG(JSON_OBJECT(
+    JSON_ARRAYAGG(
+      JSON_OBJECT(
       'id',s.id,
-      'name', s.name))
+      'name', SportTranslation.name
+      )
+      )
     END AS sports
     FROM PlayerProfile AS pp
+    LEFT JOIN Level ON pp.levelId = Level.id
+    LEFT JOIN LevelTranslation ON LevelTranslation.levelId = Level.id
+      AND LevelTranslation.language = ${I18nContext.current().lang}
     LEFT JOIN User AS u ON pp.userId = u.id
     LEFT JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
     LEFT JOIN Sport AS s ON pps.sportId = s.id
+    LEFT JOIN SportTranslation AS SportTranslation ON SportTranslation.sportId = s.id
+        AND SportTranslation.language = ${I18nContext.current().lang}
     WHERE pp.id = ${userId}
     GROUP BY pp.id
     ;`;
@@ -71,14 +79,26 @@ export class PlayerProfileModel {
   async getOneDetailedByUserId(userId): Promise<ReturnPlayerProfileDto> {
     let playerProfileWithSports = await this.prisma.$queryRaw`
     WITH UserDetails AS (
-      SELECT id,firstName,lastName,email,profileImage,mobileNumber,gender,birthday
+      SELECT
+      User.id,
+      firstName,
+      lastName,
+      email,
+      profileImage,
+      mobileNumber,
+      birthday,
+      GenderTranslation.name AS gender
       FROM User
-      WHERE id = ${userId}
+      LEFT JOIN Gender ON User.genderId = Gender.id
+      LEFT JOIN GenderTranslation
+      ON GenderTranslation.genderId = Gender.id
+      AND GenderTranslation.language = ${I18nContext.current().lang}
+      WHERE User.id = ${userId}
     ),
     playerProfileWithSports AS (
       SELECT
       pp.id AS id,
-      pp.level AS level,
+      MAX(LevelTranslation.name) AS level,
       CASE 
       WHEN count(r.id) = 0 THEN null
       ELSE
@@ -93,14 +113,21 @@ export class PlayerProfileModel {
       ELSE
       JSON_ARRAYAGG(JSON_OBJECT(
         'id',s.id,
-        'name', s.name)) 
+        'name', SportTranslation.name
+        )
+        ) 
       END AS sports
       FROM PlayerProfile AS pp
+      LEFT JOIN Level ON pp.levelId = Level.id
+      LEFT JOIN LevelTranslation ON LevelTranslation.levelId = Level.id
+      AND LevelTranslation.language = ${I18nContext.current().lang}
       LEFT JOIN Region AS r ON pp.regionId = r.id
       LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = r.id
       AND RegionTranslation.language = ${I18nContext.current().lang}
       LEFT JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
       LEFT JOIN Sport AS s ON pps.sportId = s.id
+      LEFT JOIN SportTranslation AS SportTranslation ON SportTranslation.sportId = s.id
+      AND SportTranslation.language = ${I18nContext.current().lang}
       WHERE pp.userId = ${userId}
       GROUP BY pp.id
       LIMIT 1
@@ -136,7 +163,7 @@ export class PlayerProfileModel {
       .prisma.$queryRaw`
     SELECT
     pp.id AS id,
-    pp.level AS level,
+    MAX(LevelTranslation.name) AS level,
     pp.regionId AS regionId,
     pp.userId AS userId,
     u.id AS userId,
@@ -147,12 +174,17 @@ export class PlayerProfileModel {
     ELSE
     JSON_ARRAYAGG(JSON_OBJECT(
         'id',s.id,
-        'name', s.name)) 
+        'name', SportTranslation.name)) 
     END AS sports
     FROM PlayerProfile AS pp
+    LEFT JOIN Level ON pp.levelId = Level.id
+      LEFT JOIN LevelTranslation ON LevelTranslation.levelId = Level.id
+      AND LevelTranslation.language = ${I18nContext.current().lang}
     LEFT JOIN User AS u ON pp.userId = u.id
     LEFT JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
     LEFT JOIN Sport AS s ON pps.sportId = s.id
+    LEFT JOIN SportTranslation AS SportTranslation ON SportTranslation.sportId = s.id
+        AND SportTranslation.language = ${I18nContext.current().lang}
     WHERE pp.userId IN (${Prisma.join(usersIds)})
     GROUP BY pp.id
     ;`;
@@ -162,11 +194,11 @@ export class PlayerProfileModel {
   async create(createData: PlayerProfileCreateDto, userId) {
     await this.prisma.$queryRaw`
     INSERT INTO PlayerProfile
-      (level,
+      (levelId,
       regionId,
       userId)
       VALUES
-    (${createData.level},
+    (${createData.levelId},
     ${createData.regionId},
     ${userId})`;
 
@@ -212,8 +244,8 @@ export class PlayerProfileModel {
       await this.prisma.$queryRaw`
       UPDATE PlayerProfile
       SET
-      ${setData.level ? Prisma.sql`level = ${setData.level}` : Prisma.empty}
-      ${setData.level && setData.regionId ? Prisma.sql`,` : Prisma.empty}
+      ${setData.levelId ? Prisma.sql`levelId = ${setData.levelId}` : Prisma.empty}
+      ${setData.levelId && setData.regionId ? Prisma.sql`,` : Prisma.empty}
       ${setData.regionId ? Prisma.sql`regionId = ${setData.regionId}` : Prisma.empty}
       WHERE
       id = ${playerProfileId};
@@ -225,7 +257,7 @@ export class PlayerProfileModel {
     await this.prisma.$queryRaw`
         UPDATE PlayerProfile
         SET
-        level = ${createData.level},
+        levelId = ${createData.levelId},
         regionId = ${createData.regionId}
         WHERE
         id = ${playerProfileId};

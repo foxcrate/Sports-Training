@@ -26,7 +26,7 @@ export class TrainerProfileModel {
     let trainerProfile = await this.prisma.$queryRaw`
     SELECT
       id,
-      level,
+      levelId,
       ageGroupId,
       cost,
       sessionDescription,
@@ -53,7 +53,7 @@ export class TrainerProfileModel {
     let trainerProfile = await this.prisma.$queryRaw`
     SELECT
       id,
-      level,
+      levelId,
       ageGroupId,
       cost,
       sessionDescription,
@@ -80,9 +80,21 @@ export class TrainerProfileModel {
     let trainerProfileDetails: ReturnTrainerProfileDetailsDto = await this.prisma
       .$queryRaw`
     WITH userDetails AS (
-      SELECT id,firstName,lastName,email,profileImage,mobileNumber,gender,birthday
+      SELECT
+      User.id,
+      firstName,
+      lastName,
+      email,
+      profileImage,
+      mobileNumber,
+      GenderTranslation.name AS gender,
+      birthday
       FROM User
-      WHERE id = ${userId}
+      LEFT JOIN Gender ON User.genderId = Gender.id
+      LEFT JOIN GenderTranslation
+      ON GenderTranslation.genderId = Gender.id
+      AND GenderTranslation.language = ${I18nContext.current().lang}
+      WHERE User.id = ${userId}
     ),
       TrainerPictures AS(
         SELECT fivePictures.trainerProfileId,
@@ -163,13 +175,14 @@ export class TrainerProfileModel {
     trainerProfileWithSports AS (
     SELECT
     tp.id AS trainerProfileId,
-    tp.level AS level,
+    MAX(LevelTranslation.name) AS level,
     CASE 
     WHEN COUNT(ag.id ) = 0 THEN null
     ELSE
     JSON_OBJECT(
       'id',ag.id,
-      'name', ag.name)
+      'name', MAX(AgeGroupTranslation.name)
+      )
     END AS ageGroup,
     tp.cost AS cost,
     tp.hoursPriorToBooking AS hoursPriorToBooking,
@@ -181,12 +194,20 @@ export class TrainerProfileModel {
     ELSE
     JSON_ARRAYAGG(JSON_OBJECT(
       'id',s.id,
-      'name', s.name)) 
+      'name', SportTranslation.name)) 
     END AS sports
     FROM TrainerProfile AS tp
+    LEFT JOIN Level ON tp.levelId = Level.id
+    LEFT JOIN LevelTranslation ON LevelTranslation.levelId = Level.id
+    AND LevelTranslation.language = ${I18nContext.current().lang}
     LEFT JOIN TrainerProfileSports AS tps ON tp.id = tps.trainerProfileId
     LEFT JOIN Sport AS s ON tps.sportId = s.id
+    LEFT JOIN SportTranslation AS SportTranslation ON SportTranslation.sportId = s.id
+        AND SportTranslation.language = ${I18nContext.current().lang}
     LEFT JOIN AgeGroup AS ag ON tp.ageGroupId = ag.id
+    LEFT JOIN AgeGroupTranslation
+      ON AgeGroupTranslation.ageGroupId = ag.id
+      AND AgeGroupTranslation.language = ${I18nContext.current().lang}
     WHERE tp.userId = ${userId}
     GROUP BY tp.id
     LIMIT 1
@@ -213,7 +234,7 @@ export class TrainerProfileModel {
       'email',ud.email,
       'profileImage', ud.profileImage,
       'mobileNudmber',ud.mobileNumber,
-      'gender', ud.gender,
+      'gender', MAX(ud.gender),
       'birthday',ud.birthday
       ) AS user,
     (SELECT pictures FROM TrainerPictures ) AS gallery,
@@ -224,8 +245,8 @@ export class TrainerProfileModel {
     tpf.fields AS fields
     FROM
     trainerProfileWithSports AS tpws
-    LEFT JOIN trainerProfileFields AS tpf ON tpws.trainerProfileId = tpf.trainerProfileId
     LEFT JOIN userDetails AS ud ON tpws.userId = ud.id
+    LEFT JOIN trainerProfileFields AS tpf ON tpws.trainerProfileId = tpf.trainerProfileId
     LEFT JOIN Region AS r ON tpws.regionId = r.id
     LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = r.id
     AND RegionTranslation.language = ${I18nContext.current().lang}
@@ -280,7 +301,7 @@ export class TrainerProfileModel {
     await this.prisma.$queryRaw`
     INSERT INTO TrainerProfile
     (
-      level,
+      levelId,
       ageGroupId,
       sessionDescription,
       cost,
@@ -290,7 +311,7 @@ export class TrainerProfileModel {
     )
       VALUES
     (
-      ${createData.level},
+      ${createData.levelId},
       ${createData.ageGroupId},
       ${createData.sessionDescription},
       ${createData.cost},
@@ -337,7 +358,7 @@ export class TrainerProfileModel {
     await this.prisma.$queryRaw`
       UPDATE TrainerProfile
       SET
-      level = IFNULL(${createData.level},level),
+      levelId = IFNULL(${createData.levelId},levelId),
       ageGroupId = IFNULL(${createData.ageGroupId},ageGroupId),
       sessionDescription = IFNULL(${createData.sessionDescription},sessionDescription),
       cost = IFNULL(${createData.cost},cost),

@@ -93,7 +93,7 @@ export class DoctorClinicModel {
         ELSE
         JSON_OBJECT(
           'id',dcs.id,
-          'name', dcs.name
+          'name', MAX(DoctorClinicSpecializationTranslation.name)
           )
         END AS doctorClinicSpecialization
       FROM DoctorClinicDetailsWithBookedHours AS dcdwbh
@@ -105,6 +105,9 @@ export class DoctorClinicModel {
       DoctorClinicSpecialization AS dcs
       ON
       dcdwbh.doctorClinicSpecializationId = dcs.id
+      LEFT JOIN DoctorClinicSpecializationTranslation
+      ON DoctorClinicSpecializationTranslation.doctorClinicSpecializationId = dcs.id
+      AND DoctorClinicSpecializationTranslation.language = ${I18nContext.current().lang}
       GROUP BY  dcdwbh.id
       `;
 
@@ -723,12 +726,15 @@ export class DoctorClinicModel {
     let bookedSession = await this.prisma.$queryRaw`
       SELECT dc.name AS doctorClinicName,
       dc.profileImage AS doctorClinicProfileImage,
-      dcs.name AS specializationName,
+      DoctorClinicSpecializationTranslation.name AS specializationName,
       dcbh.fromDateTime AS sessionStartDateTime,
       dc.cost AS sessionCost
       FROM DoctorClinicsBookedHours AS dcbh
       LEFT JOIN DoctorClinic AS dc ON dc.id = dcbh.doctorClinicId
       LEFT JOIN DoctorClinicSpecialization AS dcs ON dc.doctorClinicSpecializationId = dcs.id
+      LEFT JOIN DoctorClinicSpecializationTranslation
+      ON DoctorClinicSpecializationTranslation.doctorClinicSpecializationId = dcs.id
+      AND DoctorClinicSpecializationTranslation.language = ${I18nContext.current().lang}
       WHERE dcbh.doctorClinicId = ${doctorClinicId}
       AND dcbh.userId = ${userId}
       AND dcbh.fromDateTime = ${formatedDateTime}

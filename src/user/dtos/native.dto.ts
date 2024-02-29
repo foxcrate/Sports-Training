@@ -1,9 +1,3 @@
-enum Gender {
-  Female = 'female',
-  Male = 'male',
-  Unknown = 'unknown',
-}
-
 export class NativeUserDto {
   id: number;
   firstName: string;
@@ -12,7 +6,7 @@ export class NativeUserDto {
   password: string;
   email: string;
   mobileNumber: string;
-  gender: Gender;
+  genderId: number;
   birthday: Date;
   createdAt: Date;
   isPhoneVerified: Boolean;

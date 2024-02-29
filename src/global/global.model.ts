@@ -14,43 +14,111 @@ export class GlobalModel {
   async allAgeGroups(): Promise<[]> {
     let allAgeGroups: [] = await this.prisma.$queryRaw`
         SELECT
-        id,
-        name
+        AgeGroup.id,
+        AgeGroupTranslation.name AS name
         FROM
         AgeGroup
+        LEFT JOIN AgeGroupTranslation
+        ON AgeGroupTranslation.ageGroupId = AgeGroup.id
+        AND AgeGroupTranslation.language = ${I18nContext.current().lang}
       `;
 
     return allAgeGroups;
   }
 
+  async allLevels(): Promise<[]> {
+    let allLevels: [] = await this.prisma.$queryRaw`
+        SELECT
+        Level.id,
+        LevelTranslation.name AS name
+        FROM
+        Level
+        LEFT JOIN LevelTranslation
+        ON LevelTranslation.levelId = Level.id
+        AND LevelTranslation.language = ${I18nContext.current().lang}
+      `;
+
+    return allLevels;
+  }
+
+  async allGenders(): Promise<[]> {
+    let allGenders: [] = await this.prisma.$queryRaw`
+        SELECT
+        Gender.id,
+        GenderTranslation.name AS name
+        FROM
+        Gender
+        LEFT JOIN GenderTranslation
+        ON GenderTranslation.genderId = Gender.id
+        AND GenderTranslation.language = ${I18nContext.current().lang}
+      `;
+
+    return allGenders;
+  }
+
   async allFeedbacks(): Promise<[]> {
     let allFeedbacks: [] = await this.prisma.$queryRaw`
         SELECT
-        id,
-        content
+        Feedback.id,
+        FeedbackTranslation.content AS content
         FROM
         Feedback
+        LEFT JOIN FeedbackTranslation ON FeedbackTranslation.feedbackId = Feedback.id
+        AND FeedbackTranslation.language = ${I18nContext.current().lang}
       `;
 
     return allFeedbacks;
   }
 
-  async getOneAgeGroup(ageGroupId: number): Promise<any> {
-    let allAgeGroups: any[] = await this.prisma.$queryRaw`
+  async allWeekDays(): Promise<[]> {
+    let allWeekDays: [] = await this.prisma.$queryRaw`
         SELECT
-        id,
-        name
+        WeekDay.dayNumber AS dayNumber,
+        WeekDayTranslation.dayName AS dayName
         FROM
-        AgeGroup
-        WHERE id = ${ageGroupId}
+        WeekDay
+        LEFT JOIN WeekDayTranslation ON WeekDayTranslation.weekDayId = WeekDay.id
+        AND WeekDayTranslation.language = ${I18nContext.current().lang}
       `;
 
-    if (!allAgeGroups[0]) {
+    return allWeekDays;
+  }
+
+  async getOneAgeGroup(ageGroupId: number): Promise<any> {
+    let ageGroup: any[] = await this.prisma.$queryRaw`
+        SELECT
+        AgeGroup.id,
+        AgeGroupTranslation.name AS name
+        FROM
+        AgeGroup
+        LEFT JOIN AgeGroupTranslation
+        ON AgeGroupTranslation.ageGroupId = AgeGroup.id
+        AND AgeGroupTranslation.language = ${I18nContext.current().lang}
+        WHERE AgeGroup.id = ${ageGroupId}
+      `;
+
+    if (!ageGroup[0]) {
       throw new NotFoundException(
         this.i18n.t(`errors.AGE_GROUP_NOT_FOUND`, { lang: I18nContext.current().lang }),
       );
     }
 
-    return allAgeGroups[0];
+    return ageGroup[0];
+  }
+
+  async getIdByWeekDayNumber(weekDayNumber): Promise<any> {
+    let id: any[] = await this.prisma.$queryRaw`
+    SELECT
+    id
+    FROM
+    WeekDay
+    WHERE dayNumber = ${weekDayNumber}
+  `;
+    if (!id[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.WEEK_DAY_NOT_EXIST`, { lang: I18nContext.current().lang }),
+      );
+    }
+    return id[0].id;
   }
 }

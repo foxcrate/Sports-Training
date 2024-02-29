@@ -1,3 +1,4 @@
 export class CreateDoctorClinicSpecializationDto {
-  name: String;
+  name_en: String;
+  name_ar: String;
 }

@@ -10,11 +10,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Gender {
-  female
-  male
-}
-
 enum ScheduleType {
   work
   override
@@ -72,12 +67,6 @@ enum NotificationType{
   reject
 }
 
-enum Level {
-  beginner
-  intermediate
-  advanced
-}
-
 enum SessionStatus {
   active
   notActive
@@ -108,7 +97,6 @@ model User {
   password        String?
   email           String?   @unique
   mobileNumber    String    @unique
-  gender          Gender?
   birthday        DateTime?
   isPhoneVerified Boolean   @default(false)
   isActivated     Boolean   @default(true)
@@ -116,6 +104,9 @@ model User {
   userType  UserType? @default(user)
   fcm_token String?
   provider  Provider  @default(native)
+
+  genderId Int?
+  gender   Gender? @relation(fields: [genderId], references: [id])
 
   playerProfile         PlayerProfile?
   trainerProfile        TrainerProfile?
@@ -128,6 +119,34 @@ model User {
   childsParents         ParentsChilds[]            @relation("ChildsParents")
   rates                 Rate[]
   notifications Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model Gender {
+  id Int @id @default(autoincrement())
+
+  name String
+
+  user User[]
+  genderTranslation GenderTranslation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model GenderTranslation {
+  id Int @id @default(autoincrement())
+
+  name String
+
+  language  LanguageEnum?
+
+  gender   Gender? @relation(fields: [genderId], references: [id])
+  genderId Int?
+
+  @@unique([genderId, language])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
@@ -159,10 +178,11 @@ model OTP {
 model PlayerProfile {
   id Int @id @default(autoincrement())
 
-  level Level?
-
   regionId Int?
   region   Region? @relation(fields: [regionId], references: [id])
+
+  levelId Int?
+  level   Level? @relation(fields: [levelId], references: [id])
 
   sports PlayerProfileSports[]
   rates  Rate[]
@@ -189,10 +209,11 @@ model PlayerProfileSports {
 model TrainerProfile {
   id Int @id @default(autoincrement())
 
-  level Level? @default(beginner)
-
   ageGroup   AgeGroup? @relation(fields: [ageGroupId], references: [id])
   ageGroupId Int?
+
+  levelId Int?
+  level   Level? @relation(fields: [levelId], references: [id])
 
   sessionDescription String?
 
@@ -228,12 +249,58 @@ model TrainerProfile {
   updatedAt DateTime @default(now())
 }
 
+model Level {
+  id Int @id @default(autoincrement())
+
+  name String
+
+  trainerProfiles TrainerProfile[]
+  playerProfiles PlayerProfile[]
+  levelTranslation LevelTranslation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model LevelTranslation {
+  id Int @id @default(autoincrement())
+
+  name String
+
+  language  LanguageEnum?
+
+  level   Level? @relation(fields: [levelId], references: [id])
+  levelId Int?
+
+  @@unique([levelId, language])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
 model AgeGroup {
   id Int @id @default(autoincrement())
 
   name String
 
   trainerProfiles TrainerProfile[]
+  ageGroupTranslation AgeGroupTranslation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model AgeGroupTranslation {
+  id Int @id @default(autoincrement())
+
+  name String
+
+    language  LanguageEnum?
+
+  ageGroup   AgeGroup? @relation(fields: [ageGroupId], references: [id])
+  ageGroupId Int?
+
+  @@unique([ageGroupId, language])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
@@ -265,8 +332,8 @@ model Slot {
 
   cost Int?
 
-  weekDayNumber Int?
-  weekDayName   String?
+  weekDay   WeekDay? @relation(fields: [weekDayId], references: [id])
+  weekDayId Int?
 
   Schedule   Schedule? @relation(fields: [scheduleId], references: [id],onDelete: SetNull)
   scheduleId Int?
@@ -280,6 +347,36 @@ model Slot {
   updatedAt DateTime @default(now())
 }
 
+model WeekDay {
+  id Int @id @default(autoincrement())
+
+  dayNumber Int?
+  dayName   String?
+
+  slots          Slot[]
+
+  weekDayTranslation  WeekDayTranslation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model WeekDayTranslation {
+  id Int @id @default(autoincrement())
+
+  dayName   String?
+
+  language  LanguageEnum?
+
+  weekDay   WeekDay? @relation(fields: [weekDayId], references: [id])
+  weekDayId Int?
+
+  @@unique([weekDayId, language])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
 model Month {
   id Int @id @default(autoincrement())
 
@@ -287,6 +384,23 @@ model Month {
   monthName   String?
 
   schedules SchedulesMonths[]
+  monthTranslation  MonthTranslation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model MonthTranslation {
+  id Int @id @default(autoincrement())
+
+  monthName   String?
+
+  language  LanguageEnum?
+
+  month   Month? @relation(fields: [monthId], references: [id])
+  monthId Int?
+
+  @@unique([monthId, language])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
@@ -392,10 +506,28 @@ model SessionRequest {
 model CancellationReasons {
   id             Int              @id @default(autoincrement())
   name           String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @default(now())
+
   trainerBookedSessions TrainerBookedSession[]
   sessionRequest SessionRequest[]
+  cancellationReasonsTranslation    CancellationReasonsTranslation[]
+
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @default(now())
+}
+
+model CancellationReasonsTranslation {
+  id             Int              @id @default(autoincrement())
+
+  name           String?
+  language  LanguageEnum?
+
+  cancellationReasons   CancellationReasons? @relation(fields: [cancellationReasonsId], references: [id])
+  cancellationReasonsId Int?
+  
+  @@unique([cancellationReasonsId, language])
+  
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @default(now())
 }
 
 model TrainerProfileNotAvailableDays {
@@ -550,6 +682,23 @@ model DoctorClinicSpecialization {
   name String
 
   doctorClinc DoctorClinic[]
+  doctorClinicSpecializationTranslation DoctorClinicSpecializationTranslation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model DoctorClinicSpecializationTranslation {
+  id Int @id @default(autoincrement())
+
+  name   String?
+
+  language  LanguageEnum?
+
+  doctorClinicSpecialization   DoctorClinicSpecialization? @relation(fields: [doctorClinicSpecializationId], references: [id])
+  doctorClinicSpecializationId Int?
+
+  @@unique([doctorClinicSpecializationId, language])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
@@ -632,6 +781,11 @@ model SportTranslation{
 
   sport   Sport? @relation(fields: [sportId], references: [id])
   sportId Int?
+
+  @@unique([sportId, language])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 model Region {
@@ -658,12 +812,35 @@ model RegionTranslation{
 
   region   Region? @relation(fields: [regionId], references: [id])
   regionId Int?
+
+  @@unique([regionId, language])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 model Feedback {
   id Int @id @default(autoincrement())
 
   content String?
+
+  feedbackTranslation    FeedbackTranslation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model FeedbackTranslation {
+  id Int @id @default(autoincrement())
+
+  content String?
+
+  language  LanguageEnum?
+
+  feedback   Feedback? @relation(fields: [feedbackId], references: [id])
+  feedbackId Int?
+
+  @@unique([feedbackId, language])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
@@ -678,7 +855,8 @@ model Notification {
 
   type  NotificationType?
 
-  content String?
+  notificationContent   NotificationContent? @relation(fields: [notificationContentId], references: [id])
+  notificationContentId Int?
 
   seen Boolean @default(false)
   
@@ -688,17 +866,37 @@ model Notification {
   trainerBookedSession   TrainerBookedSession? @relation(fields: [trainerBookedSessionId], references: [id], onDelete: Cascade)
   trainerBookedSessionId Int?
 
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 }
 
-// model Internationalization{
-//   id                    Int                 @id @default(autoincrement())
+model NotificationContent{
+  id Int @id @default(autoincrement())
 
-//   tableName             String
-//   rowName               String
-//   en                    String
-//   ar                    String
+  content String?
 
-//   createdAt             DateTime              @default(now())
-// }
+  notificationContentTranslation  NotificationContentTranslation[]
+
+  notification  Notification[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model NotificationContentTranslation {
+  id Int @id @default(autoincrement())
+
+  content   String?
+
+  language  LanguageEnum?
+
+  notificationContent   NotificationContent? @relation(fields: [notificationContentId], references: [id])
+  notificationContentId Int?
+
+  @@unique([notificationContentId, language])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+

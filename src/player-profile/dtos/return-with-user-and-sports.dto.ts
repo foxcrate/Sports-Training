@@ -1,12 +1,6 @@
-enum Level {
-  Beginner = 'beginner',
-  Intermediate = 'intermediate',
-  Advanced = 'advanced',
-}
-
 export class ReturnPlayerProfileWithUserAndSportsDto {
   id: number;
-  level: Level;
+  levelId: Number;
   regionId: number;
   userId: number;
   firstName: string;
