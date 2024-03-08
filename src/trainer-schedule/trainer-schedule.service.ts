@@ -63,6 +63,7 @@ export class TrainerScheduleService {
     }
     //////////
     reqBody.slots = this.slotsTimeTo24(reqBody.slots);
+
     await this.validateCreateScheduleMonths(trainerProfile.id, reqBody);
     await this.groupingAndValidatingScheduleSlots(reqBody.slots);
     return await this.trainerScheduleModel.create(timezone, trainerProfile.id, reqBody);
@@ -141,7 +142,10 @@ export class TrainerScheduleService {
 
     dayDate = moment(dayDate).format('YYYY-MM-DD');
 
-    let playerBookedTimes = await this.trainerScheduleModel.getUserBookedTimes(userId);
+    let playerBookedTimes = await this.trainerScheduleModel.getUserBookedTimes(
+      userId,
+      dayDate,
+    );
 
     let trainerFreeSlots = [];
 
@@ -297,20 +301,22 @@ export class TrainerScheduleService {
     }
 
     // check booked slots
-    if (
-      await this.checkBookedSlot(
-        slotId,
-        dayDate,
-        userId,
-        SESSIONS_STATUSES_ENUM.NOT_ACTIVE,
-      )
-    ) {
+    if (await this.checkBookedSlot(slotId, dayDate, userId)) {
       throw new BadRequestException(
         this.i18n.t(`errors.BOOKED_SLOT`, {
           lang: I18nContext.current().lang,
         }),
       );
     }
+
+    //check intersection of time between player booked session and new one
+    let playerBookedTimes = await this.trainerScheduleModel.getUserBookedTimes(
+      userId,
+      dayDate,
+    );
+
+    this.validateOneSlotStateRelativeToPlayerTime(theSlot, playerBookedTimes);
+
     return true;
   }
 
@@ -378,13 +384,13 @@ export class TrainerScheduleService {
     for (let i = 0; i < trainerFreeSlots.length; i++) {
       var trainerSlot = trainerFreeSlots[i];
       var fromTime1 = moment(`1970-01-01T${trainerSlot.fromTime}`);
+
       var toTime1 = moment(`1970-01-01T${trainerSlot.toTime}`);
 
       for (let j = 0; j < playerBookedSlots.length; j++) {
         var playerSlot = playerBookedSlots[j];
         var fromTime2 = moment(`1970-01-01T${playerSlot.fromTime}`);
         var toTime2 = moment(`1970-01-01T${playerSlot.toTime}`);
-
         if (
           (fromTime2 >= fromTime1 && fromTime2 < toTime1) ||
           (fromTime1 >= fromTime2 && fromTime1 < toTime2)
@@ -394,6 +400,31 @@ export class TrainerScheduleService {
       }
     }
     return trainerFreeSlots;
+  }
+
+  private validateOneSlotStateRelativeToPlayerTime(
+    newSLot: SlotDetailsDto,
+    playerBookedSlots: UserSlotState[],
+  ): boolean {
+    var fromTime1 = moment(`1970-01-01T${newSLot.fromTime}`);
+
+    var toTime1 = moment(`1970-01-01T${newSLot.toTime}`);
+
+    for (let j = 0; j < playerBookedSlots.length; j++) {
+      var playerSlot = playerBookedSlots[j];
+      var fromTime2 = moment(`1970-01-01T${playerSlot.fromTime}`);
+      var toTime2 = moment(`1970-01-01T${playerSlot.toTime}`);
+      if (
+        (fromTime2 >= fromTime1 && fromTime2 < toTime1) ||
+        (fromTime1 >= fromTime2 && fromTime1 < toTime2)
+      ) {
+        throw new BadRequestException(
+          this.i18n.t(`errors.BOOKED_TIME`, { lang: I18nContext.current().lang }),
+        );
+      }
+    }
+
+    return true;
   }
 
   private checkWeekDayAvailabilityForOneScheduleSlot(

@@ -126,7 +126,7 @@ export class TrainerScheduleModel {
     return schedule;
   }
 
-  async getUserBookedTimes(userId: number): Promise<UserSlotState[]> {
+  async getUserBookedTimes(userId: number, date: string): Promise<UserSlotState[]> {
     let userBookedSlots = await this.prisma.$queryRaw`
     SELECT
     CASE WHEN COUNT(Slot.id ) = 0 THEN null
@@ -145,6 +145,8 @@ export class TrainerScheduleModel {
     userId = ${userId}
     and
     status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
+    and date = ${date}
+
     `;
 
     return userBookedSlots[0].times ? userBookedSlots[0].times : [];
