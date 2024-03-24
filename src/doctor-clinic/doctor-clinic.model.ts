@@ -9,7 +9,7 @@ import { DoctorClinicCreateDto } from './dtos/create.dto';
 import { Prisma } from '@prisma/client';
 import { DoctorClinicAcceptanceStatusDto } from './dtos/doctor-clinic-acceptance-status.dto';
 import { DoctorClinicUpdateDto } from './dtos/update.dto';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 
 @Injectable()
 export class DoctorClinicModel {

@@ -7,7 +7,7 @@ import { DoctorClinicBookingDetailsDTO } from './dtos/doctorClinicBookingDetails
 import { DoctorClinicCreateDto } from './dtos/create.dto';
 import { DoctorClinicReturnDto } from './dtos/return.dto';
 import { DoctorClinicUpdateDto } from './dtos/update.dto';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 
 @Injectable()
 export class DoctorClinicService {

@@ -7,8 +7,8 @@ import {
 import { UserService } from 'src/user/user.service';
 import { SigninUserDto } from 'src/user/dtos/signin.dto';
 import { JwtService } from '@nestjs/jwt';
-import * as jwt from 'jsonwebtoken';
-import * as jwksClient from 'jwks-rsa';
+import jwt from 'jsonwebtoken';
+import jwksClient from 'jwks-rsa';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
 import { ConfigService } from '@nestjs/config';
 

@@ -6,7 +6,7 @@ import { Prisma } from '@prisma/client';
 import { ScheduleSlotsDetailsDTO } from './dtos/schedule-slots-details';
 import { ScheduleCreateDto } from './dtos/create.dto';
 import { ReturnScheduleDto } from './dtos/return.dto';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { SlotDetailsDto } from './dtos/slot-details.dto';
 import { FieldReturnDto } from 'src/field/dtos/return.dto';
 import { ReturnTrainerProfileDto } from 'src/trainer-profile/dtos/return.dto';

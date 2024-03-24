@@ -5,10 +5,10 @@ import {
 } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
-import * as moment from 'moment-timezone';
+import bcrypt from 'bcrypt';
+import moment from 'moment-timezone';
 import * as AWS from 'aws-sdk';
-import * as admin from 'firebase-admin';
+import admin from 'firebase-admin';
 import { Prisma } from '@prisma/client';
 import { GlobalModel } from './global.model';
 

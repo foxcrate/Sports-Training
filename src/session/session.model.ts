@@ -5,7 +5,7 @@ import { Prisma } from '@prisma/client';
 import { BookedSessionDTO } from './dtos/booked-session.dto';
 import { SessionCardDTO } from './dtos/session-card.dto';
 import { UserSessionDataDto } from './dtos/user-session-data.dto';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import {
   PROFILE_TYPES_ENUM,
   RATEABLE_TYPES_ENUM,

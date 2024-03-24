@@ -1,4 +1,4 @@
-import * as Joi from 'joi';
+import Joi from 'joi';
 
 export const RateTrainerValidation = Joi.object({
   sessionId: Joi.number().required(),

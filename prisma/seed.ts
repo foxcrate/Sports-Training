@@ -1,4 +1,4 @@
-import * as bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 
 import { PrismaClient } from '@prisma/client';
 import { usersSeeds } from './seeds-files/users.seed';

@@ -9,7 +9,7 @@ import { FieldUpdateDto } from './dtos/update.dto';
 import { FieldAcceptanceStatusDto } from './dtos/field-acceptance-status.dto';
 import { FieldReturnDto } from './dtos/return.dto';
 import { GlobalService } from 'src/global/global.service';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 
 @Injectable()
 export class FieldModel {

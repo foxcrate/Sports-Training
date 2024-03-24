@@ -6,7 +6,7 @@ import { ScheduleSlotsDetailsDTO } from './dtos/schedule-slots-details';
 import { TrainerProfileModel } from 'src/trainer-profile/trainer-profile.model';
 import { ScheduleCreateDto } from './dtos/create.dto';
 import { SlotDetailsDto } from './dtos/slot-details.dto';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { ScheduleSlotsDTO } from './dtos/schedule-slots';
 import { SessionModel } from 'src/session/session.model';
 import { UserSlotState } from './dtos/user-slot-state.dto';

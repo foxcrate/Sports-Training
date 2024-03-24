@@ -1,6 +1,6 @@
 import { Controller, Get, Post } from '@nestjs/common';
 import { AppService } from './app.service';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { PrismaService } from './prisma/prisma.service';
 import { GlobalService } from './global/global.service';

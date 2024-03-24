@@ -23,7 +23,7 @@ import {
   TrainingSessionResultDto,
 } from './dtos/training-session-result.dto';
 import { CoachSessionDataDto } from './dtos/coach-session-data.dto';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { CancellingReasonDto } from './dtos/cancelling-reason.dto';
 import { TrainerScheduleService } from 'src/trainer-schedule/trainer-schedule.service';
 import { TrainerProfileModel } from 'src/trainer-profile/trainer-profile.model';

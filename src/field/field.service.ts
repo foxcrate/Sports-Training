@@ -7,7 +7,7 @@ import { FieldUpdateDto } from './dtos/update.dto';
 import { FieldBookingDetailsDTO } from './dtos/fieldBookingDetails.dto';
 import { FieldReturnDto } from './dtos/return.dto';
 import { FreeSlots } from './dtos/free-slots.dto';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 
 @Injectable()
 export class FieldService {

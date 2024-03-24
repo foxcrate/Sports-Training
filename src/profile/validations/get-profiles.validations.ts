@@ -1,4 +1,4 @@
-import * as Joi from 'joi';
+import Joi from 'joi';
 import { PROFILE_TYPES_ENUM } from 'src/global/enums';
 
 const childIdSchema = Joi.string()

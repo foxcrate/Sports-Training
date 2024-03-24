@@ -1,4 +1,4 @@
-import * as Joi from 'joi';
+import Joi from 'joi';
 import { HOME_SEARCH_TYPES_ENUM, RATES_ENUM } from 'src/global/enums';
 
 export const SearchFiltersValidation = Joi.object({

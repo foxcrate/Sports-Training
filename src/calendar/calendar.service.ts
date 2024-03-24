@@ -3,7 +3,7 @@ import { CalendarModel } from './calendar.model';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { GlobalService } from 'src/global/global.service';
 import { DatesCountResultDto } from './dto/dates-count-result.dto';
-import * as moment from 'moment-timezone';
+import moment from 'moment-timezone';
 import { DateSessionsResultDto } from './dto/date-sessions-result.dto';
 import { DatesCountTypeFilter } from './dto/dates-count-filters.dto';
 import { CALENDAR_TYPES_ENUM } from './dto/calendar-types.enum';

@@ -1,4 +1,4 @@
-import * as Joi from 'joi';
+import Joi from 'joi';
 import { CALENDAR_TYPES_ENUM } from '../dto/calendar-types.enum';
 import { SESSIONS_STATUSES_ENUM } from 'src/global/enums';
 
