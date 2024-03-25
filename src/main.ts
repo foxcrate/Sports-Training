@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import { AppModule } from './app.module.js';
 import { VersioningType } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service';
 import admin from 'firebase-admin';

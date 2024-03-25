@@ -12,7 +12,7 @@
     "strict": true,
     "outDir": "./dist",
     "baseUrl": "./",
-    // "resolveJsonModule": true,
+    "resolveJsonModule": true,
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": false,

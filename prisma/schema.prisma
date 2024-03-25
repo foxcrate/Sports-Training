@@ -143,7 +143,7 @@ model GenderTranslation {
 
   language  LanguageEnum?
 
-  gender   Gender? @relation(fields: [genderId], references: [id])
+  gender   Gender? @relation(fields: [genderId], references: [id],onDelete: Cascade)
   genderId Int?
 
   @@unique([genderId, language])
@@ -155,10 +155,10 @@ model GenderTranslation {
 model ParentsChilds {
   id Int @id @default(autoincrement())
 
-  parent   User @relation("ParentsChilds", fields: [parentId], references: [id])
+  parent   User @relation("ParentsChilds", fields: [parentId], references: [id],onDelete: Cascade)
   parentId Int
 
-  child   User @relation("ChildsParents", fields: [childId], references: [id])
+  child   User @relation("ChildsParents", fields: [childId], references: [id],onDelete: Cascade)
   childId Int
 
   createdAt DateTime @default(now())
@@ -179,10 +179,10 @@ model PlayerProfile {
   id Int @id @default(autoincrement())
 
   regionId Int?
-  region   Region? @relation(fields: [regionId], references: [id])
+  region   Region? @relation(fields: [regionId], references: [id],onDelete: Cascade)
 
   levelId Int?
-  level   Level? @relation(fields: [levelId], references: [id])
+  level   Level? @relation(fields: [levelId], references: [id],onDelete: SetNull)
 
   sports PlayerProfileSports[]
   rates  Rate[]
@@ -195,9 +195,9 @@ model PlayerProfile {
 }
 
 model PlayerProfileSports {
-  playerProfile   PlayerProfile @relation(fields: [playerProfileId], references: [id])
+  playerProfile   PlayerProfile @relation(fields: [playerProfileId], references: [id],onDelete: Cascade)
   playerProfileId Int
-  sport           Sport         @relation(fields: [sportId], references: [id])
+  sport           Sport         @relation(fields: [sportId], references: [id],onDelete: Cascade)
   sportId         Int
 
   createdAt DateTime @default(now())
@@ -209,11 +209,11 @@ model PlayerProfileSports {
 model TrainerProfile {
   id Int @id @default(autoincrement())
 
-  ageGroup   AgeGroup? @relation(fields: [ageGroupId], references: [id])
+  ageGroup   AgeGroup? @relation(fields: [ageGroupId], references: [id],onDelete: SetNull)
   ageGroupId Int?
 
   levelId Int?
-  level   Level? @relation(fields: [levelId], references: [id])
+  level   Level? @relation(fields: [levelId], references: [id],onDelete: SetNull)
 
   sessionDescription String?
 
@@ -235,7 +235,7 @@ model TrainerProfile {
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   regionId Int?
-  region   Region? @relation(fields: [regionId], references: [id])
+  region   Region? @relation(fields: [regionId], references: [id],onDelete: Cascade)
 
   schedules Schedule[]
 
@@ -269,7 +269,7 @@ model LevelTranslation {
 
   language  LanguageEnum?
 
-  level   Level? @relation(fields: [levelId], references: [id])
+  level   Level? @relation(fields: [levelId], references: [id],onDelete: Cascade)
   levelId Int?
 
   @@unique([levelId, language])
@@ -295,9 +295,9 @@ model AgeGroupTranslation {
 
   name String
 
-    language  LanguageEnum?
+  language  LanguageEnum?
 
-  ageGroup   AgeGroup? @relation(fields: [ageGroupId], references: [id])
+  ageGroup   AgeGroup? @relation(fields: [ageGroupId], references: [id],onDelete: Cascade)
   ageGroupId Int?
 
   @@unique([ageGroupId, language])
@@ -313,7 +313,7 @@ model Schedule {
 
   slots Slot[]
 
-  TrainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id])
+  TrainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id],onDelete: Cascade)
   trainerProfileId Int
 
   months SchedulesMonths[]
@@ -332,7 +332,7 @@ model Slot {
 
   cost Int?
 
-  weekDay   WeekDay? @relation(fields: [weekDayId], references: [id])
+  weekDay   WeekDay? @relation(fields: [weekDayId], references: [id],onDelete: Cascade)
   weekDayId Int?
 
   Schedule   Schedule? @relation(fields: [scheduleId], references: [id],onDelete: SetNull)
@@ -368,7 +368,7 @@ model WeekDayTranslation {
 
   language  LanguageEnum?
 
-  weekDay   WeekDay? @relation(fields: [weekDayId], references: [id])
+  weekDay   WeekDay? @relation(fields: [weekDayId], references: [id],onDelete: Cascade)
   weekDayId Int?
 
   @@unique([weekDayId, language])
@@ -397,7 +397,7 @@ model MonthTranslation {
 
   language  LanguageEnum?
 
-  month   Month? @relation(fields: [monthId], references: [id])
+  month   Month? @relation(fields: [monthId], references: [id],onDelete: Cascade)
   monthId Int?
 
   @@unique([monthId, language])
@@ -412,7 +412,7 @@ model SchedulesMonths {
   schedule   Schedule @relation(fields: [scheduleId], references: [id],onDelete: Cascade)
   scheduleId Int
 
-  month   Month @relation(fields: [monthId], references: [id])
+  month   Month @relation(fields: [monthId], references: [id],onDelete: Cascade)
   monthId Int
 
   createdAt DateTime @default(now())
@@ -422,10 +422,10 @@ model SchedulesMonths {
 }
 
 model TrainerProfileSports {
-  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id])
+  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id],onDelete: Cascade)
   trainerProfileId Int
 
-  sport   Sport @relation(fields: [sportId], references: [id])
+  sport   Sport @relation(fields: [sportId], references: [id],onDelete: Cascade)
   sportId Int
 
   createdAt DateTime @default(now())
@@ -437,10 +437,10 @@ model TrainerProfileSports {
 model TrainerProfileFields {
   id Int @id @default(autoincrement())
 
-  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id])
+  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id],onDelete: Cascade)
   trainerProfileId Int
 
-  field   Field @relation(fields: [fieldId], references: [id])
+  field   Field @relation(fields: [fieldId], references: [id],onDelete: Cascade)
   fieldId Int
 
   createdAt DateTime @default(now())
@@ -469,13 +469,13 @@ model TrainerBookedSession {
   cancellationReasons   CancellationReasons? @relation(fields: [cancellationReasonsId], references: [id], onDelete: SetNull)
   cancellationReasonsId Int?
 
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id],onDelete: Cascade)
   userId Int
 
-  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id])
+  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id],onDelete: Cascade)
   trainerProfileId Int
 
-  slot   Slot @relation(fields: [slotId], references: [id])
+  slot   Slot @relation(fields: [slotId], references: [id],onDelete: Cascade)
   slotId Int
 
   createdAt DateTime @default(now())
@@ -521,7 +521,7 @@ model CancellationReasonsTranslation {
   name           String?
   language  LanguageEnum?
 
-  cancellationReasons   CancellationReasons? @relation(fields: [cancellationReasonsId], references: [id])
+  cancellationReasons   CancellationReasons? @relation(fields: [cancellationReasonsId], references: [id],onDelete: Cascade)
   cancellationReasonsId Int?
   
   @@unique([cancellationReasonsId, language])
@@ -534,7 +534,7 @@ model TrainerProfileNotAvailableDays {
   id      Int      @id @default(autoincrement())
   dayDate DateTime
 
-  trainerProfile TrainerProfile @relation(fields: [trainerProfileId], references: [id])
+  trainerProfile TrainerProfile @relation(fields: [trainerProfileId], references: [id],onDelete: Cascade)
 
   trainerProfileId Int
 
@@ -564,10 +564,10 @@ model Field {
   addedByUserId Int?
   addedByUser   User? @relation(fields: [addedByUserId], references: [id], onDelete: SetNull)
 
-  sport   Sport? @relation(fields: [sportId], references: [id])
+  sport   Sport? @relation(fields: [sportId], references: [id],onDelete: SetNull)
   sportId Int?
 
-  region   Region? @relation(fields: [regionId], references: [id])
+  region   Region? @relation(fields: [regionId], references: [id],onDelete: SetNull)
   regionId Int?
 
   users            FieldsBookedHours[]
@@ -663,10 +663,10 @@ model DoctorClinic {
   addedByUserId Int?
   addedByUser   User? @relation(fields: [addedByUserId], references: [id], onDelete: Cascade)
 
-  region   Region? @relation(fields: [regionId], references: [id])
+  region   Region? @relation(fields: [regionId], references: [id],onDelete: SetNull)
   regionId Int?
 
-  doctorClinicSpecialization   DoctorClinicSpecialization? @relation(fields: [doctorClinicSpecializationId], references: [id])
+  doctorClinicSpecialization   DoctorClinicSpecialization? @relation(fields: [doctorClinicSpecializationId], references: [id],onDelete: SetNull)
   doctorClinicSpecializationId Int?
 
   users            DoctorClinicsBookedHours[]
@@ -695,7 +695,7 @@ model DoctorClinicSpecializationTranslation {
 
   language  LanguageEnum?
 
-  doctorClinicSpecialization   DoctorClinicSpecialization? @relation(fields: [doctorClinicSpecializationId], references: [id])
+  doctorClinicSpecialization   DoctorClinicSpecialization? @relation(fields: [doctorClinicSpecializationId], references: [id],onDelete: Cascade)
   doctorClinicSpecializationId Int?
 
   @@unique([doctorClinicSpecializationId, language])
@@ -708,7 +708,7 @@ model FieldNotAvailableDays {
   id      Int      @id @default(autoincrement())
   dayDate DateTime
 
-  field   Field @relation(fields: [fieldId], references: [id])
+  field   Field @relation(fields: [fieldId], references: [id],onDelete: Cascade)
   fieldId Int
 
   createdAt DateTime @default(now())
@@ -719,7 +719,7 @@ model DoctorClinicNotAvailableDays {
   id      Int      @id @default(autoincrement())
   dayDate DateTime
 
-  doctorClinic   DoctorClinic @relation(fields: [doctorClinicId], references: [id])
+  doctorClinic   DoctorClinic @relation(fields: [doctorClinicId], references: [id],onDelete: Cascade)
   doctorClinicId Int
 
   createdAt DateTime @default(now())
@@ -732,10 +732,10 @@ model FieldsBookedHours {
   fromDateTime DateTime
   gmt          Int      @default(0)
 
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id],onDelete: Cascade)
   userId Int
 
-  field   Field @relation(fields: [fieldId], references: [id])
+  field   Field @relation(fields: [fieldId], references: [id],onDelete: Cascade)
   fieldId Int
 
   createdAt DateTime @default(now())
@@ -748,10 +748,10 @@ model DoctorClinicsBookedHours {
   fromDateTime DateTime
   gmt          Int      @default(0)
 
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id],onDelete: Cascade)
   userId Int
 
-  doctorClinic   DoctorClinic @relation(fields: [doctorClinicId], references: [id])
+  doctorClinic   DoctorClinic @relation(fields: [doctorClinicId], references: [id],onDelete: Cascade)
   doctorClinicId Int
 
   createdAt DateTime @default(now())
@@ -779,7 +779,7 @@ model SportTranslation{
 
   language  LanguageEnum?
 
-  sport   Sport? @relation(fields: [sportId], references: [id])
+  sport   Sport? @relation(fields: [sportId], references: [id],onDelete: Cascade)
   sportId Int?
 
   @@unique([sportId, language])
@@ -810,7 +810,7 @@ model RegionTranslation{
 
   language  LanguageEnum?
 
-  region   Region? @relation(fields: [regionId], references: [id])
+  region   Region? @relation(fields: [regionId], references: [id],onDelete: Cascade)
   regionId Int?
 
   @@unique([regionId, language])
@@ -837,7 +837,7 @@ model FeedbackTranslation {
 
   language  LanguageEnum?
 
-  feedback   Feedback? @relation(fields: [feedbackId], references: [id])
+  feedback   Feedback? @relation(fields: [feedbackId], references: [id],onDelete: Cascade)
   feedbackId Int?
 
   @@unique([feedbackId, language])
@@ -855,12 +855,12 @@ model Notification {
 
   type  NotificationType?
 
-  notificationContent   NotificationContent? @relation(fields: [notificationContentId], references: [id])
+  notificationContent   NotificationContent? @relation(fields: [notificationContentId], references: [id],onDelete: SetNull)
   notificationContentId Int?
 
   seen Boolean @default(false)
   
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id],onDelete: Cascade)
   userId Int
   
   trainerBookedSession   TrainerBookedSession? @relation(fields: [trainerBookedSessionId], references: [id], onDelete: Cascade)
@@ -891,7 +891,7 @@ model NotificationContentTranslation {
 
   language  LanguageEnum?
 
-  notificationContent   NotificationContent? @relation(fields: [notificationContentId], references: [id])
+  notificationContent   NotificationContent? @relation(fields: [notificationContentId], references: [id],onDelete: Cascade)
   notificationContentId Int?
 
   @@unique([notificationContentId, language])
