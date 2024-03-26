@@ -9,6 +9,11 @@ import { PrismaService } from './prisma.service';
       useValue: PrismaService.getInstance(),
     },
   ],
-  exports: [PrismaService],
+  exports: [
+    {
+      provide: PrismaService,
+      useValue: PrismaService.getInstance(),
+    },
+  ],
 })
 export class PrismaModule {}
