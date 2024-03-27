@@ -65,14 +65,14 @@ const authenticate = async (email: string, password: string) => {
               {
                 resource: {
                   model: await (await import('@adminjs/prisma')).getModelByName('User'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
               {
                 resource: {
                   model: await (await import('@adminjs/prisma')).getModelByName('Gender'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -81,7 +81,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('GenderTranslation'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -90,7 +90,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('PlayerProfile'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -99,14 +99,14 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('TrainerProfile'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
               {
                 resource: {
                   model: await (await import('@adminjs/prisma')).getModelByName('Sport'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -115,14 +115,14 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('SportTranslation'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
               {
                 resource: {
                   model: await (await import('@adminjs/prisma')).getModelByName('Field'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -131,7 +131,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('DoctorClinic'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -140,7 +140,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('DoctorClinicSpecialization'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -149,7 +149,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('DoctorClinicSpecializationTranslation'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -158,7 +158,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('SessionRequest'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -167,7 +167,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('CancellationReasons'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -176,7 +176,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('CancellationReasonsTranslation'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -185,7 +185,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('Notification'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -194,7 +194,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('Certificate'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -203,7 +203,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('FieldsBookedHours'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -212,14 +212,14 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('DoctorClinicsBookedHours'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
               {
                 resource: {
                   model: await (await import('@adminjs/prisma')).getModelByName('Region'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -228,7 +228,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('RegionTranslation'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -237,7 +237,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('Feedback'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -246,14 +246,14 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('FeedbackTranslation'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
               {
                 resource: {
                   model: await (await import('@adminjs/prisma')).getModelByName('Rate'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -262,14 +262,14 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('Schedule'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
               {
                 resource: {
                   model: await (await import('@adminjs/prisma')).getModelByName('Level'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -278,7 +278,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('LevelTranslation'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -287,7 +287,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('AgeGroup'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -296,7 +296,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('AgeGroupTranslation'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -305,14 +305,14 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('TrainerBookedSession'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
               {
                 resource: {
                   model: await (await import('@adminjs/prisma')).getModelByName('Slot'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -321,7 +321,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('WeekDay'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -330,7 +330,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('WeekDayTranslation'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -339,7 +339,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('NotificationContent'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -348,7 +348,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('NotificationContentTranslation'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -358,14 +358,14 @@ const authenticate = async (email: string, password: string) => {
               //     model: await (
               //       await import('@adminjs/prisma')
               //     ).getModelByName('PlayerProfileSports'),
-              //     client: new PrismaService(),
+              //     client: PrismaService.getInstance(),
               //   },
               //   options: {},
               // },
               {
                 resource: {
                   model: await (await import('@adminjs/prisma')).getModelByName('Month'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -374,7 +374,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('MonthTranslation'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -383,7 +383,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('SchedulesMonths'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -392,7 +392,7 @@ const authenticate = async (email: string, password: string) => {
               //     model: await (
               //       await import('@adminjs/prisma')
               //     ).getModelByName('TrainerProfileSports'),
-              //     client: new PrismaService(),
+              //     client: PrismaService.getInstance(),
               //   },
               //   options: {},
               // },
@@ -401,7 +401,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('TrainerProfileNotAvailableDays'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -410,7 +410,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('Picture'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -419,7 +419,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('FieldNotAvailableDays'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
@@ -428,7 +428,7 @@ const authenticate = async (email: string, password: string) => {
                   model: await (
                     await import('@adminjs/prisma')
                   ).getModelByName('DoctorClinicNotAvailableDays'),
-                  client: new PrismaService(),
+                  client: PrismaService.getInstance(),
                 },
                 options: {},
               },
