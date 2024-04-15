@@ -5,7 +5,7 @@ import { CreateDoctorClinicSpecializationDto } from './dtos/create.dto';
 import { ReturnDoctorClinicSpecializationDto } from './dtos/retrun.dto';
 
 @Injectable()
-export class DoctorClinicSpecializationModel {
+export class DoctorClinicSpecializationRepository {
   constructor(
     private prisma: PrismaService,
     private readonly i18n: I18nService,

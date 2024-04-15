@@ -8,18 +8,17 @@ import { TrainerProfileCreateDto } from './dtos/create.dto';
 import { Prisma } from '@prisma/client';
 import { FieldReturnDto } from 'src/field/dtos/return.dto';
 import { SportService } from 'src/sport/sport.service';
-import { TrainerScheduleModel } from 'src/trainer-schedule/trainer-schedule.model';
-import { GlobalModel } from 'src/global/global.model';
+import { GlobalRepository } from 'src/global/global.repository';
 import { SimplifiedFieldReturn } from 'src/field/dtos/field-simplified-return.dto';
 
 @Injectable()
-export class TrainerProfileModel {
+export class TrainerProfileRepository {
   constructor(
     private prisma: PrismaService,
     private readonly i18n: I18nService,
     private sportService: SportService,
     private globalService: GlobalService,
-    private globalModel: GlobalModel,
+    private globalRepository: GlobalRepository,
   ) {}
 
   async getByID(id: number): Promise<ReturnTrainerProfileDto> {
@@ -295,7 +294,7 @@ export class TrainerProfileModel {
   ): Promise<ReturnTrainerProfileDto> {
     // validate age group existance
     if (createData.ageGroupId) {
-      await this.globalModel.getOneAgeGroup(createData.ageGroupId);
+      await this.globalRepository.getOneAgeGroup(createData.ageGroupId);
     }
 
     await this.prisma.$queryRaw`
@@ -351,7 +350,7 @@ export class TrainerProfileModel {
     let theTrainerProfile = await this.getByUserId(userId);
     // validate age group existance
     if (createData.ageGroupId) {
-      await this.globalModel.getOneAgeGroup(createData.ageGroupId);
+      await this.globalRepository.getOneAgeGroup(createData.ageGroupId);
     }
 
     //update

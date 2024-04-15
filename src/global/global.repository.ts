@@ -1,10 +1,10 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class GlobalModel {
+export class GlobalRepository {
   constructor(
     private prisma: PrismaService,
     private config: ConfigService,

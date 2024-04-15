@@ -19,15 +19,15 @@ import { ScheduleIdValidation } from './validations/scheduleId.validation';
 import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { AddScheduleValidation } from './validations/create.validation';
 import { UserId } from 'src/decorators/user-id.decorator';
-import { TrainerScheduleModel } from './trainer-schedule.model';
-import { TrainerProfileModel } from 'src/trainer-profile/trainer-profile.model';
+import { TrainerScheduleRepository } from './trainer-schedule.repository';
+import { TrainerProfileRepository } from 'src/trainer-profile/trainer-profile.repository';
 
 @Controller('trainer-schedule')
 export class TrainerScheduleController {
   constructor(
     private scheduleService: TrainerScheduleService,
-    private trainerScheduleModel: TrainerScheduleModel,
-    private trainerProfileModel: TrainerProfileModel,
+    private trainerScheduleRepository: TrainerScheduleRepository,
+    private trainerProfileRepository: TrainerProfileRepository,
   ) {}
 
   @Get()
@@ -60,8 +60,10 @@ export class TrainerScheduleController {
   ) {
     ///////// Temproray, Trainer has one schedule /////////
     if (params.id == 0) {
-      let trainerProfile = await this.trainerProfileModel.getByUserId(req['id']);
-      params.id = await this.trainerScheduleModel.getTrainerScheduleId(trainerProfile.id);
+      let trainerProfile = await this.trainerProfileRepository.getByUserId(req['id']);
+      params.id = await this.trainerScheduleRepository.getTrainerScheduleId(
+        trainerProfile.id,
+      );
       return await this.scheduleService.update(
         req['timezone'],
         req['id'],
@@ -88,8 +90,10 @@ export class TrainerScheduleController {
   ) {
     ///////// Temproray, Trainer has one schedule /////////
     if (params.id == 0) {
-      let trainerProfile = await this.trainerProfileModel.getByUserId(req['id']);
-      params.id = await this.trainerScheduleModel.getTrainerScheduleId(trainerProfile.id);
+      let trainerProfile = await this.trainerProfileRepository.getByUserId(req['id']);
+      params.id = await this.trainerScheduleRepository.getTrainerScheduleId(
+        trainerProfile.id,
+      );
       return await this.scheduleService.delete(req['timezone'], req['id'], params.id);
     }
     //////////
@@ -106,8 +110,10 @@ export class TrainerScheduleController {
   ) {
     ///////// Temproray, Trainer has one schedule /////////
     if (params.id == 0) {
-      let trainerProfile = await this.trainerProfileModel.getByUserId(req['id']);
-      params.id = await this.trainerScheduleModel.getTrainerScheduleId(trainerProfile.id);
+      let trainerProfile = await this.trainerProfileRepository.getByUserId(req['id']);
+      params.id = await this.trainerScheduleRepository.getTrainerScheduleId(
+        trainerProfile.id,
+      );
       return await this.scheduleService.getOne(req['timezone'], req['id'], params.id);
     }
     //////////

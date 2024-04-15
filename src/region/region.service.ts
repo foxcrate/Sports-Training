@@ -2,30 +2,30 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { RegionCreateDto } from './dtos/create.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { RegionReturnDto } from './dtos/return.dto';
-import { RegionModel } from './region.model';
+import { RegionRepository } from './region.repository';
 
 @Injectable()
 export class RegionService {
   constructor(
-    private regionModel: RegionModel,
+    private regionRepository: RegionRepository,
     private readonly i18n: I18nService,
   ) {}
   async create(createData: RegionCreateDto): Promise<RegionReturnDto> {
     await this.findRepeated(createData.name_en);
 
-    let newRegion = await this.regionModel.create(createData);
+    let newRegion = await this.regionRepository.create(createData);
 
     return newRegion[0];
   }
 
   async getAll(): Promise<RegionReturnDto[]> {
-    let allRegions = await this.regionModel.getAll();
+    let allRegions = await this.regionRepository.getAll();
     return allRegions;
   }
 
   async findRepeated(name): Promise<boolean> {
     //Chick existed email or phone number
-    let repeatedRegion = await this.regionModel.findByName(name);
+    let repeatedRegion = await this.regionRepository.findByName(name);
 
     if (repeatedRegion[0]) {
       throw new BadRequestException(
@@ -36,7 +36,7 @@ export class RegionService {
   }
 
   async checkExistance(regionId): Promise<boolean> {
-    let foundedRegion = await this.regionModel.findById(regionId);
+    let foundedRegion = await this.regionRepository.findById(regionId);
 
     if (!foundedRegion[0]) {
       throw new NotFoundException(

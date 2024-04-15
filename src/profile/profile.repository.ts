@@ -4,7 +4,7 @@ import { GlobalService } from 'src/global/global.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
-export class ProfileModel {
+export class ProfileRepository {
   constructor(
     private prisma: PrismaService,
     private globalService: GlobalService,

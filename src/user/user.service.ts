@@ -10,51 +10,51 @@ import { ReturnUserDto } from './dtos/return.dto';
 import { NativeUserDto } from './dtos/native.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { CompleteSignupUserDto } from './dtos/complete-signup.dto';
-import { UserModel } from './user.model';
-import { PlayerProfileModel } from 'src/player-profile/player-profile.model';
+import { UserRepository } from './user.repository';
+import { PlayerProfileRepository } from 'src/player-profile/player-profile.repository';
 
 @Injectable()
 export class UserService {
   constructor(
-    private userModel: UserModel,
-    private playerProfileModel: PlayerProfileModel,
+    private userRepository: UserRepository,
+    private playerProfileRepository: PlayerProfileRepository,
     private readonly i18n: I18nService,
   ) {}
 
   async create(signupData: SignupUserDto): Promise<ReturnUserDto> {
-    await this.userModel.create(signupData);
+    await this.userRepository.create(signupData);
 
-    let newUser = await this.userModel.getByMobileNumber(signupData.mobileNumber);
+    let newUser = await this.userRepository.getByMobileNumber(signupData.mobileNumber);
 
     return newUser;
   }
 
   async createByMobile(mobileNumber: string): Promise<ReturnUserDto> {
-    await this.userModel.createByMobile(mobileNumber);
-    let createdUser = await this.userModel.getByMobileNumber(mobileNumber);
+    await this.userRepository.createByMobile(mobileNumber);
+    let createdUser = await this.userRepository.getByMobileNumber(mobileNumber);
     return createdUser;
   }
 
   async completeSignup(userId: number, completeSignupUserDto: CompleteSignupUserDto) {
-    let theUser = await this.userModel.getById(userId);
+    let theUser = await this.userRepository.getById(userId);
 
     //complete profile
-    await this.userModel.completeSignup(userId, completeSignupUserDto);
+    await this.userRepository.completeSignup(userId, completeSignupUserDto);
 
-    return await this.userModel.getById(theUser.id);
+    return await this.userRepository.getById(theUser.id);
   }
 
   async update(reqBody, userId) {
-    let user = await this.userModel.getById(userId);
+    let user = await this.userRepository.getById(userId);
 
     //update
-    await this.userModel.updateById(userId, reqBody);
+    await this.userRepository.updateById(userId, reqBody);
 
-    return await this.userModel.getById(user.id);
+    return await this.userRepository.getById(user.id);
   }
 
   async getOne(userId): Promise<ReturnUserDto> {
-    let user = await this.userModel.getById(userId);
+    let user = await this.userRepository.getById(userId);
 
     return user;
   }
@@ -62,15 +62,15 @@ export class UserService {
   async createChild(reqBody, userId) {
     await this.findRepeated(reqBody.email, reqBody.mobileNumber);
 
-    await this.userModel.createChild(reqBody, userId);
+    await this.userRepository.createChild(reqBody, userId);
 
-    let newChild = await this.userModel.getByMobileNumber(reqBody.mobileNumber);
+    let newChild = await this.userRepository.getByMobileNumber(reqBody.mobileNumber);
 
     return newChild;
   }
 
   async getChilds(userId): Promise<ReturnUserDto[]> {
-    let userChilds = await this.userModel.getChilds(userId);
+    let userChilds = await this.userRepository.getChilds(userId);
 
     return userChilds;
   }
@@ -84,9 +84,9 @@ export class UserService {
   async updateChild(reqBody, childId, userId) {
     let child = await this.authorizeChildResource(userId, childId);
 
-    await this.userModel.updateById(child.id, reqBody);
+    await this.userRepository.updateById(child.id, reqBody);
 
-    let updatedChild = await this.userModel.getById(child.id);
+    let updatedChild = await this.userRepository.getById(child.id);
 
     return updatedChild;
   }
@@ -94,21 +94,21 @@ export class UserService {
   async deleteChild(childId, userId): Promise<ReturnUserDto> {
     let child = await this.authorizeChildResource(userId, childId);
 
-    let childProfile = await this.playerProfileModel.getOneByUserId(childId);
+    let childProfile = await this.playerProfileRepository.getOneByUserId(childId);
 
     Promise.all([
-      await this.playerProfileModel.deletePlayerSports(childProfile?.id),
-      await this.playerProfileModel.deleteByUserId(childId),
-      await this.userModel.deleteChildRelations(childId),
+      await this.playerProfileRepository.deletePlayerSports(childProfile?.id),
+      await this.playerProfileRepository.deleteByUserId(childId),
+      await this.userRepository.deleteChildRelations(childId),
     ]);
 
-    await this.userModel.deleteById(childId);
+    await this.userRepository.deleteById(childId);
 
     return child;
   }
 
   async findByMobile(mobileNumber: string): Promise<NativeUserDto> {
-    let foundedAccount = await this.userModel.getNativeByMobileNumber(mobileNumber);
+    let foundedAccount = await this.userRepository.getNativeByMobileNumber(mobileNumber);
 
     if (!foundedAccount) {
       throw new UnauthorizedException(
@@ -131,7 +131,7 @@ export class UserService {
 
   async findRepeatedMobile(mobileNumber): Promise<boolean> {
     //Chick existed  phone number
-    let repeatedMobile = await this.userModel.getByMobileNumber(mobileNumber);
+    let repeatedMobile = await this.userRepository.getByMobileNumber(mobileNumber);
 
     if (repeatedMobile) {
       if (repeatedMobile.mobileNumber == mobileNumber) {
@@ -147,7 +147,7 @@ export class UserService {
 
   async findRepeatedEmail(email): Promise<boolean> {
     //Chick existed email or phone number
-    let repeatedEmail = await this.userModel.getByEmail(email);
+    let repeatedEmail = await this.userRepository.getByEmail(email);
 
     if (repeatedEmail) {
       if (repeatedEmail.email == email) {
@@ -166,7 +166,7 @@ export class UserService {
     childId: number,
   ): Promise<ReturnUserDto> {
     //get childProfile
-    let child = await this.userModel.getById(childId);
+    let child = await this.userRepository.getById(childId);
     if (!child) {
       throw new NotFoundException(
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
@@ -174,7 +174,7 @@ export class UserService {
     }
 
     //check if the child is the current user's child
-    if (!(await this.userModel.isMyChild(userId, childId))) {
+    if (!(await this.userRepository.isMyChild(userId, childId))) {
       throw new ForbiddenException(
         this.i18n.t(`errors.NOT_ALLOWED`, { lang: I18nContext.current().lang }),
       );

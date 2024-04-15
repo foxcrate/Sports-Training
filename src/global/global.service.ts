@@ -10,7 +10,7 @@ import moment from 'moment-timezone';
 import * as AWS from 'aws-sdk';
 import admin from 'firebase-admin';
 import { Prisma } from '@prisma/client';
-import { GlobalModel } from './global.model';
+import { GlobalRepository } from './global.repository';
 
 @Injectable()
 export class GlobalService {
@@ -26,7 +26,7 @@ export class GlobalService {
 
   constructor(
     private config: ConfigService,
-    private globalModel: GlobalModel,
+    private globalRepository: GlobalRepository,
     private readonly i18n: I18nService,
   ) {}
 
@@ -109,31 +109,31 @@ export class GlobalService {
   }
 
   async getAllAgeGroups(): Promise<[]> {
-    let allAgeGroups = await this.globalModel.allAgeGroups();
+    let allAgeGroups = await this.globalRepository.allAgeGroups();
 
     return allAgeGroups;
   }
 
   async getAllLevels(): Promise<[]> {
-    let allLevels = await this.globalModel.allLevels();
+    let allLevels = await this.globalRepository.allLevels();
 
     return allLevels;
   }
 
   async getAllGenders(): Promise<[]> {
-    let allGenders = await this.globalModel.allGenders();
+    let allGenders = await this.globalRepository.allGenders();
 
     return allGenders;
   }
 
   async getAllFeedbacks(): Promise<[]> {
-    let allFeedbacks = await this.globalModel.allFeedbacks();
+    let allFeedbacks = await this.globalRepository.allFeedbacks();
 
     return allFeedbacks;
   }
 
   async getAllWeekDays(): Promise<[]> {
-    let allWeekDays = await this.globalModel.allWeekDays();
+    let allWeekDays = await this.globalRepository.allWeekDays();
 
     return allWeekDays;
   }
@@ -171,7 +171,7 @@ export class GlobalService {
   }
 
   async getIdByWeekDayNumber(weekDayNumber: number): Promise<number> {
-    let id = await this.globalModel.getIdByWeekDayNumber(weekDayNumber);
+    let id = await this.globalRepository.getIdByWeekDayNumber(weekDayNumber);
     return id;
   }
 

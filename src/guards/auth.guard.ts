@@ -9,7 +9,7 @@ import { Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { IAuthToken } from 'src/auth/interfaces/auth-token.interface';
-import { UserModel } from 'src/user/user.model';
+import { UserRepository } from 'src/user/user.repository';
 import { USER_TYPES_ENUM } from 'src/global/enums';
 
 @Injectable()
@@ -17,7 +17,7 @@ export class AuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
     private config: ConfigService,
-    private userModel: UserModel,
+    private userRepository: UserRepository,
     private readonly i18n: I18nService,
   ) {}
 
@@ -48,7 +48,7 @@ export class AuthGuard implements CanActivate {
     request['id'] = payload.id;
     request['authType'] = payload.authType;
 
-    let userMetaData = await this.userModel.getUserMetaData(request['id']);
+    let userMetaData = await this.userRepository.getUserMetaData(request['id']);
 
     // console.log({ userMetaData });
 
@@ -103,7 +103,7 @@ export class AuthGuard implements CanActivate {
   }
 
   private async userAvailable(userId) {
-    let theUser = await this.userModel.getById(userId);
+    let theUser = await this.userRepository.getById(userId);
     if (!theUser) {
       return false;
     }

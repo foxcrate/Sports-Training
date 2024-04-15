@@ -6,7 +6,7 @@ import { I18nContext } from 'nestjs-i18n';
 import { CreateSportDto } from './dtos/create.dto';
 
 @Injectable()
-export class SportModel {
+export class SportRepository {
   constructor(private prisma: PrismaService) {}
 
   async getAll(): Promise<ReturnSportDto[]> {

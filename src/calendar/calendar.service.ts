@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CalendarModel } from './calendar.model';
+import { CalendarRepository } from './calendar.repository';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { GlobalService } from 'src/global/global.service';
 import { DatesCountResultDto } from './dto/dates-count-result.dto';
@@ -15,7 +15,7 @@ export class CalendarService {
   private DEFAULT_LIMIT_MULTI_RESULTS = 10;
 
   constructor(
-    private calendarModel: CalendarModel,
+    private CalendarRepository: CalendarRepository,
     private readonly i18n: I18nService,
     private globalService: GlobalService,
   ) {}
@@ -80,7 +80,11 @@ export class CalendarService {
       .clone()
       .add(this.toBeAddedMonths, 'months')
       .format('YYYY-MM-DD');
-    const results = await this.calendarModel.getAllDatesCount(userId, startDate, endDate);
+    const results = await this.CalendarRepository.getAllDatesCount(
+      userId,
+      startDate,
+      endDate,
+    );
     return this.formateDatesCountResults(results);
   }
 
@@ -102,7 +106,7 @@ export class CalendarService {
       ?.split(',')
       .map((type) => type.trim()) as DatesCountTypeFilter[];
     if (!convertedType || convertedType.length !== 1) {
-      results = await this.calendarModel.getMultiDateSessions(
+      results = await this.CalendarRepository.getMultiDateSessions(
         convertedType,
         userId,
         date,
@@ -113,7 +117,7 @@ export class CalendarService {
     } else {
       switch (convertedType[0]) {
         case CALENDAR_TYPES_ENUM.PLAYERS:
-          results = await this.calendarModel.getPlayerDateSessions(
+          results = await this.CalendarRepository.getPlayerDateSessions(
             userId,
             date,
             status,
@@ -121,7 +125,7 @@ export class CalendarService {
           );
           break;
         case CALENDAR_TYPES_ENUM.COACHES:
-          results = await this.calendarModel.getCoachSessions(
+          results = await this.CalendarRepository.getCoachSessions(
             userId,
             date,
             status,
@@ -129,10 +133,13 @@ export class CalendarService {
           );
           break;
         case CALENDAR_TYPES_ENUM.DOCTORS:
-          results = await this.calendarModel.getDoctorClinicDateSessions(userId, date);
+          results = await this.CalendarRepository.getDoctorClinicDateSessions(
+            userId,
+            date,
+          );
           break;
         case CALENDAR_TYPES_ENUM.FIELDS:
-          results = await this.calendarModel.getFieldsDateSessions(userId, date);
+          results = await this.CalendarRepository.getFieldsDateSessions(userId, date);
           break;
         default:
           throw new BadRequestException(

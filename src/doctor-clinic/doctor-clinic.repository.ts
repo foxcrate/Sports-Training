@@ -12,7 +12,7 @@ import { DoctorClinicUpdateDto } from './dtos/update.dto';
 import moment from 'moment-timezone';
 
 @Injectable()
-export class DoctorClinicModel {
+export class DoctorClinicRepository {
   constructor(
     private prisma: PrismaService,
     private config: ConfigService,

@@ -12,7 +12,7 @@ import { GlobalService } from 'src/global/global.service';
 import moment from 'moment-timezone';
 
 @Injectable()
-export class FieldModel {
+export class FieldRepository {
   constructor(
     private prisma: PrismaService,
     private config: ConfigService,

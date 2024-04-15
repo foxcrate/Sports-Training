@@ -6,7 +6,7 @@ import { I18nContext } from 'nestjs-i18n';
 import { PaginationParams } from 'src/global/dtos/pagination-params.dto';
 
 @Injectable()
-export class NotificationModel {
+export class NotificationRepository {
   constructor(private prisma: PrismaService) {}
 
   async getAll(userId: number, paginationParams: PaginationParams): Promise<any> {

@@ -15,7 +15,7 @@ import { UserSlotState } from './dtos/user-slot-state.dto';
 import { TrainerFieldSlots } from './dtos/trainer-field-slots.dto';
 
 @Injectable()
-export class TrainerScheduleModel {
+export class TrainerScheduleRepository {
   constructor(
     private prisma: PrismaService,
     private readonly i18n: I18nService,

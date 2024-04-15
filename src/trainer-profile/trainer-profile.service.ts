@@ -2,21 +2,22 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { TrainerProfileCreateDto } from 'src/trainer-profile/dtos/create.dto';
 import { ReturnTrainerProfileDto } from './dtos/return.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { TrainerProfileModel } from './trainer-profile.model';
+import { TrainerProfileRepository } from './trainer-profile.repository';
 import { ReturnTrainerProfileDetailsDto } from './dtos/details-return.dto';
-import { TrainerScheduleModel } from 'src/trainer-schedule/trainer-schedule.model';
+import { TrainerScheduleRepository } from 'src/trainer-schedule/trainer-schedule.repository';
 
 @Injectable()
 export class TrainerProfileService {
   constructor(
-    private trainerProfileModel: TrainerProfileModel,
-    private trainerScheduleModel: TrainerScheduleModel,
+    private trainerProfileRepository: TrainerProfileRepository,
+    private trainerScheduleRepository: TrainerScheduleRepository,
 
     private readonly i18n: I18nService,
   ) {}
 
   async getOne(userId): Promise<ReturnTrainerProfileDetailsDto> {
-    let trainerProfileWithSports = await this.trainerProfileModel.getOneDetailed(userId);
+    let trainerProfileWithSports =
+      await this.trainerProfileRepository.getOneDetailed(userId);
     if (!trainerProfileWithSports) {
       throw new NotFoundException(
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
@@ -27,8 +28,8 @@ export class TrainerProfileService {
   }
 
   async playerGetOne(trainerProfileId: number): Promise<ReturnTrainerProfileDetailsDto> {
-    let trainerProfile = await this.trainerProfileModel.getByID(trainerProfileId);
-    let trainerProfileWithSports = await this.trainerProfileModel.getOneDetailed(
+    let trainerProfile = await this.trainerProfileRepository.getByID(trainerProfileId);
+    let trainerProfileWithSports = await this.trainerProfileRepository.getOneDetailed(
       trainerProfile.userId,
     );
     if (!trainerProfileWithSports) {
@@ -44,9 +45,9 @@ export class TrainerProfileService {
     // console.log(createData);
     // return createData;
 
-    await this.trainerProfileModel.findRepeated(userId);
+    await this.trainerProfileRepository.findRepeated(userId);
 
-    return await this.trainerProfileModel.create(createData, userId);
+    return await this.trainerProfileRepository.create(createData, userId);
   }
 
   async update(
@@ -54,21 +55,24 @@ export class TrainerProfileService {
     userId,
   ): Promise<ReturnTrainerProfileDetailsDto> {
     //check profile existence
-    let trainerProfile = await this.trainerProfileModel.getByUserId(userId);
+    let trainerProfile = await this.trainerProfileRepository.getByUserId(userId);
     if (!trainerProfile) {
       throw new NotFoundException(
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
       );
     }
 
-    let updatedPlayerProfile = await this.trainerProfileModel.update(createData, userId);
+    let updatedPlayerProfile = await this.trainerProfileRepository.update(
+      createData,
+      userId,
+    );
 
     return updatedPlayerProfile;
   }
 
   async delete(userId): Promise<ReturnTrainerProfileDto> {
     //get deleted playerProfile
-    let deletedTrainerProfile = await this.trainerProfileModel.getByUserId(userId);
+    let deletedTrainerProfile = await this.trainerProfileRepository.getByUserId(userId);
 
     if (!deletedTrainerProfile) {
       throw new NotFoundException(
@@ -78,30 +82,42 @@ export class TrainerProfileService {
 
     //delete playerProfileSports
     Promise.all([
-      await this.trainerProfileModel.deletePastTrainerSports(deletedTrainerProfile.id),
-      await this.trainerProfileModel.deletePastTrainerFields(deletedTrainerProfile.id),
-      await this.trainerProfileModel.deletePastTrainerImages(deletedTrainerProfile.id),
-      await this.trainerProfileModel.deletePastTrainerCertificates(
+      await this.trainerProfileRepository.deletePastTrainerSports(
         deletedTrainerProfile.id,
       ),
-      await this.trainerProfileModel.deletePastNotAvailableDays(deletedTrainerProfile.id),
-      await this.trainerProfileModel.deletePastBookedSessions(deletedTrainerProfile.id),
-      await this.trainerScheduleModel.deleteByTrainerProfileId(deletedTrainerProfile.id),
+      await this.trainerProfileRepository.deletePastTrainerFields(
+        deletedTrainerProfile.id,
+      ),
+      await this.trainerProfileRepository.deletePastTrainerImages(
+        deletedTrainerProfile.id,
+      ),
+      await this.trainerProfileRepository.deletePastTrainerCertificates(
+        deletedTrainerProfile.id,
+      ),
+      await this.trainerProfileRepository.deletePastNotAvailableDays(
+        deletedTrainerProfile.id,
+      ),
+      await this.trainerProfileRepository.deletePastBookedSessions(
+        deletedTrainerProfile.id,
+      ),
+      await this.trainerScheduleRepository.deleteByTrainerProfileId(
+        deletedTrainerProfile.id,
+      ),
     ]);
-    // await this.trainerProfileModel.deletePastTrainerSports(deletedTrainerProfile.id);
-    // await this.trainerProfileModel.deletePastTrainerFields(deletedTrainerProfile.id);
+    // await this.trainerProfileRepository.deletePastTrainerSports(deletedTrainerProfile.id);
+    // await this.trainerProfileRepository.deletePastTrainerFields(deletedTrainerProfile.id);
 
     //delete schedule sessions
 
     //delete
-    await this.trainerProfileModel.deleteByUserId(userId);
+    await this.trainerProfileRepository.deleteByUserId(userId);
 
     return deletedTrainerProfile;
   }
 
   async addNotAvailableDays(userId: number, datesArray: string[]) {
-    let theTrainerProfile = await this.trainerProfileModel.getByUserId(userId);
-    return await this.trainerProfileModel.insertNotAvailableDays(
+    let theTrainerProfile = await this.trainerProfileRepository.getByUserId(userId);
+    return await this.trainerProfileRepository.insertNotAvailableDays(
       theTrainerProfile.id,
       datesArray,
     );

@@ -2,22 +2,18 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { PlayerProfileCreateDto } from 'src/player-profile/dtos/create.dto';
 import { ReturnPlayerProfileDto } from './dtos/return.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { Prisma } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
-import { PlayerProfileModel } from './player-profile.model';
-import { ReturnSportDto } from 'src/sport/dtos/return.dto';
-import { GlobalService } from 'src/global/global.service';
+import { PlayerProfileRepository } from './player-profile.repository';
 
 @Injectable()
 export class PlayerProfileService {
   constructor(
-    private playerProfileModel: PlayerProfileModel,
+    private playerProfileRepository: PlayerProfileRepository,
     private readonly i18n: I18nService,
   ) {}
 
   async getOne(userId): Promise<ReturnPlayerProfileDto> {
     let playerProfileWithSports =
-      await this.playerProfileModel.getOneDetailedByUserId(userId);
+      await this.playerProfileRepository.getOneDetailedByUserId(userId);
     if (!playerProfileWithSports) {
       throw new NotFoundException(
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
@@ -31,15 +27,15 @@ export class PlayerProfileService {
     createData: PlayerProfileCreateDto,
     userId: number,
   ): Promise<ReturnPlayerProfileDto> {
-    let playerProfile = await this.playerProfileModel.createIfNotExist(userId);
+    let playerProfile = await this.playerProfileRepository.createIfNotExist(userId);
 
-    await this.playerProfileModel.setById(createData, playerProfile.id);
-    return await this.playerProfileModel.getOneDetailedByUserId(userId);
+    await this.playerProfileRepository.setById(createData, playerProfile.id);
+    return await this.playerProfileRepository.getOneDetailedByUserId(userId);
   }
 
   async delete(userId): Promise<ReturnPlayerProfileDto> {
     //get deleted playerProfile
-    let deletedPlayerProfile = await this.playerProfileModel.getOneByUserId(userId);
+    let deletedPlayerProfile = await this.playerProfileRepository.getOneByUserId(userId);
 
     if (!deletedPlayerProfile) {
       throw new NotFoundException(
@@ -48,16 +44,16 @@ export class PlayerProfileService {
     }
 
     //delete playerProfileSports
-    await this.playerProfileModel.deletePlayerSports(deletedPlayerProfile.id);
+    await this.playerProfileRepository.deletePlayerSports(deletedPlayerProfile.id);
 
-    await this.playerProfileModel.deleteByUserId(userId);
+    await this.playerProfileRepository.deleteByUserId(userId);
 
     return deletedPlayerProfile;
   }
 
   private async findRepeated(userId): Promise<boolean> {
     //Chick existed email or phone number
-    let repeatedPlayerProfile = await this.playerProfileModel.getOneByUserId(userId);
+    let repeatedPlayerProfile = await this.playerProfileRepository.getOneByUserId(userId);
 
     if (repeatedPlayerProfile) {
       throw new BadRequestException(

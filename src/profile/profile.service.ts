@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ProfileModel } from './profile.model';
+import { ProfileRepository } from './profile.repository';
 import { PROFILE_TYPES_ENUM } from 'src/global/enums';
 import { GlobalService } from 'src/global/global.service';
 import { GetProfilesResultDto } from './dto/get-profiles-result.dto';
@@ -7,7 +7,7 @@ import { GetProfilesResultDto } from './dto/get-profiles-result.dto';
 @Injectable()
 export class ProfileService {
   constructor(
-    private profileModel: ProfileModel,
+    private profileRepository: ProfileRepository,
     private globalService: GlobalService,
   ) {}
 
@@ -39,7 +39,7 @@ export class ProfileService {
     type: PROFILE_TYPES_ENUM,
     childId: number,
   ): Promise<GetProfilesResultDto> {
-    const result = await this.profileModel.getUserProfiles(userId, type, childId);
+    const result = await this.profileRepository.getUserProfiles(userId, type, childId);
     return this.formatUserProfiles(Array.isArray(result) ? result[0] : []);
   }
 }

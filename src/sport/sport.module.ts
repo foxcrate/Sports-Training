@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { SportController } from './sport.controller';
 import { SportService } from './sport.service';
-import { SportModel } from './sport.model';
+import { SportRepository } from './sport.repository';
 
 @Module({
   controllers: [SportController],
-  providers: [SportService, SportModel],
-  exports: [SportService, SportModel],
+  providers: [SportService, SportRepository],
+  exports: [SportService, SportRepository],
 })
 export class SportModule {}
