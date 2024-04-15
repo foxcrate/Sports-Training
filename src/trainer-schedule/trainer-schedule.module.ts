@@ -4,7 +4,7 @@ import { TrainerScheduleController } from './trainer-schedule.controller';
 import { UserTrainerScheduleController } from './user-trainer-schedule.controller';
 import { AdminTrainerScheduleController } from './admin-trainer-schedule.controller';
 import { TrainerScheduleService } from './trainer-schedule.service';
-import { TrainerScheduleModel } from './trainer-schedule.model';
+import { TrainerScheduleRepository } from './trainer-schedule.repository';
 import { SessionModule } from 'src/session/session.module';
 import { NotificationModule } from 'src/notification/notification.module';
 import { FieldModule } from 'src/field/field.module';
@@ -21,7 +21,7 @@ import { FieldModule } from 'src/field/field.module';
     UserTrainerScheduleController,
     AdminTrainerScheduleController,
   ],
-  providers: [TrainerScheduleService, TrainerScheduleModel],
-  exports: [TrainerScheduleModel, TrainerScheduleService],
+  providers: [TrainerScheduleService, TrainerScheduleRepository],
+  exports: [TrainerScheduleRepository, TrainerScheduleService],
 })
 export class TrainerScheduleModule {}

@@ -1,8 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { RateTrainerDto } from './dtos/rate-trainer.dto';
-import { SessionModel } from './session.model';
-import { PlayerProfileModel } from 'src/player-profile/player-profile.model';
+import { SessionRepository } from './session.repository';
+import { PlayerProfileRepository } from 'src/player-profile/player-profile.repository';
 import { GlobalService } from 'src/global/global.service';
 import {
   CANCELED_BY_ENUM,
@@ -26,29 +26,27 @@ import { CoachSessionDataDto } from './dtos/coach-session-data.dto';
 import moment from 'moment-timezone';
 import { CancellingReasonDto } from './dtos/cancelling-reason.dto';
 import { TrainerScheduleService } from 'src/trainer-schedule/trainer-schedule.service';
-import { TrainerProfileModel } from 'src/trainer-profile/trainer-profile.model';
-import { NotificationModel } from 'src/notification/notification.model';
+import { TrainerProfileRepository } from 'src/trainer-profile/trainer-profile.repository';
+import { NotificationRepository } from 'src/notification/notification.repository';
 import { RequestSlotChangeDto } from './dtos/request-slot-change.dto';
-import { TrainerScheduleModel } from 'src/trainer-schedule/trainer-schedule.model';
-import { GlobalModel } from 'src/global/global.model';
+import { TrainerScheduleRepository } from 'src/trainer-schedule/trainer-schedule.repository';
 
 @Injectable()
 export class SessionService {
   constructor(
     private readonly i18n: I18nService,
-    private sessionModel: SessionModel,
-    private playerProfileModel: PlayerProfileModel,
-    private trainerProfileModel: TrainerProfileModel,
-    private notificationModel: NotificationModel,
+    private sessionRepository: SessionRepository,
+    private playerProfileRepository: PlayerProfileRepository,
+    private trainerProfileRepository: TrainerProfileRepository,
+    private notificationRepository: NotificationRepository,
     private trainerScheduleService: TrainerScheduleService,
-    private trainerScheduleModel: TrainerScheduleModel,
+    private trainerScheduleRepository: TrainerScheduleRepository,
     private globalService: GlobalService,
-    private globalModel: GlobalModel,
   ) {}
 
   async playerRateTrainer(userId: number, reqBody: RateTrainerDto): Promise<boolean> {
     // throw an error if playerProfile don't exist
-    let thePlayerProfile = await this.playerProfileModel.getOneByUserId(userId);
+    let thePlayerProfile = await this.playerProfileRepository.getOneByUserId(userId);
     if (!thePlayerProfile) {
       throw new NotFoundException(
         this.i18n.t(`errors.PLAYER_PROFILE_NOT_FOUND`, {
@@ -58,12 +56,12 @@ export class SessionService {
     }
 
     // throw error if session don't exist
-    let theSession = await this.sessionModel.getBookedSessionBySessionId(
+    let theSession = await this.sessionRepository.getBookedSessionBySessionId(
       reqBody.sessionId,
     );
 
     this.validatePlayerRatingSession(thePlayerProfile.userId, theSession.userId);
-    await this.sessionModel.savePlayerTrainerRating(
+    await this.sessionRepository.savePlayerTrainerRating(
       thePlayerProfile.userId,
       theSession.trainerProfileId,
       reqBody.ratingNumber,
@@ -79,17 +77,20 @@ export class SessionService {
   ): Promise<TrainingSessionResultDto> {
     switch (type) {
       case HOME_SEARCH_TYPES_ENUM.COACHES:
-        const coachSession = await this.sessionModel.getCoachTrainingSession(sessionId);
+        const coachSession =
+          await this.sessionRepository.getCoachTrainingSession(sessionId);
         const validCoachSession = this.validateSessionExistence(coachSession);
         this.validateSessionViewUserRights(userId, validCoachSession.userId);
         return this.formatCoachTrainingSession(validCoachSession);
       case HOME_SEARCH_TYPES_ENUM.DOCTORS:
-        const doctorSession = await this.sessionModel.getDoctorTrainingSession(sessionId);
+        const doctorSession =
+          await this.sessionRepository.getDoctorTrainingSession(sessionId);
         const validDoctorSession = this.validateSessionExistence(doctorSession);
         this.validateSessionViewUserRights(userId, validDoctorSession.userId);
         return this.formatDoctorTrainingSession(validDoctorSession);
       case HOME_SEARCH_TYPES_ENUM.FIELDS:
-        const fieldSession = await this.sessionModel.getFieldTrainingSession(sessionId);
+        const fieldSession =
+          await this.sessionRepository.getFieldTrainingSession(sessionId);
         const validFieldSession = this.validateSessionExistence(fieldSession);
         this.validateSessionViewUserRights(userId, validFieldSession.userId);
         return this.formatFieldTrainingSession(validFieldSession);
@@ -104,7 +105,7 @@ export class SessionService {
     userId: number,
     sessionId: number,
   ): Promise<TrainingSessionResultDto> {
-    const coachSession = await this.sessionModel.getCoachingSession(sessionId);
+    const coachSession = await this.sessionRepository.getCoachingSession(sessionId);
     // console.log({ coachSession });
 
     const validCoachSession = this.validateSessionExistence(coachSession);
@@ -113,14 +114,14 @@ export class SessionService {
   }
 
   async getCancellingReasons(): Promise<CancellingReasonDto[]> {
-    const cancellingReasons = await this.sessionModel.getCancellingReasons();
+    const cancellingReasons = await this.sessionRepository.getCancellingReasons();
     return this.formatCancellingReasons(cancellingReasons);
   }
 
   async getPendingSessions(userId: number) {
     // return await this.globalModel.getOneAgeGroup(1);
-    let trainerProfile = await this.trainerProfileModel.getByUserId(userId);
-    return await this.sessionModel.getPendingSessions(trainerProfile.id);
+    let trainerProfile = await this.trainerProfileRepository.getByUserId(userId);
+    return await this.sessionRepository.getPendingSessions(trainerProfile.id);
   }
 
   async playerRequestSlotChange(
@@ -128,14 +129,14 @@ export class SessionService {
     sessionId: number,
     reqBody: RequestSlotChangeDto,
   ) {
-    await this.playerProfileModel.getOneByUserId(userId);
+    await this.playerProfileRepository.getOneByUserId(userId);
     await this.validateRequestChangeSlot(
       userId,
       sessionId,
       reqBody.newSlotId,
       reqBody.newDate,
     );
-    await this.sessionModel.createChangeSessionSlotRequest(
+    await this.sessionRepository.createChangeSessionSlotRequest(
       sessionId,
       reqBody.newDate,
       reqBody.newSlotId,
@@ -148,7 +149,8 @@ export class SessionService {
     newSlotId: number,
     newDate: string,
   ) {
-    let bookedSession = await this.sessionModel.getBookedSessionBySessionId(sessionId);
+    let bookedSession =
+      await this.sessionRepository.getBookedSessionBySessionId(sessionId);
     if (bookedSession.userId !== userId) {
       throw new BadRequestException(
         this.i18n.t(`errors.NOT_ALLOWED_USER_SESSION`, {
@@ -157,7 +159,7 @@ export class SessionService {
       );
     }
     //validate slot existance
-    await this.trainerScheduleModel.getSlotById(newSlotId);
+    await this.trainerScheduleRepository.getSlotById(newSlotId);
 
     //validate if there is a booked session
     if (
@@ -180,7 +182,8 @@ export class SessionService {
     userId: number,
     sessionRequestId: number,
   ): Promise<TrainingSessionResultDto> {
-    let sessionRequest = await this.sessionModel.getSessionRequestByid(sessionRequestId);
+    let sessionRequest =
+      await this.sessionRepository.getSessionRequestByid(sessionRequestId);
     if (sessionRequest.type === SESSION_REQUEST_TYPE.NEW) {
       return await this.coachApproveNewSession(
         userId,
@@ -201,9 +204,11 @@ export class SessionService {
     sessionRequestId: number,
     declineReasonId: number,
   ): Promise<TrainingSessionResultDto> {
-    let sessionRequest = await this.sessionModel.getSessionRequestByid(sessionRequestId);
+    let sessionRequest =
+      await this.sessionRepository.getSessionRequestByid(sessionRequestId);
 
-    let declineReasonData = await this.sessionModel.getCancellingReason(declineReasonId);
+    let declineReasonData =
+      await this.sessionRepository.getCancellingReason(declineReasonId);
     if (!declineReasonData) {
       throw new NotFoundException(
         this.i18n.t(`errors.NOT_FOUND_DECLINE_REASON`, {
@@ -231,7 +236,9 @@ export class SessionService {
     sessionId: number,
   ): Promise<TrainingSessionResultDto> {
     const coachSessionData: CoachSessionDataDto[] =
-      (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
+      (await this.sessionRepository.getCoachSessionData(
+        sessionId,
+      )) as CoachSessionDataDto[];
 
     // console.log({ coachSessionData });
 
@@ -259,14 +266,14 @@ export class SessionService {
     const { sessionRequestId, coachBookedSessionId } = validCoachSession;
     const [formattedSession] = await Promise.all([
       this.getCoachingSession(userId, sessionId),
-      this.sessionModel.updateSessionAndRequest(
+      this.sessionRepository.updateSessionAndRequest(
         coachBookedSessionId,
         SESSIONS_STATUSES_ENUM.ACTIVE,
         sessionRequestId,
         SESSION_REQUEST_STATUSES_ENUM.ACCEPTED,
       ),
     ]);
-    // await this.sessionModel.rejectRestOfSameDateSlotRequests(
+    // await this.sessionRepository.rejectRestOfSameDateSlotRequests(
     //   coachSessionData[0].date,
     //   coachSessionData[0].slotId,
     // );
@@ -276,7 +283,7 @@ export class SessionService {
     );
 
     // create notification
-    await this.notificationModel.createOne(
+    await this.notificationRepository.createOne(
       coachSessionData[0].userId,
       coachSessionData[0].coachBookedSessionId,
       NOTIFICATION_SENT_TO.PLAYER_PROFILE,
@@ -297,7 +304,9 @@ export class SessionService {
     declineReasonId: number,
   ): Promise<TrainingSessionResultDto> {
     const coachSessionData: CoachSessionDataDto[] =
-      (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
+      (await this.sessionRepository.getCoachSessionData(
+        sessionId,
+      )) as CoachSessionDataDto[];
     const validCoachSession = await this.validateChangeSessionRequest(
       userId,
       coachSessionData,
@@ -305,7 +314,7 @@ export class SessionService {
     const { sessionRequestId, coachBookedSessionId } = validCoachSession;
     const [formattedSession] = await Promise.all([
       this.getCoachingSession(userId, sessionId),
-      this.sessionModel.updateSessionAndRequest(
+      this.sessionRepository.updateSessionAndRequest(
         coachBookedSessionId,
         SESSIONS_STATUSES_ENUM.NOT_ACTIVE,
         sessionRequestId,
@@ -315,7 +324,7 @@ export class SessionService {
     ]);
 
     // create notification
-    await this.notificationModel.createOne(
+    await this.notificationRepository.createOne(
       coachSessionData[0].userId,
       coachSessionData[0].coachBookedSessionId,
       NOTIFICATION_SENT_TO.PLAYER_PROFILE,
@@ -337,7 +346,9 @@ export class SessionService {
     newDate: string,
   ): Promise<TrainingSessionResultDto> {
     const coachSessionData: CoachSessionDataDto[] =
-      (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
+      (await this.sessionRepository.getCoachSessionData(
+        sessionId,
+      )) as CoachSessionDataDto[];
 
     // console.log({ coachSessionData });
 
@@ -364,8 +375,12 @@ export class SessionService {
 
     const { sessionRequestId, coachBookedSessionId } = validCoachSession;
 
-    await this.sessionModel.updateSessionTiming(coachBookedSessionId, newDate, newSlotId);
-    await this.sessionModel.updateSessionRequest(
+    await this.sessionRepository.updateSessionTiming(
+      coachBookedSessionId,
+      newDate,
+      newSlotId,
+    );
+    await this.sessionRepository.updateSessionRequest(
       sessionRequestId,
       SESSION_REQUEST_STATUSES_ENUM.ACCEPTED,
     );
@@ -373,7 +388,7 @@ export class SessionService {
     await this.rejectRestOfSameDateSlotRequests(newDate, newSlotId);
 
     // create notification
-    await this.notificationModel.createOne(
+    await this.notificationRepository.createOne(
       coachSessionData[0].userId,
       coachSessionData[0].coachBookedSessionId,
       NOTIFICATION_SENT_TO.PLAYER_PROFILE,
@@ -393,7 +408,9 @@ export class SessionService {
     sessionId: number,
   ): Promise<TrainingSessionResultDto> {
     const coachSessionData: CoachSessionDataDto[] =
-      (await this.sessionModel.getCoachSessionData(sessionId)) as CoachSessionDataDto[];
+      (await this.sessionRepository.getCoachSessionData(
+        sessionId,
+      )) as CoachSessionDataDto[];
 
     // console.log({ coachSessionData });
 
@@ -404,14 +421,14 @@ export class SessionService {
 
     const { sessionRequestId } = validCoachSession;
 
-    await this.sessionModel.updateSessionRequest(
+    await this.sessionRepository.updateSessionRequest(
       sessionRequestId,
       SESSION_REQUEST_STATUSES_ENUM.REJECTED,
     );
     const formattedSession = await this.getCoachingSession(userId, sessionId);
 
     // create notification
-    await this.notificationModel.createOne(
+    await this.notificationRepository.createOne(
       coachSessionData[0].userId,
       coachSessionData[0].coachBookedSessionId,
       NOTIFICATION_SENT_TO.PLAYER_PROFILE,
@@ -428,13 +445,13 @@ export class SessionService {
 
   async rejectRestOfSameDateSlotRequests(newDate: string, newSlotId: number) {
     // get all user who booked this slot
-    let usersSessionsIds = await this.sessionModel.getAllBookedUsersSessionsIds(
+    let usersSessionsIds = await this.sessionRepository.getAllBookedUsersSessionsIds(
       newDate,
       newSlotId,
     );
 
     // notify the rejection to all users
-    await this.notificationModel.createMany(
+    await this.notificationRepository.createMany(
       usersSessionsIds,
       NOTIFICATION_SENT_TO.PLAYER_PROFILE,
       NOTIFICATION_ABOUT.TRAINER_SESSION,
@@ -442,14 +459,14 @@ export class SessionService {
       NOTIFICATION_CONTENT.COACH_REJECTED_SESSION,
     );
 
-    await this.sessionModel.rejectRestOfSameDateSlotRequests(newDate, newSlotId);
+    await this.sessionRepository.rejectRestOfSameDateSlotRequests(newDate, newSlotId);
   }
 
   async coachCancelSession(
     userId: number,
     sessionId: number,
   ): Promise<TrainingSessionResultDto> {
-    const coachSessionData = await this.sessionModel.getCoachSessionData(sessionId);
+    const coachSessionData = await this.sessionRepository.getCoachSessionData(sessionId);
     if (!coachSessionData[0]) {
       throw new BadRequestException(
         this.i18n.t(`errors.BOOKED_SESSION_NOT_FOUND`, {
@@ -462,7 +479,10 @@ export class SessionService {
     const { coachBookedSessionId } = validCoachSession;
     const [formattedSession] = await Promise.all([
       this.getCoachingSession(userId, sessionId),
-      this.sessionModel.cancelSession(coachBookedSessionId, CANCELED_BY_ENUM.TRAINER),
+      this.sessionRepository.cancelSession(
+        coachBookedSessionId,
+        CANCELED_BY_ENUM.TRAINER,
+      ),
     ]);
     return {
       ...formattedSession,
@@ -475,8 +495,8 @@ export class SessionService {
     sessionId: number,
   ): Promise<TrainingSessionResultDto> {
     // const sessionData: UserSessionDataDto[] =
-    //   await this.sessionModel.getUserSessionData(sessionId);
-    const sessionData = await this.sessionModel.getUserSessionData(sessionId);
+    //   await this.sessionRepository.getUserSessionData(sessionId);
+    const sessionData = await this.sessionRepository.getUserSessionData(sessionId);
     if (!sessionData[0]) {
       throw new BadRequestException(
         this.i18n.t(`errors.BOOKED_SESSION_NOT_FOUND`, {
@@ -490,7 +510,7 @@ export class SessionService {
     const { bookedSessionId } = validSession;
     const [formattedSession] = await Promise.all([
       this.getTrainingSession(userId, sessionId, HOME_SEARCH_TYPES_ENUM.COACHES),
-      this.sessionModel.cancelSession(bookedSessionId, CANCELED_BY_ENUM.PLAYER),
+      this.sessionRepository.cancelSession(bookedSessionId, CANCELED_BY_ENUM.PLAYER),
     ]);
     return {
       ...formattedSession,

@@ -1,14 +1,14 @@
 import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { GlobalService } from 'src/global/global.service';
-import { TrainerScheduleModel } from './trainer-schedule.model';
+import { TrainerScheduleRepository } from './trainer-schedule.repository';
 import { ScheduleSlotsDetailsDTO } from './dtos/schedule-slots-details';
-import { TrainerProfileModel } from 'src/trainer-profile/trainer-profile.model';
+import { TrainerProfileRepository } from 'src/trainer-profile/trainer-profile.repository';
 import { ScheduleCreateDto } from './dtos/create.dto';
 import { SlotDetailsDto } from './dtos/slot-details.dto';
 import moment from 'moment-timezone';
 import { ScheduleSlotsDTO } from './dtos/schedule-slots';
-import { SessionModel } from 'src/session/session.model';
+import { SessionRepository } from 'src/session/session.repository';
 import { UserSlotState } from './dtos/user-slot-state.dto';
 import { SessionCardDTO } from 'src/session/dtos/session-card.dto';
 import { SimplifiedFieldReturn } from 'src/field/dtos/field-simplified-return.dto';
@@ -19,26 +19,26 @@ import {
   NOTIFICATION_TYPE,
   SESSIONS_STATUSES_ENUM,
 } from 'src/global/enums';
-import { NotificationModel } from 'src/notification/notification.model';
-import { FieldModel } from 'src/field/field.model';
+import { NotificationRepository } from 'src/notification/notification.repository';
+import { FieldRepository } from 'src/field/field.repository';
 
 @Injectable()
 export class TrainerScheduleService {
   constructor(
-    private trainerScheduleModel: TrainerScheduleModel,
+    private trainerScheduleRepository: TrainerScheduleRepository,
     private globalService: GlobalService,
     private readonly i18n: I18nService,
-    private trainerProfileModel: TrainerProfileModel,
-    private sessionModel: SessionModel,
-    private fieldModel: FieldModel,
-    private notificationModel: NotificationModel,
+    private trainerProfileRepository: TrainerProfileRepository,
+    private sessionRepository: SessionRepository,
+    private fieldRepository: FieldRepository,
+    private notificationRepository: NotificationRepository,
   ) {}
 
   async getAll(userId: number): Promise<ScheduleSlotsDetailsDTO[]> {
     //get user traienr profile
-    let trainerProfile = await this.trainerProfileModel.getByUserId(userId);
+    let trainerProfile = await this.trainerProfileRepository.getByUserId(userId);
 
-    return await this.trainerScheduleModel.getAll(trainerProfile.id);
+    return await this.trainerScheduleRepository.getAll(trainerProfile.id);
   }
 
   async getOne(
@@ -50,7 +50,7 @@ export class TrainerScheduleService {
   }
 
   async create(timezone, userId: number, reqBody: ScheduleCreateDto): Promise<any> {
-    let trainerProfile = await this.trainerProfileModel.getByUserId(userId);
+    let trainerProfile = await this.trainerProfileRepository.getByUserId(userId);
 
     ///////// Temproray, Trainer has one schedule /////////
     let trainerSchedules = await this.getAll(trainerProfile.userId);
@@ -66,7 +66,11 @@ export class TrainerScheduleService {
 
     await this.validateCreateScheduleMonths(trainerProfile.id, reqBody);
     await this.groupingAndValidatingScheduleSlots(reqBody.slots);
-    return await this.trainerScheduleModel.create(timezone, trainerProfile.id, reqBody);
+    return await this.trainerScheduleRepository.create(
+      timezone,
+      trainerProfile.id,
+      reqBody,
+    );
   }
 
   async delete(
@@ -75,7 +79,7 @@ export class TrainerScheduleService {
     scheduleId: number,
   ): Promise<ScheduleSlotsDetailsDTO> {
     let theSchedule = await this.authorizeResource(timezone, userId, scheduleId);
-    return await this.trainerScheduleModel.deleteByID(timezone, theSchedule.id);
+    return await this.trainerScheduleRepository.deleteByID(timezone, theSchedule.id);
   }
 
   async update(
@@ -91,18 +95,18 @@ export class TrainerScheduleService {
       reqBody,
     );
     await this.groupingAndValidatingScheduleSlots(reqBody.slots);
-    return await this.trainerScheduleModel.update(timezone, schedule.id, reqBody);
+    return await this.trainerScheduleRepository.update(timezone, schedule.id, reqBody);
   }
 
   async getTrainerFields(trainerProfileId: number): Promise<SimplifiedFieldReturn[]> {
-    return await this.trainerProfileModel.getTrainerFields(trainerProfileId);
+    return await this.trainerProfileRepository.getTrainerFields(trainerProfileId);
   }
 
   async getTrainerFieldDaysForThisWeek(
     trainerProfileId: number,
     fieldId: number,
   ): Promise<string[]> {
-    let trainerFieldSlots = await this.trainerScheduleModel.getTrainerFieldSlots(
+    let trainerFieldSlots = await this.trainerScheduleRepository.getTrainerFieldSlots(
       trainerProfileId,
       fieldId,
     );
@@ -135,14 +139,14 @@ export class TrainerScheduleService {
     fieldId: number,
     dayDate: string,
   ): Promise<UserSlotState[]> {
-    let trainerFieldSlots = await this.trainerScheduleModel.getTrainerFieldSlots(
+    let trainerFieldSlots = await this.trainerScheduleRepository.getTrainerFieldSlots(
       trainerProfileId,
       fieldId,
     );
 
     dayDate = moment(dayDate).format('YYYY-MM-DD');
 
-    let playerBookedTimes = await this.trainerScheduleModel.getUserBookedTimes(
+    let playerBookedTimes = await this.trainerScheduleRepository.getUserBookedTimes(
       userId,
       dayDate,
     );
@@ -196,19 +200,19 @@ export class TrainerScheduleService {
   ): Promise<SessionCardDTO> {
     await this.validateBookingTrainerSession(userId, trainerProfileId, dayDate, slotId);
 
-    let trainerBookedSession = await this.sessionModel.createTrainerBookedSession(
+    let trainerBookedSession = await this.sessionRepository.createTrainerBookedSession(
       userId,
       dayDate,
       trainerProfileId,
       slotId,
     );
 
-    let theTrainerProfile = await this.trainerProfileModel.getByID(trainerProfileId);
+    let theTrainerProfile = await this.trainerProfileRepository.getByID(trainerProfileId);
 
-    await this.sessionModel.createNewTrainerSessionRequest(trainerBookedSession.id);
+    await this.sessionRepository.createNewTrainerSessionRequest(trainerBookedSession.id);
 
     // create notification
-    await this.notificationModel.createOne(
+    await this.notificationRepository.createOne(
       theTrainerProfile.userId,
       trainerBookedSession.id,
       NOTIFICATION_SENT_TO.TRAINER_PROFILE,
@@ -217,9 +221,8 @@ export class TrainerScheduleService {
       NOTIFICATION_CONTENT.USER_REQUESTED_SESSION,
     );
 
-    let trainerBookedSessionCard = await this.sessionModel.getTrainerBookedSessionCard(
-      trainerBookedSession.id,
-    );
+    let trainerBookedSessionCard =
+      await this.sessionRepository.getTrainerBookedSessionCard(trainerBookedSession.id);
 
     let formatedDayDate = moment(trainerBookedSessionCard.date).format('YYYY-MM-DD');
 
@@ -241,10 +244,13 @@ export class TrainerScheduleService {
     dayDate: string,
     slotId: number,
   ): Promise<boolean> {
-    let theSlot = await this.trainerScheduleModel.getSlotById(slotId);
-    let theTrainerProfile = await this.trainerProfileModel.getByID(trainerProfileId);
-    let theSchedule = await this.trainerScheduleModel.getByID(null, theSlot.scheduleId);
-    let trainerFieldSlots = await this.trainerScheduleModel.getTrainerFieldSlots(
+    let theSlot = await this.trainerScheduleRepository.getSlotById(slotId);
+    let theTrainerProfile = await this.trainerProfileRepository.getByID(trainerProfileId);
+    let theSchedule = await this.trainerScheduleRepository.getByID(
+      null,
+      theSlot.scheduleId,
+    );
+    let trainerFieldSlots = await this.trainerScheduleRepository.getTrainerFieldSlots(
       trainerProfileId,
       theSlot.fieldId,
     );
@@ -310,7 +316,7 @@ export class TrainerScheduleService {
     }
 
     //check intersection of time between player booked session and new one
-    let playerBookedTimes = await this.trainerScheduleModel.getUserBookedTimes(
+    let playerBookedTimes = await this.trainerScheduleRepository.getUserBookedTimes(
       userId,
       dayDate,
     );
@@ -326,7 +332,7 @@ export class TrainerScheduleService {
     userId: number = null,
     status: string = null,
   ): Promise<boolean> {
-    let bookedSlot = await this.sessionModel.getBookedSessionBySlotId(
+    let bookedSlot = await this.sessionRepository.getBookedSessionBySlotId(
       slotId,
       dayDate,
       userId,
@@ -509,9 +515,9 @@ export class TrainerScheduleService {
     userId: number,
     scheduleId: number,
   ): Promise<ScheduleSlotsDetailsDTO> {
-    let schedule = await this.trainerScheduleModel.getByID(timezone, scheduleId);
+    let schedule = await this.trainerScheduleRepository.getByID(timezone, scheduleId);
 
-    let schedulesIds = await this.trainerProfileModel.getSchedulesIds(userId);
+    let schedulesIds = await this.trainerProfileRepository.getSchedulesIds(userId);
 
     if (!schedulesIds.includes(schedule.id)) {
       throw new ForbiddenException(
@@ -527,7 +533,7 @@ export class TrainerScheduleService {
   ): Promise<boolean> {
     //get all trainer schedule months
     let allTrainerSchedulesMonths =
-      await this.trainerScheduleModel.allTrainerSchedulesMonths(trainerProfileId);
+      await this.trainerScheduleRepository.allTrainerSchedulesMonths(trainerProfileId);
 
     //check intersecting months
     for (let i = 0; i < reqBody.months.length; i++) {
@@ -550,7 +556,7 @@ export class TrainerScheduleService {
   ): Promise<boolean> {
     //get all trainer schedule months except the desired update schedule
     let allTrainerSchedulesMonthsExceptOne =
-      await this.trainerScheduleModel.allTrainerSchedulesMonthsExceptOne(
+      await this.trainerScheduleRepository.allTrainerSchedulesMonthsExceptOne(
         scheduleId,
         trainerProfileId,
       );
@@ -576,7 +582,7 @@ export class TrainerScheduleService {
     });
     let uniqueSlotsFieldsIds = [...new Set(slotsFieldsIds)];
 
-    let foundedFields = await this.fieldModel.getManyFields(uniqueSlotsFieldsIds);
+    let foundedFields = await this.fieldRepository.getManyFields(uniqueSlotsFieldsIds);
 
     if (foundedFields.length !== uniqueSlotsFieldsIds.length) {
       throw new BadRequestException(

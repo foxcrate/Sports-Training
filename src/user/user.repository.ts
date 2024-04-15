@@ -9,7 +9,7 @@ import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 import { UserMetaData } from './dtos/user-meta-data.dto';
 
 @Injectable()
-export class UserModel {
+export class UserRepository {
   constructor(private prisma: PrismaService) {}
 
   async getChilds(userId): Promise<ReturnUserDto[]> {

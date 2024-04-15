@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { DoctorClinicSpecializationController } from './doctor-clinic-specialization.controller';
 import { DoctorClinicSpecializationService } from './doctor-clinic-specialization.service';
-import { DoctorClinicSpecializationModel } from './doctor-clinic-specialization.model';
+import { DoctorClinicSpecializationRepository } from './doctor-clinic-specialization.repository';
 
 @Module({
   controllers: [DoctorClinicSpecializationController],
-  providers: [DoctorClinicSpecializationService, DoctorClinicSpecializationModel],
+  providers: [DoctorClinicSpecializationService, DoctorClinicSpecializationRepository],
 })
 export class DoctorClinicSpecializationModule {}

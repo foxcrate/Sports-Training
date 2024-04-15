@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ProfileController } from './profile.controller';
 import { ProfileService } from './profile.service';
-import { ProfileModel } from './profile.model';
+import { ProfileRepository } from './profile.repository';
 
 @Module({
   controllers: [ProfileController],
-  providers: [ProfileService, ProfileModel],
+  providers: [ProfileService, ProfileRepository],
 })
 export class ProfileModule {}

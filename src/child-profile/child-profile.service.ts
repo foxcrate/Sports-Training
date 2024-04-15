@@ -8,14 +8,14 @@ import { PlayerProfileCreateDto } from '../player-profile/dtos/create.dto';
 import { ReturnPlayerProfileDto } from '../player-profile/dtos/return.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { ReturnPlayerProfileWithUserAndSportsDto } from '../player-profile/dtos/return-with-user-and-sports.dto';
-import { PlayerProfileModel } from '../player-profile/player-profile.model';
-import { UserModel } from 'src/user/user.model';
+import { PlayerProfileRepository } from '../player-profile/player-profile.repository';
+import { UserRepository } from 'src/user/user.repository';
 
 @Injectable()
 export class ChildProfileService {
   constructor(
-    private userModel: UserModel,
-    private playerProfileModel: PlayerProfileModel,
+    private userRepository: UserRepository,
+    private playerProfileRepository: PlayerProfileRepository,
     private readonly i18n: I18nService,
   ) {}
 
@@ -24,9 +24,9 @@ export class ChildProfileService {
     childId,
     userId,
   ): Promise<ReturnPlayerProfileDto> {
-    let child = await this.userModel.getById(childId);
+    let child = await this.userRepository.getById(childId);
 
-    if (!(await this.userModel.isMyChild(userId, child.id))) {
+    if (!(await this.userRepository.isMyChild(userId, child.id))) {
       throw new ForbiddenException(
         this.i18n.t(`errors.NOT_ALLOWED`, { lang: I18nContext.current().lang }),
       );
@@ -34,9 +34,9 @@ export class ChildProfileService {
 
     await this.findRepeated(childId);
 
-    await this.playerProfileModel.create(createData, childId);
+    await this.playerProfileRepository.create(createData, childId);
 
-    return await this.playerProfileModel.getOneDetailedByUserId(childId);
+    return await this.playerProfileRepository.getOneDetailedByUserId(childId);
   }
 
   async update(
@@ -53,8 +53,8 @@ export class ChildProfileService {
       );
     }
 
-    await this.playerProfileModel.updateById(createData, childProfile.id);
-    return await this.playerProfileModel.getOneDetailedByUserId(childProfile.userId);
+    await this.playerProfileRepository.updateById(createData, childProfile.id);
+    return await this.playerProfileRepository.getOneDetailedByUserId(childProfile.userId);
   }
 
   async delete(userId, childProfileId): Promise<ReturnPlayerProfileDto> {
@@ -62,23 +62,23 @@ export class ChildProfileService {
     await this.authorizeResource(userId, childProfileId);
 
     let deletedChildProfile: ReturnPlayerProfileDto =
-      await this.playerProfileModel.getOneById(childProfileId);
+      await this.playerProfileRepository.getOneById(childProfileId);
 
-    await this.playerProfileModel.deleteById(deletedChildProfile.id);
+    await this.playerProfileRepository.deleteById(deletedChildProfile.id);
 
     return deletedChildProfile;
   }
 
   async getAll(userId): Promise<ReturnPlayerProfileWithUserAndSportsDto[]> {
     //get all user's childs
-    let childsIds = await this.userModel.getChildsIds(userId);
+    let childsIds = await this.userRepository.getChildsIds(userId);
 
     //return empty array if childsIds is empty
     if (childsIds.length == 0) {
       return [];
     }
 
-    return await this.playerProfileModel.getManyByUserIds(childsIds);
+    return await this.playerProfileRepository.getManyByUserIds(childsIds);
   }
 
   async getOne(userId, childProfileId): Promise<ReturnPlayerProfileWithUserAndSportsDto> {
@@ -87,11 +87,11 @@ export class ChildProfileService {
 
     //get childProfile
 
-    return await this.playerProfileModel.getOneDetailedById(childProfile.id);
+    return await this.playerProfileRepository.getOneDetailedById(childProfile.id);
   }
 
   private async findRepeated(childId): Promise<boolean> {
-    let repeatedChildProfile = await this.playerProfileModel.getOneByUserId(childId);
+    let repeatedChildProfile = await this.playerProfileRepository.getOneByUserId(childId);
 
     if (repeatedChildProfile) {
       throw new BadRequestException(
@@ -106,7 +106,7 @@ export class ChildProfileService {
     childProfileId: number,
   ): Promise<ReturnPlayerProfileDto> {
     //get childProfile
-    let childProfile = await this.playerProfileModel.getOneById(childProfileId);
+    let childProfile = await this.playerProfileRepository.getOneById(childProfileId);
 
     if (!childProfile) {
       throw new NotFoundException(
@@ -118,7 +118,7 @@ export class ChildProfileService {
     //get current user childs
     // console.log({ userId });
 
-    let childsIds = await this.userModel.getChildsIds(userId);
+    let childsIds = await this.userRepository.getChildsIds(userId);
     // console.log({ childsIds });
 
     childId = childId;

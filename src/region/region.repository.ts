@@ -5,7 +5,7 @@ import { I18nContext } from 'nestjs-i18n';
 import { RegionCreateDto } from './dtos/create.dto';
 
 @Injectable()
-export class RegionModel {
+export class RegionRepository {
   constructor(private prisma: PrismaService) {}
 
   async getAll(): Promise<RegionReturnDto[]> {

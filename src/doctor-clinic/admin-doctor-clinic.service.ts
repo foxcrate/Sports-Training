@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
-import { DoctorClinicModel } from './doctor-clinic.model';
+import { DoctorClinicRepository } from './doctor-clinic.repository';
 import { DoctorClinicBookingDetailsDTO } from './dtos/doctorClinicBookingDetails.dto';
 import { DoctorClinicCreateDto } from './dtos/create.dto';
 import { DoctorClinicReturnDto } from './dtos/return.dto';
@@ -10,21 +10,21 @@ import { DoctorClinicAcceptanceStatusDto } from './dtos/doctor-clinic-acceptance
 @Injectable()
 export class AdminDoctorClinicService {
   constructor(
-    private doctorClinicModel: DoctorClinicModel,
+    private doctorClinicRepository: DoctorClinicRepository,
     private readonly i18n: I18nService,
   ) {}
 
   async getAll(): Promise<DoctorClinicBookingDetailsDTO[]> {
-    return await this.doctorClinicModel.allDoctorClinics();
+    return await this.doctorClinicRepository.allDoctorClinics();
   }
 
   async getOne(id: number): Promise<DoctorClinicBookingDetailsDTO> {
-    return await this.doctorClinicModel.getByID(id);
+    return await this.doctorClinicRepository.getByID(id);
   }
 
   async create(reqBody: DoctorClinicCreateDto): Promise<DoctorClinicReturnDto> {
     // check for repeated name;
-    let repeatedField = await this.doctorClinicModel.getByName(reqBody.name);
+    let repeatedField = await this.doctorClinicRepository.getByName(reqBody.name);
 
     if (repeatedField) {
       throw new BadRequestException(
@@ -36,7 +36,7 @@ export class AdminDoctorClinicService {
 
     reqBody.availableWeekDays = JSON.stringify(reqBody.availableWeekDays);
 
-    return await this.doctorClinicModel.create(reqBody);
+    return await this.doctorClinicRepository.create(reqBody);
   }
 
   async update(
@@ -44,7 +44,7 @@ export class AdminDoctorClinicService {
     reqBody: DoctorClinicUpdateDto,
   ): Promise<DoctorClinicReturnDto> {
     // check for repeated name;
-    let repeatedDoctorClinic = await this.doctorClinicModel.getByName(reqBody.name);
+    let repeatedDoctorClinic = await this.doctorClinicRepository.getByName(reqBody.name);
 
     if (repeatedDoctorClinic && repeatedDoctorClinic.id != id) {
       throw new BadRequestException(
@@ -55,24 +55,25 @@ export class AdminDoctorClinicService {
     }
     reqBody.availableWeekDays = JSON.stringify(reqBody.availableWeekDays);
 
-    return await this.doctorClinicModel.update(id, reqBody);
+    return await this.doctorClinicRepository.update(id, reqBody);
   }
 
   async delete(id: number): Promise<DoctorClinicBookingDetailsDTO> {
     console.log('alo');
 
-    let deletedDoctorClinic = await this.doctorClinicModel.getByID(id);
+    let deletedDoctorClinic = await this.doctorClinicRepository.getByID(id);
     Promise.all([
-      await this.doctorClinicModel.deleteNotAvailableDays(id),
-      await this.doctorClinicModel.deleteRates(id),
-      await this.doctorClinicModel.deleteBookedHours(id),
+      await this.doctorClinicRepository.deleteNotAvailableDays(id),
+      await this.doctorClinicRepository.deleteRates(id),
+      await this.doctorClinicRepository.deleteBookedHours(id),
     ]);
-    await this.doctorClinicModel.deleteByID(id);
+    await this.doctorClinicRepository.deleteByID(id);
     return deletedDoctorClinic;
   }
 
   async getPendingDoctorClinics(): Promise<DoctorClinicBookingDetailsDTO[]> {
-    let pendingDoctorFields = await this.doctorClinicModel.selectPendingDoctorClinics();
+    let pendingDoctorFields =
+      await this.doctorClinicRepository.selectPendingDoctorClinics();
     return pendingDoctorFields;
   }
 
@@ -80,7 +81,7 @@ export class AdminDoctorClinicService {
     doctorClinicId: number,
     newStatus: DoctorClinicAcceptanceStatusDto,
   ): Promise<boolean> {
-    let theDoctorClinic = await this.doctorClinicModel.getByID(doctorClinicId);
+    let theDoctorClinic = await this.doctorClinicRepository.getByID(doctorClinicId);
     if (theDoctorClinic.acceptanceStatus != DoctorClinicAcceptanceStatusDto.Pending) {
       throw new BadRequestException(
         this.i18n.t(`errors.DOCTOR_CLINIC_NOT_PENDING`, {
@@ -88,15 +89,15 @@ export class AdminDoctorClinicService {
         }),
       );
     }
-    return await this.doctorClinicModel.setDoctorClinicAcceptanceStatue(
+    return await this.doctorClinicRepository.setDoctorClinicAcceptanceStatue(
       doctorClinicId,
       newStatus,
     );
   }
 
   async addNotAvailableDays(doctorClinicId: number, datesArray: string[]) {
-    let theDoctorClinic = await this.doctorClinicModel.getByID(doctorClinicId);
-    return await this.doctorClinicModel.insertNotAvailableDays(
+    let theDoctorClinic = await this.doctorClinicRepository.getByID(doctorClinicId);
+    return await this.doctorClinicRepository.insertNotAvailableDays(
       doctorClinicId,
       datesArray,
     );

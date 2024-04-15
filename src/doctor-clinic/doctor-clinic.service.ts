@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { GlobalService } from 'src/global/global.service';
 import { FreeSlots } from './dtos/free-slots.dto';
-import { DoctorClinicModel } from './doctor-clinic.model';
+import { DoctorClinicRepository } from './doctor-clinic.repository';
 import { DoctorClinicBookingDetailsDTO } from './dtos/doctorClinicBookingDetails.dto';
 import { DoctorClinicCreateDto } from './dtos/create.dto';
 import { DoctorClinicReturnDto } from './dtos/return.dto';
@@ -12,17 +12,17 @@ import moment from 'moment-timezone';
 @Injectable()
 export class DoctorClinicService {
   constructor(
-    private doctorClinicModel: DoctorClinicModel,
+    private doctorClinicRepository: DoctorClinicRepository,
     private readonly i18n: I18nService,
     private globalSerice: GlobalService,
   ) {}
 
   async getAll(): Promise<DoctorClinicBookingDetailsDTO[]> {
-    return await this.doctorClinicModel.allDoctorClinics();
+    return await this.doctorClinicRepository.allDoctorClinics();
   }
 
   async getOne(id: number): Promise<DoctorClinicBookingDetailsDTO> {
-    return await this.doctorClinicModel.getByID(id);
+    return await this.doctorClinicRepository.getByID(id);
   }
 
   async create(
@@ -30,7 +30,7 @@ export class DoctorClinicService {
     reqBody: DoctorClinicCreateDto,
   ): Promise<DoctorClinicReturnDto> {
     // check for repeated name;
-    let repeatedDoctorClinc = await this.doctorClinicModel.getByName(reqBody.name);
+    let repeatedDoctorClinc = await this.doctorClinicRepository.getByName(reqBody.name);
 
     if (repeatedDoctorClinc) {
       throw new BadRequestException(
@@ -44,7 +44,7 @@ export class DoctorClinicService {
     reqBody.startTime = this.globalSerice.timeTo24(reqBody.startTime);
     reqBody.endTime = this.globalSerice.timeTo24(reqBody.endTime);
 
-    return await this.doctorClinicModel.createByUser(userId, reqBody);
+    return await this.doctorClinicRepository.createByUser(userId, reqBody);
   }
 
   async update(
@@ -52,7 +52,7 @@ export class DoctorClinicService {
     reqBody: DoctorClinicUpdateDto,
   ): Promise<DoctorClinicReturnDto> {
     // check for repeated name;
-    let repeatedDoctorClinic = await this.doctorClinicModel.getByName(reqBody.name);
+    let repeatedDoctorClinic = await this.doctorClinicRepository.getByName(reqBody.name);
 
     if (repeatedDoctorClinic && repeatedDoctorClinic.id != id) {
       throw new BadRequestException(
@@ -63,23 +63,23 @@ export class DoctorClinicService {
     }
     reqBody.availableWeekDays = JSON.stringify(reqBody.availableWeekDays);
 
-    return await this.doctorClinicModel.update(id, reqBody);
+    return await this.doctorClinicRepository.update(id, reqBody);
   }
 
   async delete(id: number): Promise<DoctorClinicBookingDetailsDTO> {
-    let deletedClinic = await this.doctorClinicModel.getByID(id);
+    let deletedClinic = await this.doctorClinicRepository.getByID(id);
 
     Promise.all([
-      await this.doctorClinicModel.deleteNotAvailableDays(id),
-      await this.doctorClinicModel.deleteRates(id),
-      await this.doctorClinicModel.deleteBookedHours(id),
+      await this.doctorClinicRepository.deleteNotAvailableDays(id),
+      await this.doctorClinicRepository.deleteRates(id),
+      await this.doctorClinicRepository.deleteBookedHours(id),
     ]);
-    await this.doctorClinicModel.deleteByID(id);
+    await this.doctorClinicRepository.deleteByID(id);
     return deletedClinic;
   }
 
   async availableUpcomingWeek(id: number) {
-    let theDoctorClinic = await this.doctorClinicModel.getByID(id);
+    let theDoctorClinic = await this.doctorClinicRepository.getByID(id);
     let availableDays = [];
 
     let endDate = moment().endOf('week');
@@ -117,14 +117,14 @@ export class DoctorClinicService {
     doctorClinicId: number,
     day: string,
   ): Promise<FreeSlots[]> {
-    await this.doctorClinicModel.getByID(doctorClinicId);
+    await this.doctorClinicRepository.getByID(doctorClinicId);
     let dayDate = moment(day);
 
     let dateString = this.globalSerice.getDate(dayDate);
     let dayName = this.globalSerice.getDayName(dayDate);
 
     let theDoctorClinic =
-      await this.doctorClinicModel.doctorClinicBookingDetailsForSpecificDate(
+      await this.doctorClinicRepository.doctorClinicBookingDetailsForSpecificDate(
         doctorClinicId,
         dateString,
       );
@@ -152,7 +152,7 @@ export class DoctorClinicService {
     });
 
     //get user booked hours
-    let userBookedHours = await this.doctorClinicModel.getUserBookedHours(
+    let userBookedHours = await this.doctorClinicRepository.getUserBookedHours(
       userId,
       dateString,
     );
@@ -176,7 +176,7 @@ export class DoctorClinicService {
   }
 
   async reserveSlot(doctorClinicId: number, userId: number, reqBody): Promise<any> {
-    await this.doctorClinicModel.getByID(doctorClinicId);
+    await this.doctorClinicRepository.getByID(doctorClinicId);
     let dayDate = moment(reqBody.dayDate);
     let dateOnly = this.globalSerice.getDate(dayDate);
     let dayTimesArray = reqBody.dayTimes;
@@ -188,7 +188,7 @@ export class DoctorClinicService {
     let dateString = this.globalSerice.getDate(dayDate);
 
     let theDoctorClinic =
-      await this.doctorClinicModel.doctorClinicBookingDetailsForSpecificDate(
+      await this.doctorClinicRepository.doctorClinicBookingDetailsForSpecificDate(
         doctorClinicId,
         dateString,
       );
@@ -220,7 +220,7 @@ export class DoctorClinicService {
     });
 
     //get user booked hours
-    let userBookedHours = await this.doctorClinicModel.getUserBookedHours(
+    let userBookedHours = await this.doctorClinicRepository.getUserBookedHours(
       userId,
       dateOnly,
     );
@@ -255,13 +255,13 @@ export class DoctorClinicService {
       }
 
       let dateTime = `${dateString} ${localDayTimes[i]}`;
-      await this.doctorClinicModel.insertDoctorClinicBookedHour(
+      await this.doctorClinicRepository.insertDoctorClinicBookedHour(
         doctorClinicId,
         userId,
         dateTime,
       );
 
-      let bookedSession = await this.doctorClinicModel.getDoctorClinicBookedHour(
+      let bookedSession = await this.doctorClinicRepository.getDoctorClinicBookedHour(
         doctorClinicId,
         userId,
         dateTime,

@@ -6,15 +6,13 @@ import { ReturnPlayerProfileDto } from './dtos/return.dto';
 import { SportService } from 'src/sport/sport.service';
 import { PlayerProfileCreateDto } from './dtos/create.dto';
 import { ReturnPlayerProfileWithUserAndSportsDto } from './dtos/return-with-user-and-sports.dto';
-import { GlobalService } from 'src/global/global.service';
 import { RegionService } from 'src/region/region.service';
 
 @Injectable()
-export class PlayerProfileModel {
+export class PlayerProfileRepository {
   constructor(
     private prisma: PrismaService,
     private sportService: SportService,
-    private globalService: GlobalService,
     private regionService: RegionService,
   ) {}
 

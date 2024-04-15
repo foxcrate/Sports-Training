@@ -15,7 +15,7 @@ import {
 import { SessionRequestDTO } from './dtos/session-request.dto';
 
 @Injectable()
-export class SessionModel {
+export class SessionRepository {
   constructor(
     private prisma: PrismaService,
     private readonly i18n: I18nService,

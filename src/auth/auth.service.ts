@@ -21,14 +21,14 @@ import { IAuthToken } from './interfaces/auth-token.interface';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { VerifyOtpDto } from './dtos/verify-otp.dto';
 import { CompleteSignupUserDto } from 'src/user/dtos/complete-signup.dto';
-import { UserModel } from 'src/user/user.model';
+import { UserRepository } from 'src/user/user.repository';
 import { USER_TYPES_ENUM } from 'src/global/enums';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
-    private userModel: UserModel,
+    private userRepository: UserRepository,
     private prisma: PrismaService,
     private jwtService: JwtService,
     private config: ConfigService,
@@ -53,22 +53,22 @@ export class AuthService {
 
   async createPassword(userId: number, password: string) {
     let hashedPassword = await this.globalService.hashPassword(password);
-    let theUser = await this.userModel.getById(userId);
+    let theUser = await this.userRepository.getById(userId);
 
-    await this.userModel.updatePassword(userId, hashedPassword);
+    await this.userRepository.updatePassword(userId, hashedPassword);
 
-    let updatedUser = await this.userModel.getById(theUser.id);
+    let updatedUser = await this.userRepository.getById(theUser.id);
 
     return updatedUser;
   }
 
   async changePassword(userId: number, password: string) {
     let hashedPassword = await this.globalService.hashPassword(password);
-    let theUser = await this.userModel.getById(userId);
+    let theUser = await this.userRepository.getById(userId);
 
-    await this.userModel.updatePassword(userId, hashedPassword);
+    await this.userRepository.updatePassword(userId, hashedPassword);
 
-    let updatedUser = await this.userModel.getById(theUser.id);
+    let updatedUser = await this.userRepository.getById(theUser.id);
 
     return updatedUser;
   }
@@ -101,7 +101,7 @@ export class AuthService {
   }
 
   async sendMobileOtp(mobileNumber: string) {
-    let theUser = await this.userModel.getByMobileNumber(mobileNumber);
+    let theUser = await this.userRepository.getByMobileNumber(mobileNumber);
     if (!theUser) {
       throw new NotFoundException(
         this.i18n.t(`errors.USER_NOT_FOUND`, { lang: I18nContext.current().lang }),
@@ -141,14 +141,14 @@ export class AuthService {
     await this.deletePastOTP(data.mobileNumber);
 
     //return token to user
-    return await this.userModel.updateMobile(userId, data.mobileNumber);
+    return await this.userRepository.updateMobile(userId, data.mobileNumber);
   }
 
   async verifyMobileOtp(data: VerifyOtpDto, req) {
     //throw error if not passed
     await this.checkSavedOTP(data.mobileNumber, data.otp);
 
-    let theUser = await this.userModel.getByMobileNumber(data.mobileNumber);
+    let theUser = await this.userRepository.getByMobileNumber(data.mobileNumber);
 
     if (!theUser) {
       throw new NotFoundException(
@@ -173,7 +173,7 @@ export class AuthService {
     await this.deletePastOTP(data.mobileNumber);
 
     //return token to user
-    let user = await this.userModel.getByMobileNumber(data.mobileNumber);
+    let user = await this.userRepository.getByMobileNumber(data.mobileNumber);
     return await this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id, req);
   }
 
@@ -319,7 +319,7 @@ export class AuthService {
       tokenType: 'refresh',
     };
 
-    let userMetaData = await this.userModel.getUserMetaData(payload.id);
+    let userMetaData = await this.userRepository.getUserMetaData(payload.id);
 
     let userRoles = [];
 
@@ -363,7 +363,7 @@ export class AuthService {
       tokenType: 'refresh',
     };
 
-    let userMetaData = await this.userModel.getUserMetaData(authId);
+    let userMetaData = await this.userRepository.getUserMetaData(authId);
     let userRoles = [];
 
     if (userMetaData.playerProfileId) {

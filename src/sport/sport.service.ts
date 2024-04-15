@@ -2,28 +2,28 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { CreateSportDto } from './dtos/create.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { ReturnSportDto } from './dtos/return.dto';
-import { SportModel } from './sport.model';
+import { SportRepository } from './sport.repository';
 
 @Injectable()
 export class SportService {
   constructor(
-    private sportModel: SportModel,
+    private SportRepository: SportRepository,
     private readonly i18n: I18nService,
   ) {}
   async create(createData: CreateSportDto): Promise<ReturnSportDto> {
     await this.findRepeated(createData.name_en);
 
-    let newSport = await this.sportModel.create(createData);
+    let newSport = await this.SportRepository.create(createData);
     return newSport[0];
   }
 
   async getAll(): Promise<ReturnSportDto[]> {
-    let allSports: ReturnSportDto[] = await this.sportModel.getAll();
+    let allSports: ReturnSportDto[] = await this.SportRepository.getAll();
     return allSports;
   }
 
   async findRepeated(name: string): Promise<boolean> {
-    let repeatedSport = await this.sportModel.findByName(name);
+    let repeatedSport = await this.SportRepository.findByName(name);
 
     if (repeatedSport[0]) {
       throw new BadRequestException(
@@ -35,7 +35,7 @@ export class SportService {
 
   async checkExistance(sportsIdsArray: number[]): Promise<boolean> {
     let foundedSports: Array<ReturnSportDto> =
-      await this.sportModel.findByIds(sportsIdsArray);
+      await this.SportRepository.findByIds(sportsIdsArray);
 
     if (foundedSports.length < sportsIdsArray.length) {
       throw new NotFoundException(

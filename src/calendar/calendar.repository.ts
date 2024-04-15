@@ -7,7 +7,7 @@ import { DatesCountResultDto } from './dto/dates-count-result.dto';
 import { CALENDAR_TYPES_ENUM } from './dto/calendar-types.enum';
 
 @Injectable()
-export class CalendarModel {
+export class CalendarRepository {
   constructor(
     private prisma: PrismaService,
     private globalService: GlobalService,

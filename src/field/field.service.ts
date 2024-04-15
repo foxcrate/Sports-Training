@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { GlobalService } from 'src/global/global.service';
-import { FieldModel } from './field.model';
+import { FieldRepository } from './field.repository';
 import { FieldCreateDto } from './dtos/create.dto';
 import { FieldUpdateDto } from './dtos/update.dto';
 import { FieldBookingDetailsDTO } from './dtos/fieldBookingDetails.dto';
@@ -12,22 +12,22 @@ import moment from 'moment-timezone';
 @Injectable()
 export class FieldService {
   constructor(
-    private fieldModel: FieldModel,
+    private fieldRepository: FieldRepository,
     private readonly i18n: I18nService,
     private globalSerice: GlobalService,
   ) {}
 
   async getAll(): Promise<FieldBookingDetailsDTO[]> {
-    return this.fieldModel.allFields();
+    return this.fieldRepository.allFields();
   }
 
   async getOne(id: number): Promise<FieldBookingDetailsDTO> {
-    return this.fieldModel.getByID(id);
+    return this.fieldRepository.getByID(id);
   }
 
   async create(userId: number, reqBody: FieldCreateDto): Promise<FieldReturnDto> {
     // check for repeated name;
-    let repeatedField = await this.fieldModel.getByName(reqBody.name);
+    let repeatedField = await this.fieldRepository.getByName(reqBody.name);
 
     if (repeatedField) {
       throw new BadRequestException(
@@ -39,12 +39,12 @@ export class FieldService {
     reqBody.startTime = this.globalSerice.timeTo24(reqBody.startTime);
     reqBody.endTime = this.globalSerice.timeTo24(reqBody.endTime);
 
-    return await this.fieldModel.createByUser(userId, reqBody);
+    return await this.fieldRepository.createByUser(userId, reqBody);
   }
 
   async update(id: number, reqBody: FieldUpdateDto): Promise<FieldReturnDto> {
     // check for repeated name;
-    let repeatedField = await this.fieldModel.getByName(reqBody.name);
+    let repeatedField = await this.fieldRepository.getByName(reqBody.name);
 
     if (repeatedField && repeatedField.id == id) {
       throw new BadRequestException(
@@ -53,26 +53,26 @@ export class FieldService {
     }
     reqBody.availableWeekDays = JSON.stringify(reqBody.availableWeekDays);
 
-    return await this.fieldModel.update(id, reqBody);
+    return await this.fieldRepository.update(id, reqBody);
   }
 
   async delete(id: number): Promise<FieldBookingDetailsDTO> {
-    let deletedField = await this.fieldModel.getByID(id);
+    let deletedField = await this.fieldRepository.getByID(id);
 
     Promise.all([
-      await this.fieldModel.deleteSlots(id),
-      await this.fieldModel.deleteRates(id),
-      await this.fieldModel.deleteNotAvailableDays(id),
-      await this.fieldModel.deleteBookedHours(id),
-      await this.fieldModel.deleteTrainerProfileFields(id),
+      await this.fieldRepository.deleteSlots(id),
+      await this.fieldRepository.deleteRates(id),
+      await this.fieldRepository.deleteNotAvailableDays(id),
+      await this.fieldRepository.deleteBookedHours(id),
+      await this.fieldRepository.deleteTrainerProfileFields(id),
     ]);
 
-    this.fieldModel.deleteByID(id);
+    this.fieldRepository.deleteByID(id);
     return deletedField;
   }
 
   async availableUpcomingWeek(id: number) {
-    let theField = await this.fieldModel.getByID(id);
+    let theField = await this.fieldRepository.getByID(id);
     let availableDays = [];
 
     let endDate = moment().endOf('week');
@@ -108,13 +108,13 @@ export class FieldService {
     fieldId: number,
     day: string,
   ): Promise<FreeSlots[]> {
-    await this.fieldModel.getByID(fieldId);
+    await this.fieldRepository.getByID(fieldId);
     let dayDate = moment(day);
 
     let dateString = this.globalSerice.getDate(dayDate);
     let dayName = this.globalSerice.getDayName(dayDate);
 
-    let theField = await this.fieldModel.fieldBookingDetailsForSpecificDate(
+    let theField = await this.fieldRepository.fieldBookingDetailsForSpecificDate(
       fieldId,
       dateString,
     );
@@ -139,7 +139,10 @@ export class FieldService {
     // console.log({ mappedFieldBookedHours });
 
     //get user booked hours
-    let userBookedHours = await this.fieldModel.getUserBookedHours(userId, dateString);
+    let userBookedHours = await this.fieldRepository.getUserBookedHours(
+      userId,
+      dateString,
+    );
 
     if (userBookedHours) {
       let mappedUserBookedHours = userBookedHours.map((i) => {
@@ -160,7 +163,7 @@ export class FieldService {
   }
 
   async reserveSlot(fieldId: number, userId: number, reqBody): Promise<any> {
-    await this.fieldModel.getByID(fieldId);
+    await this.fieldRepository.getByID(fieldId);
     let dayDate = moment(reqBody.dayDate);
     let dateOnly = this.globalSerice.getDate(dayDate);
     let dayTimesArray = reqBody.dayTimes;
@@ -171,7 +174,7 @@ export class FieldService {
 
     let dateString = this.globalSerice.getDate(dayDate);
 
-    let theField = await this.fieldModel.fieldBookingDetailsForSpecificDate(
+    let theField = await this.fieldRepository.fieldBookingDetailsForSpecificDate(
       fieldId,
       dateString,
     );
@@ -198,7 +201,7 @@ export class FieldService {
     });
 
     //get user booked hours
-    let userBookedHours = await this.fieldModel.getUserBookedHours(userId, dateOnly);
+    let userBookedHours = await this.fieldRepository.getUserBookedHours(userId, dateOnly);
 
     if (userBookedHours) {
       let mappedUserBookedHours = userBookedHours.map((i) => {
@@ -229,9 +232,9 @@ export class FieldService {
         );
       }
       let dateTime = `${dateString} ${localDayTimes[i]}`;
-      await this.fieldModel.insertFieldBookedHour(fieldId, userId, dateTime);
+      await this.fieldRepository.insertFieldBookedHour(fieldId, userId, dateTime);
 
-      let bookedSession = await this.fieldModel.getFieldBookedHour(
+      let bookedSession = await this.fieldRepository.getFieldBookedHour(
         fieldId,
         userId,
         dateTime,
