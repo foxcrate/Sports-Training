@@ -8,9 +8,11 @@ COPY package*.json ./
 
 RUN pnpm install
 
-RUN pnpm build
-
 COPY . .
+
+RUN npx prisma generate
+
+RUN pnpm build
 
 EXPOSE 3000
 
