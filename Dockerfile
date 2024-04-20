@@ -14,6 +14,6 @@ RUN npx prisma generate
 
 RUN pnpm build
 
-EXPOSE 3000
+EXPOSE 8000
 
 CMD [ "pnpm", "start:prod" ]
