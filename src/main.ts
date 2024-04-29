@@ -23,7 +23,6 @@ async function bootstrap() {
     ),
   });
 
-  console.log(firebaseAdminApp);
   await app.listen(8000);
 
   process.on('beforeExit', async () => {
