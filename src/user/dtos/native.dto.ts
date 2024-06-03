@@ -1,3 +1,6 @@
+import { AvailableRoles } from "src/auth/dtos/available-roles.dto";
+
+
 export class NativeUserDto {
   id: number;
   firstName: string;
@@ -6,6 +9,7 @@ export class NativeUserDto {
   password: string;
   email: string;
   mobileNumber: string;
+  userType: AvailableRoles;
   genderId: number;
   birthday: Date;
   createdAt: Date;

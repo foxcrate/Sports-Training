@@ -264,7 +264,15 @@ export class AuthService {
       );
     }
 
-    return await this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id, req);
+    if(user.userType == AvailableRoles.User){
+      return await this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id, req);
+    }else if(user.userType == AvailableRoles.Admin){
+      return await this.generateNormalAndRefreshJWTToken(AvailableRoles.Admin, user.id, req);
+    }else if(user.userType == AvailableRoles.Child){
+      return await this.generateNormalAndRefreshJWTToken(AvailableRoles.Child, user.id, req);
+    }
+
+    
   }
 
   async childSignin(signinData: SigninUserDto, req): Promise<AuthTokensDTO> {
