@@ -61,9 +61,9 @@ export class HomeModel {
         AND EXISTS (
           SELECT 1
           FROM 
-            trainerProfileSports
+          TrainerProfileSports
           WHERE 
-            trainerProfileSports.trainerProfileId = tp.id AND trainerProfileSports.sportId = ${filters.sport}
+          TrainerProfileSports.trainerProfileId = tp.id AND TrainerProfileSports.sportId = ${filters.sport}
         )`;
     }
     let selectQuery = `${selectSqlPrefix} ${sql} GROUP BY tp.id`;
