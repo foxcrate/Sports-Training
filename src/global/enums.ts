@@ -34,8 +34,8 @@ export enum SESSION_REQUEST_TYPE {
 }
 
 export enum USER_TYPES_ENUM {
-  PLAYER = 'user',
-  TRAINER = 'admin',
+  PLAYER = 'player',
+  TRAINER = 'trainer',
   CHILD = 'child',
 }
 

@@ -11,7 +11,7 @@
     "start": "nest start",
     "dev": "NODE_PORT=3000 nest start --watch",
     "start:dev": "nest start --watch",
-    "start:dev2": "killall -9 node;nest start --watch",
+    "start:local": "killall -9 node;nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main",
     "start:prod2": "killall -9 node;node dist/src/main",
