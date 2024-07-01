@@ -5,6 +5,7 @@ import { PrismaService } from './prisma/prisma.service';
 import admin from 'firebase-admin';
 import { join } from 'path';
 
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const prismaService = app.get(PrismaService);
@@ -15,7 +16,52 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
 
-  const serviceAccount = process.env.FIREBASE_AUTH_FILE;
+
+  // Swagger configuration
+  const config = new DocumentBuilder()
+    .setTitle('Instaplay API')
+    .addBearerAuth()
+    .setDescription(
+      `
+      success response object -> {
+        success: true,
+        statusCode: number,
+        data: any,
+        userRoles: string[],
+        error: null
+      }
+
+      error response object -> {
+        success: false,
+        statusCode: number,
+        data: null,
+        userRoles: null,
+        error: {
+          type: string
+          message: string
+          }
+      }
+
+      - data objects are defined below
+      `,
+    )
+    .setVersion('1')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-docs', app, document, {
+    swaggerOptions: {
+      plugins: [
+        (...args: any[]) => (window as any).HierarchicalTagsPlugin(...args),
+        // This is added by nestjs by default and would be overridden if not included
+        (...args: any[]) => (window as any).SwaggerUIBundle.plugins.DownloadUrl(...args),
+      ],
+      hierarchicalTagSeparator: ':', // This must be a string, as RegExp will not survive being json encoded
+    },
+    customJs: ['https://unpkg.com/swagger-ui-plugin-hierarchical-tags'],
+  });
+  //
+
+  var serviceAccount = process.env.FIREBASE_AUTH_FILE
 
   const firebaseAdminApp = admin.initializeApp({
     credential: admin.credential.cert(
@@ -23,6 +69,7 @@ async function bootstrap() {
     ),
   });
 
+  // console.log(firebaseAdmin)
   await app.listen(8000);
 
   process.on('beforeExit', async () => {
