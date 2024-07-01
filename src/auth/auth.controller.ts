@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  UseGuards,
-  Request,
-  Version,
-  Query,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards, Request, Version } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { SignupValidation } from 'src/user/validations/signup.validation';
@@ -29,11 +20,28 @@ import { CreatePasswordValidation } from './validations/create-password.validait
 import { CompleteSignupValidation } from 'src/user/validations/complete-signup.validation';
 import { AccessTokenValidation } from './validations/access-token.validation';
 import { AppleReturnDataSerializer } from './serializers/apple-return-data.serializer';
+import {
+  ApiBadRequestResponse,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { ReturnUserDto } from 'src/user/dtos/return.dto';
+import { SwaggerErrorResponse } from 'src/global/classes/swagger-error-response';
 
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @ApiBody({
+    type: SignupUserDto,
+  })
+  @ApiCreatedResponse({
+    type: ReturnUserDto,
+  })
+  @ApiBadRequestResponse(new SwaggerErrorResponse('REPEATED_MOBILE_NUMBER').init())
+  @ApiTags('Auth: User Signup')
   @Post('user/signup')
   @Version('1')
   async signup1(@Body(new JoiValidation(SignupValidation)) signupData: SignupUserDto) {

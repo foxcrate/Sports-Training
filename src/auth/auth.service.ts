@@ -23,6 +23,7 @@ import { VerifyOtpDto } from './dtos/verify-otp.dto';
 import { CompleteSignupUserDto } from 'src/user/dtos/complete-signup.dto';
 import { UserRepository } from 'src/user/user.repository';
 import { USER_TYPES_ENUM } from 'src/global/enums';
+import { ReturnUserDto } from 'src/user/dtos/return.dto';
 
 @Injectable()
 export class AuthService {
@@ -36,7 +37,7 @@ export class AuthService {
     private readonly i18n: I18nService,
   ) {}
 
-  async userSignup(signupData: SignupUserDto) {
+  async userSignup(signupData: SignupUserDto): Promise<ReturnUserDto> {
     let repeatedAccount = await this.userService.findRepeated(
       signupData.email,
       signupData.mobileNumber,
@@ -264,15 +265,25 @@ export class AuthService {
       );
     }
 
-    if(user.userType == AvailableRoles.User){
-      return await this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id, req);
-    }else if(user.userType == AvailableRoles.Admin){
-      return await this.generateNormalAndRefreshJWTToken(AvailableRoles.Admin, user.id, req);
-    }else if(user.userType == AvailableRoles.Child){
-      return await this.generateNormalAndRefreshJWTToken(AvailableRoles.Child, user.id, req);
+    if (user.userType == AvailableRoles.User) {
+      return await this.generateNormalAndRefreshJWTToken(
+        AvailableRoles.User,
+        user.id,
+        req,
+      );
+    } else if (user.userType == AvailableRoles.Admin) {
+      return await this.generateNormalAndRefreshJWTToken(
+        AvailableRoles.Admin,
+        user.id,
+        req,
+      );
+    } else if (user.userType == AvailableRoles.Child) {
+      return await this.generateNormalAndRefreshJWTToken(
+        AvailableRoles.Child,
+        user.id,
+        req,
+      );
     }
-
-    
   }
 
   async childSignin(signinData: SigninUserDto, req): Promise<AuthTokensDTO> {
