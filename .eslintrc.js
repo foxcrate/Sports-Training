@@ -21,5 +21,11 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'warn',
     'prefer-const': 'off',
     'no-var': 'warn',
+    'prettier/prettier': [
+      'error',
+      {
+        endOfLine: 'auto',
+      },
+    ],
   },
 };
