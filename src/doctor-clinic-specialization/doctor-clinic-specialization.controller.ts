@@ -15,6 +15,16 @@ import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { RoleGuard } from 'src/guards/role.guard';
 import { AddDoctorClinicSpecializationValidation } from './validations/create.validation';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { ReturnDoctorClinicSpecializationDto } from './dtos/retrun.dto';
+import { CreateDoctorClinicSpecializationDto } from './dtos/create.dto';
+import { SwaggerErrorResponse } from 'src/global/classes/swagger-error-response';
 
 @Controller('doctor-clinic-specialization')
 export class DoctorClinicSpecializationController {
@@ -22,6 +32,13 @@ export class DoctorClinicSpecializationController {
     private doctorClinicSpecializationService: DoctorClinicSpecializationService,
   ) {}
 
+  @ApiCreatedResponse({
+    type: ReturnDoctorClinicSpecializationDto,
+    isArray: true,
+  })
+  @ApiTags('Doctor-Clinic Specialization: Get All')
+  @ApiBearerAuth()
+  //
   @Get()
   @Version('1')
   @Roles('user')
@@ -30,6 +47,18 @@ export class DoctorClinicSpecializationController {
     return await this.doctorClinicSpecializationService.getAll();
   }
 
+  @ApiBody({
+    type: CreateDoctorClinicSpecializationDto,
+  })
+  @ApiCreatedResponse({
+    type: ReturnDoctorClinicSpecializationDto,
+  })
+  @ApiBadRequestResponse(
+    new SwaggerErrorResponse('REPEATED_DOCTOR_CLINIC_SPECIALIZATION').init(),
+  )
+  @ApiTags('Doctor-Clinic Specialization: Create')
+  @ApiBearerAuth()
+  //
   @Post()
   @Version('1')
   @Roles('user')

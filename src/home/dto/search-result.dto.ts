@@ -13,7 +13,7 @@ export interface SearchResultDto {
   sport: string | null;
 }
 
-export interface SearchResultsDto {
+export class SearchResultsDto {
   searchResults: SearchResultDto[];
   count: number;
 }

@@ -21,6 +21,18 @@ import { AddScheduleValidation } from './validations/create.validation';
 import { UserId } from 'src/decorators/user-id.decorator';
 import { TrainerScheduleRepository } from './trainer-schedule.repository';
 import { TrainerProfileRepository } from 'src/trainer-profile/trainer-profile.repository';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
+import { ScheduleSlotsDetailsDTO } from './dtos/schedule-slots-details';
+import { SwaggerErrorResponse } from 'src/global/classes/swagger-error-response';
+import { ScheduleWithSlotsCreateDto } from './dtos/schedule-with-slots-create.dto';
 
 @Controller('trainer-schedule')
 export class TrainerScheduleController {
@@ -30,6 +42,13 @@ export class TrainerScheduleController {
     private trainerProfileRepository: TrainerProfileRepository,
   ) {}
 
+  @ApiCreatedResponse({
+    type: ScheduleSlotsDetailsDTO,
+    isArray: true,
+  })
+  @ApiTags('Trainer-Schedule: Get All')
+  @ApiBearerAuth()
+  //
   @Get()
   @Version('1')
   @Roles('user')
@@ -38,6 +57,16 @@ export class TrainerScheduleController {
     return await this.scheduleService.getAll(userId);
   }
 
+  @ApiBody({
+    type: ScheduleWithSlotsCreateDto,
+  })
+  @ApiCreatedResponse({
+    type: ScheduleSlotsDetailsDTO,
+  })
+  @ApiBadRequestResponse(new SwaggerErrorResponse('TRAINER_ALREADY_HAS_SCHEDULE').init())
+  @ApiTags('Trainer-Schedule: Create')
+  @ApiBearerAuth()
+  //
   @Post()
   @Version('1')
   @Roles('user')
@@ -49,6 +78,19 @@ export class TrainerScheduleController {
     return await this.scheduleService.create(req['timezone'], req['id'], reqBody);
   }
 
+  @ApiParam({
+    name: 'id',
+  })
+  @ApiBody({
+    type: ScheduleWithSlotsCreateDto,
+  })
+  @ApiCreatedResponse({
+    type: ScheduleSlotsDetailsDTO,
+  })
+  @ApiForbiddenResponse(new SwaggerErrorResponse('NOT_ALLOWED').init())
+  @ApiTags('Trainer-Schedule: Update')
+  @ApiBearerAuth()
+  //
   @Put('/:id')
   @Version('1')
   @Roles('user')
@@ -80,6 +122,16 @@ export class TrainerScheduleController {
     );
   }
 
+  @ApiParam({
+    name: 'id',
+  })
+  @ApiCreatedResponse({
+    type: ScheduleSlotsDetailsDTO,
+  })
+  @ApiForbiddenResponse(new SwaggerErrorResponse('NOT_ALLOWED').init())
+  @ApiTags('Trainer-Schedule: Delete')
+  @ApiBearerAuth()
+  //
   @Delete('/:id')
   @Version('1')
   @Roles('user')
@@ -100,6 +152,16 @@ export class TrainerScheduleController {
     return await this.scheduleService.delete(req['timezone'], req['id'], params.id);
   }
 
+  @ApiParam({
+    name: 'id',
+  })
+  @ApiCreatedResponse({
+    type: ScheduleSlotsDetailsDTO,
+  })
+  @ApiForbiddenResponse(new SwaggerErrorResponse('NOT_ALLOWED').init())
+  @ApiTags('Trainer-Schedule: Get One')
+  @ApiBearerAuth()
+  //
   @Get('/:id')
   @Version('1')
   @Roles('user')

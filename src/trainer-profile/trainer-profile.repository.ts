@@ -291,7 +291,7 @@ export class TrainerProfileRepository {
   async create(
     createData: TrainerProfileCreateDto,
     userId,
-  ): Promise<ReturnTrainerProfileDto> {
+  ): Promise<ReturnTrainerProfileDetailsDto> {
     // validate age group existance
     if (createData.ageGroupId) {
       await this.globalRepository.getOneAgeGroup(createData.ageGroupId);

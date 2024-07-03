@@ -34,7 +34,7 @@ export class AdminDoctorClinicService {
       );
     }
 
-    reqBody.availableWeekDays = JSON.stringify(reqBody.availableWeekDays);
+    // reqBody.availableWeekDays = JSON.stringify(reqBody.availableWeekDays);
 
     return await this.doctorClinicRepository.create(reqBody);
   }

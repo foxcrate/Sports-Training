@@ -37,7 +37,7 @@ export class DoctorClinicSpecializationRepository {
     return newDoctorClinicSpecialization[0];
   }
 
-  async getAll() {
+  async getAll(): Promise<ReturnDoctorClinicSpecializationDto[]> {
     let allDoctorClinicSpecialization: ReturnDoctorClinicSpecializationDto[] = await this
       .prisma.$queryRaw`
     SELECT

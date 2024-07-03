@@ -44,7 +44,7 @@ export class UserService {
     return await this.userRepository.getById(theUser.id);
   }
 
-  async update(reqBody, userId) {
+  async update(reqBody, userId): Promise<ReturnUserDto> {
     let user = await this.userRepository.getById(userId);
 
     //update
