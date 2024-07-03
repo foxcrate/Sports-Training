@@ -87,6 +87,14 @@ export class AuthController {
   //   return await this.authService.sendMobileOtp(sendOTPData.mobileNumber);
   // }
 
+  @ApiBody({
+    type: CreatePasswordDto,
+  })
+  @ApiCreatedResponse({
+    type: ReturnUserDto,
+  })
+  @ApiTags('Auth: Create Password')
+  //
   @Post('user/create-password')
   @Version('1')
   @Roles('user')
@@ -99,6 +107,14 @@ export class AuthController {
     return await this.authService.createPassword(req['id'], createPasswordData.password);
   }
 
+  @ApiBody({
+    type: CreatePasswordDto,
+  })
+  @ApiCreatedResponse({
+    type: ReturnUserDto,
+  })
+  @ApiTags('Auth: Change Password')
+  //
   @Post('user/change-password')
   @Version('1')
   @Roles('user')
