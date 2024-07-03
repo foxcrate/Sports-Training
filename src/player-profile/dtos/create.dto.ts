@@ -1,6 +1,10 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 export class PlayerProfileCreateDto {
+  @ApiProperty()
   levelId: Number;
+  @ApiProperty()
   regionId: Number;
-  userId: Number;
+  @ApiProperty()
   sports: Number[];
 }

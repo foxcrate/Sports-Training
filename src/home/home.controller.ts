@@ -9,6 +9,15 @@ import { SearchFiltersValidation } from './validations/search-filters.validation
 import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 import { SearchResultsDto } from './dto/search-result.dto';
 import { PaginationTransformPipe } from 'src/pipes/pagination-transform.pipe';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
+import { SwaggerErrorResponse } from 'src/global/classes/swagger-error-response';
 
 // @Roles(AvailableRoles.User)
 // @UseGuards(AuthGuard, RoleGuard)
@@ -17,6 +26,16 @@ import { PaginationTransformPipe } from 'src/pipes/pagination-transform.pipe';
 export class HomeController {
   constructor(private homeService: HomeService) {}
 
+  @ApiBody({
+    type: SearchFiltersDto,
+  })
+  @ApiCreatedResponse({
+    type: SearchResultsDto,
+  })
+  @ApiBadRequestResponse(new SwaggerErrorResponse('WRONG_FILTER_TYPE').init())
+  @ApiTags('Home: Search')
+  @ApiBearerAuth()
+  //
   @Post('search')
   @Version('1')
   @Roles('user')

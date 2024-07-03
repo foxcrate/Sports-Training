@@ -8,6 +8,8 @@
   "APPLE_TOKEN_ERROR": "Wrong Apple Token",
   "NO_BEARER_TOKEN": "Authorization Bearer token should be provided",
   "JWT_ERROR": "Invalid bearer token",
+  "FIREBASE_TOKEN_ERROR": "Invalid firebase token",
+  "EXPIRED_FIREBASE_TOKEN_ERROR": "Expired Firebase token",
   "NOT_ALLOWED": "You are not allowed to access this resource",
   "UPLOAD_IMAGE_ERROR": "Error in uploading image",
   "SENDING_NOTIFICATION_ERROR": "Error in sending notification",
