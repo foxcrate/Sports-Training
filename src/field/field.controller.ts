@@ -18,11 +18,33 @@ import { AddFieldValidation } from './validations/create.validation';
 import { FieldAvailableHoursValidation } from './validations/field-available-hours.validation';
 import { FieldIdValidation } from './validations/field-id.validaiton';
 import { ReserveSlotValidation } from './validations/reserve-slot.validation';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
+import { FieldBookingDetailsDTO } from './dtos/fieldBookingDetails.dto';
+import { SwaggerErrorResponse } from 'src/global/classes/swagger-error-response';
+import { FreeSlots } from './dtos/free-slots.dto';
+import { FieldCreateDto } from './dtos/create.dto';
+import { FieldReturnDto } from './dtos/return.dto';
+import { ReserveSlotDto } from 'src/doctor-clinic/dtos/reserve-slot.dto';
+import { FieldCardFormatDto } from './dtos/field-card-format.dto';
 
 @Controller('field')
 export class FieldController {
   constructor(private fieldService: FieldService) {}
 
+  @ApiCreatedResponse({
+    type: FieldBookingDetailsDTO,
+    isArray: true,
+  })
+  @ApiTags('Field: Get All')
+  @ApiBearerAuth()
+  //
   @Get()
   @Version('1')
   @Roles('user')
@@ -31,6 +53,22 @@ export class FieldController {
     return await this.fieldService.getAll();
   }
 
+  @ApiParam({
+    name: 'id',
+    required: false,
+  })
+  @ApiParam({
+    name: 'date',
+    required: false,
+  })
+  @ApiCreatedResponse({
+    type: FreeSlots,
+    isArray: true,
+  })
+  @ApiBadRequestResponse(new SwaggerErrorResponse('DAY_NOT_AVAILABLE').init())
+  @ApiTags('Field: Day Available Hours')
+  @ApiBearerAuth()
+  //
   @Get('/:id/day-available-hours/:date')
   @Version('1')
   @Roles('user')
@@ -46,6 +84,17 @@ export class FieldController {
     );
   }
 
+  @ApiParam({
+    name: 'id',
+  })
+  @ApiCreatedResponse({
+    type: String,
+    isArray: true,
+  })
+  @ApiBadRequestResponse(new SwaggerErrorResponse('DAY_NOT_AVAILABLE').init())
+  @ApiTags('Field: Available Upcoming Week')
+  @ApiBearerAuth()
+  //
   @Get('/:id/available-upcoming-week')
   @Version('1')
   @Roles('user')
@@ -54,6 +103,16 @@ export class FieldController {
     return await this.fieldService.availableUpcomingWeek(params.id);
   }
 
+  @ApiBody({
+    type: FieldCreateDto,
+  })
+  @ApiCreatedResponse({
+    type: FieldReturnDto,
+  })
+  @ApiBadRequestResponse(new SwaggerErrorResponse('REPEATED_FIELD').init())
+  @ApiTags('Field: Create')
+  @ApiBearerAuth()
+  //
   @Post()
   @Version('1')
   @Roles('user')
@@ -65,6 +124,19 @@ export class FieldController {
     return await this.fieldService.create(req['id'], reqBody);
   }
 
+  @ApiParam({
+    name: 'id',
+  })
+  @ApiBody({
+    type: ReserveSlotDto,
+  })
+  @ApiCreatedResponse({
+    type: FieldCardFormatDto,
+  })
+  @ApiBadRequestResponse(new SwaggerErrorResponse('DAY_NOT_AVAILABLE').init())
+  @ApiTags('Field: Reserve Slot')
+  @ApiBearerAuth()
+  //
   @Post('/:id/reserve-slot')
   @Version('1')
   @Roles('user')
@@ -77,6 +149,15 @@ export class FieldController {
     return await this.fieldService.reserveSlot(params.id, req['id'], reqBody);
   }
 
+  @ApiParam({
+    name: 'id',
+  })
+  @ApiCreatedResponse({
+    type: FieldBookingDetailsDTO,
+  })
+  @ApiTags('Field: Get One')
+  @ApiBearerAuth()
+  //
   @Get('/:id')
   @Version('1')
   @Roles('user')

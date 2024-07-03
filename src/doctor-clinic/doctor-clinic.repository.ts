@@ -10,6 +10,7 @@ import { Prisma } from '@prisma/client';
 import { DoctorClinicAcceptanceStatusDto } from './dtos/doctor-clinic-acceptance-status.dto';
 import { DoctorClinicUpdateDto } from './dtos/update.dto';
 import moment from 'moment-timezone';
+import { CardFormatDto } from './dtos/card-format.dto';
 
 @Injectable()
 export class DoctorClinicRepository {
@@ -415,7 +416,7 @@ export class DoctorClinicRepository {
           ${DoctorClinicAcceptanceStatusDto.Accepted},
           ${reqBody.regionId},
           ${reqBody.doctorClinicSpecializationId},
-          ${reqBody.availableWeekDays},
+          ${JSON.stringify(reqBody.availableWeekDays)},
           ${{ from: reqBody.startTime, to: reqBody.endTime }}
         );`,
         this.prisma.$queryRaw`
@@ -468,7 +469,7 @@ export class DoctorClinicRepository {
           ${reqBody.profileImage},
           ${reqBody.regionId},
           ${reqBody.doctorClinicSpecializationId},
-          ${reqBody.availableWeekDays},
+          ${JSON.stringify(reqBody.availableWeekDays)},
           ${{ from: reqBody.startTime, to: reqBody.endTime }},
           ${userId}
         );`,
@@ -720,7 +721,7 @@ export class DoctorClinicRepository {
     doctorClinicId: number,
     userId: number,
     dateTime: string,
-  ) {
+  ): Promise<CardFormatDto> {
     let formatedDateTime = moment(dateTime).format('YYYY-MM-DD HH:mm:ss');
 
     let bookedSession = await this.prisma.$queryRaw`

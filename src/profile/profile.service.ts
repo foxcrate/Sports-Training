@@ -11,7 +11,7 @@ export class ProfileService {
     private globalService: GlobalService,
   ) {}
 
-  private formatUserProfiles(userProfilesEntity): GetProfilesResultDto {
+  private formatUserProfiles(userProfilesEntity): GetProfilesResultDto[] {
     const parsedChildren = userProfilesEntity?.children
       ? this.globalService.safeParse(userProfilesEntity?.children)
       : null;
@@ -38,7 +38,7 @@ export class ProfileService {
     userId: number,
     type: PROFILE_TYPES_ENUM,
     childId: number,
-  ): Promise<GetProfilesResultDto> {
+  ): Promise<GetProfilesResultDto[]> {
     const result = await this.profileRepository.getUserProfiles(userId, type, childId);
     return this.formatUserProfiles(Array.isArray(result) ? result[0] : []);
   }

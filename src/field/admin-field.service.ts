@@ -32,7 +32,7 @@ export class AdminFieldService {
       );
     }
 
-    reqBody.availableWeekDays = JSON.stringify(reqBody.availableWeekDays);
+    // reqBody.availableWeekDays = JSON.stringify(reqBody.availableWeekDays);
 
     return await this.fieldRepository.create(reqBody);
   }

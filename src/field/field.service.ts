@@ -8,6 +8,7 @@ import { FieldBookingDetailsDTO } from './dtos/fieldBookingDetails.dto';
 import { FieldReturnDto } from './dtos/return.dto';
 import { FreeSlots } from './dtos/free-slots.dto';
 import moment from 'moment-timezone';
+import { FieldCardFormatDto } from './dtos/field-card-format.dto';
 
 @Injectable()
 export class FieldService {
@@ -35,7 +36,7 @@ export class FieldService {
       );
     }
 
-    reqBody.availableWeekDays = JSON.stringify(reqBody.availableWeekDays);
+    // reqBody.availableWeekDays = JSON.stringify(reqBody.availableWeekDays);
     reqBody.startTime = this.globalSerice.timeTo24(reqBody.startTime);
     reqBody.endTime = this.globalSerice.timeTo24(reqBody.endTime);
 
@@ -162,7 +163,11 @@ export class FieldService {
     return availableHours;
   }
 
-  async reserveSlot(fieldId: number, userId: number, reqBody): Promise<any> {
+  async reserveSlot(
+    fieldId: number,
+    userId: number,
+    reqBody,
+  ): Promise<FieldCardFormatDto> {
     await this.fieldRepository.getByID(fieldId);
     let dayDate = moment(reqBody.dayDate);
     let dateOnly = this.globalSerice.getDate(dayDate);
