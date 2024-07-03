@@ -1,4 +1,5 @@
 import DateExtension from '@joi/date';
+import { ApiProperty } from '@nestjs/swagger';
 import * as JoiImport from 'joi';
 const Joi = JoiImport.extend(DateExtension);
 

@@ -30,6 +30,7 @@ import { TrainerProfileRepository } from 'src/trainer-profile/trainer-profile.re
 import { NotificationRepository } from 'src/notification/notification.repository';
 import { RequestSlotChangeDto } from './dtos/request-slot-change.dto';
 import { TrainerScheduleRepository } from 'src/trainer-schedule/trainer-schedule.repository';
+import { PendingSessionDTO } from './dtos/pending-session.dto';
 
 @Injectable()
 export class SessionService {
@@ -118,7 +119,7 @@ export class SessionService {
     return this.formatCancellingReasons(cancellingReasons);
   }
 
-  async getPendingSessions(userId: number) {
+  async getPendingSessions(userId: number): Promise<PendingSessionDTO[]> {
     // return await this.globalModel.getOneAgeGroup(1);
     let trainerProfile = await this.trainerProfileRepository.getByUserId(userId);
     return await this.sessionRepository.getPendingSessions(trainerProfile.id);

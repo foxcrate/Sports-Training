@@ -8,6 +8,7 @@ import { DoctorClinicCreateDto } from './dtos/create.dto';
 import { DoctorClinicReturnDto } from './dtos/return.dto';
 import { DoctorClinicUpdateDto } from './dtos/update.dto';
 import moment from 'moment-timezone';
+import { CardFormatDto } from './dtos/card-format.dto';
 
 @Injectable()
 export class DoctorClinicService {
@@ -40,7 +41,7 @@ export class DoctorClinicService {
       );
     }
 
-    reqBody.availableWeekDays = JSON.stringify(reqBody.availableWeekDays);
+    // reqBody.availableWeekDays = JSON.stringify(reqBody.availableWeekDays);
     reqBody.startTime = this.globalSerice.timeTo24(reqBody.startTime);
     reqBody.endTime = this.globalSerice.timeTo24(reqBody.endTime);
 
@@ -175,7 +176,11 @@ export class DoctorClinicService {
     return availableHours;
   }
 
-  async reserveSlot(doctorClinicId: number, userId: number, reqBody): Promise<any> {
+  async reserveSlot(
+    doctorClinicId: number,
+    userId: number,
+    reqBody,
+  ): Promise<CardFormatDto> {
     await this.doctorClinicRepository.getByID(doctorClinicId);
     let dayDate = moment(reqBody.dayDate);
     let dateOnly = this.globalSerice.getDate(dayDate);

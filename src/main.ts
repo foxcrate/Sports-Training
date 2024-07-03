@@ -3,9 +3,9 @@ import { AppModule } from './app.module.js';
 import { VersioningType } from '@nestjs/common';
 import { PrismaService } from './prisma/prisma.service';
 import admin from 'firebase-admin';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { join } from 'path';
 
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const prismaService = app.get(PrismaService);
@@ -15,7 +15,6 @@ async function bootstrap() {
   app.enableVersioning({
     type: VersioningType.URI,
   });
-
 
   // Swagger configuration
   const config = new DocumentBuilder()
@@ -69,7 +68,7 @@ async function bootstrap() {
     ),
   });
 
-  // console.log(firebaseAdmin)
+  // console.log(firebaseAdminApp);
   await app.listen(8000);
 
   process.on('beforeExit', async () => {

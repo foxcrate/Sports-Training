@@ -13,6 +13,7 @@ import {
   SESSION_REQUEST_STATUSES_ENUM,
 } from 'src/global/enums';
 import { SessionRequestDTO } from './dtos/session-request.dto';
+import { PendingSessionDTO } from './dtos/pending-session.dto';
 
 @Injectable()
 export class SessionRepository {
@@ -292,9 +293,9 @@ export class SessionRepository {
     //
   }
 
-  async getPendingSessions(trainerProfileId: number) {
+  async getPendingSessions(trainerProfileId: number): Promise<PendingSessionDTO[]> {
     let todayDate = moment().format('YYYY-MM-DD');
-    let pendingSessions: any[] = await this.prisma.$queryRaw`
+    let pendingSessions: PendingSessionDTO[] = await this.prisma.$queryRaw`
       SELECT
         SessionRequest.id AS sessionRequestId,  
         SessionRequest.type AS type,  
@@ -361,7 +362,7 @@ export class SessionRepository {
       AND SessionRequest.status = ${SESSION_REQUEST_STATUSES_ENUM.PENDING}
       GROUP BY TrainerBookedSession.id
     `;
-    return pendingSessions.map((session) => {
+    let newPending = pendingSessions.map((session) => {
       session.date = moment(session.date).format('YYYY-MM-DD');
       session.slot.fromTime = moment(`1970-01-01T${session.slot.fromTime}`).format(
         'hh:mm A',
@@ -378,6 +379,8 @@ export class SessionRepository {
       }
       return session;
     });
+
+    return newPending;
   }
 
   async rejectRestOfSameDateSlotRequests(date: string, slotId: number) {

@@ -1,4 +1,9 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 export class VerifyOtpDto {
-  mobileNumber: string;
-  otp: string;
+  @ApiProperty()
+  token: string;
+
+  // @ApiProperty()
+  // otp: string;
 }

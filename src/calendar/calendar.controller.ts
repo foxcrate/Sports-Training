@@ -12,6 +12,18 @@ import { DatesCountResultDto } from './dto/dates-count-result.dto';
 import { SessionsFiltersValidation } from './validations/sessions-filters.validations';
 import { SessionsFiltersDto } from './dto/sessions-filters.dto';
 import { DateSessionsResultDto } from './dto/date-sessions-result.dto';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import { SwaggerErrorResponse } from 'src/global/classes/swagger-error-response';
+import { CALENDAR_TYPES_ENUM } from './dto/calendar-types.enum';
+import { SESSIONS_STATUSES_ENUM } from 'src/global/enums';
 
 // @Roles(AvailableRoles.User, AvailableRoles.Child)
 // @UseGuards(AuthGuard, RoleGuard)
@@ -20,6 +32,22 @@ import { DateSessionsResultDto } from './dto/date-sessions-result.dto';
 export class CalendarController {
   constructor(private calenderService: CalendarService) {}
 
+  @ApiQuery({
+    name: 'type',
+    enum: CALENDAR_TYPES_ENUM,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+  })
+  @ApiCreatedResponse({
+    type: DatesCountResultDto,
+  })
+  @ApiBadRequestResponse(new SwaggerErrorResponse('WRONG_DATE_FORMAT').init())
+  @ApiTags('Calender: Dates Count')
+  @ApiBearerAuth()
+  //
   @Get('dates-count')
   @Version('1')
   @Roles('user', 'child')
@@ -31,6 +59,36 @@ export class CalendarController {
     return this.calenderService.getDatesCount(userId, filters?.startDate);
   }
 
+  @ApiParam({
+    name: 'type',
+    enum: CALENDAR_TYPES_ENUM,
+    required: false,
+  })
+  @ApiParam({
+    name: 'date',
+    required: false,
+  })
+  @ApiParam({
+    name: 'status',
+    enum: SESSIONS_STATUSES_ENUM,
+    required: false,
+  })
+  @ApiParam({
+    name: 'pageSize',
+    required: false,
+  })
+  @ApiParam({
+    name: 'fieldId',
+    type: Number,
+    required: false,
+  })
+  @ApiCreatedResponse({
+    type: DateSessionsResultDto,
+  })
+  @ApiBadRequestResponse(new SwaggerErrorResponse('WRONG_DATE_FORMAT').init())
+  @ApiTags('Calender: Dates Sessions')
+  @ApiBearerAuth()
+  //
   @Get('date-sessions')
   @Version('1')
   @Roles('user', 'child')
