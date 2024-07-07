@@ -60,7 +60,7 @@ async function bootstrap() {
   });
   //
 
-  var serviceAccount = process.env.FIREBASE_AUTH_FILE
+  var serviceAccount = process.env.FIREBASE_AUTH_FILE;
 
   const firebaseAdminApp = admin.initializeApp({
     credential: admin.credential.cert(

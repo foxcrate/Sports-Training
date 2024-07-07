@@ -186,6 +186,7 @@ model PlayerProfile {
 
   sports PlayerProfileSports[]
   rates  Rate[]
+  packages PlayerProfilePackages[]
 
   userId Int  @unique
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -231,17 +232,19 @@ model TrainerProfile {
 
   fields TrainerProfileFields[]
 
-  userId Int  @unique
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  regionId Int?
-  region   Region? @relation(fields: [regionId], references: [id], onDelete: Cascade)
-
   schedules Schedule[]
 
   notAvailableDays TrainerProfileNotAvailableDays[]
 
   trainerBookedSessions TrainerBookedSession[]
+
+  packages Package[]
+  
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  regionId Int?
+  region   Region? @relation(fields: [regionId], references: [id], onDelete: Cascade)
 
   defaultCancellationTime Int?
 
@@ -503,6 +506,18 @@ model SessionRequest {
   updatedAt DateTime @default(now())
 }
 
+model PackageRequest {
+  id Int @id @default(autoincrement())
+
+  package   Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  packageId Int                  @unique
+
+  status SessionRequestStatus @default(pending)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
 model CancellationReasons {
   id   Int     @id @default(autoincrement())
   name String?
@@ -560,6 +575,7 @@ model Field {
   rates             Rate[]
 
   slots Slot[]
+  packages  Package[]
 
   addedByUserId Int?
   addedByUser   User? @relation(fields: [addedByUserId], references: [id], onDelete: SetNull)
@@ -674,6 +690,46 @@ model DoctorClinic {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+}
+
+model Package {
+  id                Int              @id @default(autoincrement())
+
+  name              String
+  description       String?
+  numberOfSessions              Int?
+  maxAttendees              Int?
+  minAttendees              Int?
+  price              Int?
+  ExpirationDate  DateTime @db.Date
+
+  field   Field? @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  fieldId Int?
+
+  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
+  trainerProfileId Int
+
+  packageRequests  PackageRequest[]
+
+  playerProfiles PlayerProfilePackages[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model PlayerProfilePackages {
+  id Int @id @default(autoincrement())
+
+  playerProfile   PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  playerProfileId Int
+
+  package   Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  packageId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@unique([playerProfileId, packageId])
 }
 
 model DoctorClinicSpecialization {
