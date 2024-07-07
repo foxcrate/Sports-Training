@@ -31,6 +31,7 @@ import { ProfileModule } from './profile/profile.module.js';
 import { SessionModule } from './session/session.module.js';
 import { NotificationModule } from './notification/notification.module.js';
 import { PrismaService } from './prisma/prisma.service.js';
+import { PackagesModule } from './packages/packages.module';
 
 (async () => {
   const adminjsPrisma = await import('@adminjs/prisma');
@@ -484,6 +485,7 @@ const authenticate = async (email: string, password: string) => {
     ProfileModule,
     SessionModule,
     NotificationModule,
+    PackagesModule,
   ],
   controllers: [AppController],
   providers: [
