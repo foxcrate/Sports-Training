@@ -20,13 +20,22 @@ export class TrainerProfileCreateDto {
   @ApiProperty()
   regionId: number;
 
-  @ApiProperty()
+  @ApiProperty({
+    type: Number,
+    isArray: true,
+  })
   sports: number[];
 
-  @ApiProperty()
+  @ApiProperty({
+    type: Number,
+    isArray: true,
+  })
   fields: number[];
 
-  @ApiProperty()
+  @ApiProperty({
+    type: String,
+    isArray: true,
+  })
   images: String[];
 
   @ApiProperty({

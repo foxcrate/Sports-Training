@@ -1,9 +1,14 @@
 import { Controller, Get, Post } from '@nestjs/common';
 import { AppService } from './app.service';
+import { UserService } from './user/user.service';
+import { ConfigService } from 'aws-sdk';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(
+    private readonly appService: AppService,
+    private userService: UserService,
+  ) {}
 
   @Get()
   getHello(): string {
@@ -12,6 +17,10 @@ export class AppController {
 
   @Get('/test')
   async test() {
-    return 'test route';
+    let x = await this.userService.getAll();
+    let y = process.env.DATABASE_URL;
+    console.log('alo2');
+
+    console.log(y);
   }
 }
