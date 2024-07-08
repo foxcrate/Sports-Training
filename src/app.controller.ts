@@ -17,7 +17,7 @@ export class AppController {
 
   @Get('/test')
   async test() {
-    let x = await this.userService.getAll();
+    // let x = await this.userService.getAll();
     let y = process.env.DATABASE_URL;
     console.log('alo2');
 

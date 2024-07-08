@@ -26,10 +26,11 @@ export class PackageService {
   }
 
   async GetOne(packageId: number, userId: number): Promise<PackageReturnDto> {
+    await this.authorizeResource(packageId, userId);
     return await this.packageRepository.getOneById(packageId);
   }
 
-  private async authorizeResource(userId: number, packageId: number): Promise<any> {
+  private async authorizeResource(packageId: number, userId: number): Promise<any> {
     //get pacakge
     let thePackage = await this.packageRepository.getOneById(packageId);
     if (!thePackage) {
@@ -38,13 +39,13 @@ export class PackageService {
       );
     }
 
-    // let currentUserTrainerProfile =
-    //   await this.trainerProfileRepository.getByUserId(userId);
-    // if (thePackage.trainerProfileId != currentUserTrainerProfile.id) {
-    //   throw new ForbiddenException(
-    //     this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
-    //   );
-    // }
-    // return pacakge;
+    let currentUserTrainerProfile =
+      await this.trainerProfileRepository.getByUserId(userId);
+    if (thePackage.trainerProfileId != currentUserTrainerProfile.id) {
+      throw new ForbiddenException(
+        this.i18n.t(`errors.NOT_ALLOWED`, { lang: I18nContext.current().lang }),
+      );
+    }
+    return true;
   }
 }

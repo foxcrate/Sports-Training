@@ -187,55 +187,6 @@ export class AuthService {
     return await this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id, req);
   }
 
-  // private async saveOTP(mobileNumber: string, otp: string) {
-  //   let foundedNumber = await this.prisma.$queryRaw`
-  //     SELECT *
-  //     FROM OTP
-  //     WHERE mobileNumber = ${mobileNumber}
-  //   `;
-
-  //   if (foundedNumber[0]) {
-  //     await this.prisma.$queryRaw`
-  //     UPDATE OTP
-  //     SET
-  //     otp = ${otp}
-  //     WHERE
-  //     mobileNumber = ${mobileNumber}
-  //   `;
-  //   } else {
-  //     await this.prisma.$queryRaw`
-  //     INSERT INTO OTP
-  //     (
-  //       mobileNumber,
-  //       OTP
-  //     )
-  //     VALUES
-  //     (
-  //       ${mobileNumber},
-  //       ${otp}
-  //     )`;
-  //   }
-  // }
-
-  // private async checkSavedOTP(mobileNumber: string, otp: string): Promise<any> {
-  //   let obj = await this.prisma.$queryRaw`
-  //     SELECT
-  //     *
-  //     FROM OTP
-  //     WHERE
-  //     mobileNumber = ${mobileNumber}
-  //   `;
-
-  //   if (!obj[0] || obj[0].otp != otp) {
-  //     await this.deletePastOTP(mobileNumber);
-  //     throw new NotFoundException(
-  //       this.i18n.t(`errors.WRONG_OTP`, { lang: I18nContext.current().lang }),
-  //     );
-  //   }
-
-  //   return true;
-  // }
-
   private async checkFirebaseOTP(firebaseToken: string): Promise<string> {
     try {
       // if (userFirebaseId === '01550307033') {
@@ -293,15 +244,6 @@ export class AuthService {
     }
   }
 
-  // private async deletePastOTP(mobileNumber: string): Promise<any> {
-  //   await this.prisma.$queryRaw`
-  //     DELETE
-  //     FROM OTP
-  //     WHERE
-  //     mobileNumber = ${mobileNumber}
-  //   `;
-  // }
-
   private async signupUserAndReturnToken(
     mobileNumber: string,
     req,
@@ -315,7 +257,12 @@ export class AuthService {
   }
 
   async userSignin(signinData: SigninUserDto, req): Promise<AuthTokensDTO> {
+    console.log('alo 1');
+
     const user = await this.userService.findByMobile(signinData.mobileNumber);
+
+    console.log('alo 2');
+    console.log('user: ', user);
 
     if (!user.password) {
       throw new UnauthorizedException(

@@ -29,7 +29,7 @@ export class PackageReturnDto {
   fieldId: number;
 
   @ApiProperty()
-  trainerProfile: number;
+  trainerProfileId: number;
 
   @ApiProperty({
     isArray: true,

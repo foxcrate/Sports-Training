@@ -51,7 +51,7 @@ export class TrainerPackageController {
   @ApiCreatedResponse({
     type: PackageReturnDto,
   })
-  //   @ApiNotFoundResponse(new SwaggerErrorResponse('TRAINER_PROFILE_NOT_FOUND').init())
+  @ApiNotFoundResponse(new SwaggerErrorResponse('RECORD_NOT_FOUND').init())
   @ApiTags('Package: Trainer: Get One')
   @ApiBearerAuth()
   //
