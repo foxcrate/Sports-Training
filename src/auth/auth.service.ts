@@ -182,8 +182,18 @@ export class AuthService {
     // await this.deletePastOTP(data.mobileNumber);
     let userMobileNumber = await this.checkFirebaseOTP(data.token);
 
+    console.log('userMobileNumber:', userMobileNumber);
+
     //return token to user
     let user = await this.userRepository.getByMobileNumber(userMobileNumber);
+
+    console.log('user:', user);
+    if (!user) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.USER_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
+    }
+
     return await this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id, req);
   }
 
@@ -260,14 +270,14 @@ export class AuthService {
 
       console.log('diffInMinutes: ', diffInMinutes);
 
-      if (diffInMinutes > 3) {
-        // throw new UnauthorizedException('Time expired for last otp');
-        throw new UnauthorizedException(
-          this.i18n.t(`errors.EXPIRED_FIREBASE_TOKEN_ERROR`, {
-            lang: I18nContext.current().lang,
-          }),
-        );
-      }
+      // if (diffInMinutes > 3) {
+      //   // throw new UnauthorizedException('Time expired for last otp');
+      //   throw new UnauthorizedException(
+      //     this.i18n.t(`errors.EXPIRED_FIREBASE_TOKEN_ERROR`, {
+      //       lang: I18nContext.current().lang,
+      //     }),
+      //   );
+      // }
       return user.phoneNumber;
     } catch (error: any) {
       console.log('firebase error: ', error);
