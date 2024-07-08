@@ -247,19 +247,18 @@ export class AuthService {
 
       const user: UserRecord = await admin.auth().getUser(decodedToken.uid);
 
-      const parsedDateTime = moment(
-        user.metadata.lastSignInTime,
-        'ddd, DD MMM YYYY HH:mm:ss [GMT]',
-      );
-      // console.log('lastSignin: ', parsedDateTime);
+      console.log('firebaseUser: ', user);
+
+      const parsedDateTime = moment(user.metadata.lastSignInTime);
+      console.log('lastSignin: ', parsedDateTime);
 
       const currentDateTime = moment();
 
-      // console.log('current dataTime: ', currentDateTime);
+      console.log('current dataTime: ', currentDateTime);
 
       const diffInMinutes = currentDateTime.diff(parsedDateTime, 'minutes');
 
-      // console.log('diffInMinutes: ', diffInMinutes);
+      console.log('diffInMinutes: ', diffInMinutes);
 
       if (diffInMinutes > 3) {
         // throw new UnauthorizedException('Time expired for last otp');
