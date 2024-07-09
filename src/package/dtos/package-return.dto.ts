@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { SessionDateTimeDto } from './session-date-time.dto';
 
 export class PackageReturnDto {
   @ApiProperty()
@@ -33,7 +34,7 @@ export class PackageReturnDto {
 
   @ApiProperty({
     isArray: true,
-    type: String,
+    type: SessionDateTimeDto,
   })
-  sessionsDateTime: string[];
+  sessionsDateTime: SessionDateTimeDto[];
 }

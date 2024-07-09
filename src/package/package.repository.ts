@@ -16,9 +16,9 @@ export class PackageRepository {
     createData: PackageCreateDto,
     trainerProfileId: number,
   ): Promise<PackageReturnDto> {
-    createData.sessionsDateTime = createData.sessionsDateTime.map((item) => {
-      return moment(item).toISOString();
-    });
+    // createData.sessionsDateTime = createData.sessionsDateTime.map((item) => {
+    //   return moment(item).toISOString();
+    // });
 
     await this.prisma.$queryRaw`
     INSERT INTO Package
@@ -48,17 +48,44 @@ export class PackageRepository {
         ${JSON.stringify(createData.sessionsDateTime)}
     )`;
 
-    return await this.getOneByTrainerProfileId(trainerProfileId);
+    const lastInsertedItemId: any = await this.prisma.$queryRaw`
+      SELECT LAST_INSERT_ID() AS id;
+    `;
+
+    // console.log(parseInt(lastInsertedItemId[0].id));
+
+    return await this.getOneById(parseInt(lastInsertedItemId[0].id));
   }
 
   async getOneById(id: number): Promise<PackageReturnDto> {
     let thePackage = await this.prisma.$queryRaw`
-        SELECT *
+        SELECT
+        Package.id,
+        Package.name,
+        Package.description,
+        Package.numberOfSessions,
+        Package.maxAttendees,
+        Package.minAttendees,
+        Package.price,
+        Package.ExpirationDate,
+        Package.fieldId,
+        Package.trainerProfileId,
+        JSON_EXTRACT(Package.sessionsDateTime,'$[*]') AS sessionsDateTime
         FROM Package
         WHERE id = ${id}
         LIMIT 1
       `;
-    // console.log(thePackage[0]);
+
+    thePackage[0].sessionsDateTime = thePackage[0].sessionsDateTime.map((item) => {
+      return {
+        fromDateTime: moment(item.fromDateTime)
+          .tz(this.configService.getOrThrow('TZ'))
+          .format('YYYY-MM-DD HH:mm'),
+        toDateTime: moment(item.toDateTime)
+          .tz(this.configService.getOrThrow('TZ'))
+          .format('YYYY-MM-DD HH:mm'),
+      };
+    });
 
     return thePackage[0];
   }
@@ -75,14 +102,11 @@ export class PackageRepository {
         Package.ExpirationDate,
         Package.fieldId,
         Package.trainerProfileId,
-        JSON_EXTRACT(Package.sessionsDateTime,'$') AS sessionsDateTime
+        JSON_EXTRACT(Package.sessionsDateTime,'$[*]') AS sessionsDateTime
         FROM Package
         WHERE trainerProfileId = ${trainerProfileId}
         LIMIT 1
       `;
-    // console.log(thePackage[0]);
-
-    // console.log('timezone:', this.configService.getOrThrow('TZ'));
 
     thePackage[0].sessionsDateTime = thePackage[0].sessionsDateTime.map((item) => {
       return moment(item)

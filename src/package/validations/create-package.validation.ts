@@ -9,5 +9,11 @@ export const CreatePackageValidation = Joi.object({
   price: Joi.number().required(),
   ExpirationDate: Joi.string().required(),
   fieldId: Joi.number().required(),
-  sessionsDateTime: Joi.array().items(Joi.string().required()).required().min(1),
+  sessionsDateTime: Joi.array()
+    .items({
+      fromDateTime: Joi.string().required(),
+      toDateTime: Joi.string().required(),
+    })
+    .required()
+    .min(1),
 });

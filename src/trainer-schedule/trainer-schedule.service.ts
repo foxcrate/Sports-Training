@@ -514,7 +514,7 @@ export class TrainerScheduleService {
     });
   }
 
-  private async authorizeResource(
+  async authorizeResource(
     timezone,
     userId: number,
     scheduleId: number,

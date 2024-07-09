@@ -257,12 +257,7 @@ export class AuthService {
   }
 
   async userSignin(signinData: SigninUserDto, req): Promise<AuthTokensDTO> {
-    console.log('alo 1');
-
     const user = await this.userService.findByMobile(signinData.mobileNumber);
-
-    console.log('alo 2');
-    console.log('user: ', user);
 
     if (!user.password) {
       throw new UnauthorizedException(
