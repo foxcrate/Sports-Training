@@ -702,6 +702,7 @@ model Package {
   minAttendees              Int?
   price              Int?
   ExpirationDate  DateTime @db.Date
+  sessionsDateTime Json?
 
   field   Field? @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   fieldId Int?
