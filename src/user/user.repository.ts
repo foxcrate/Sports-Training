@@ -79,6 +79,15 @@ export class UserRepository {
     )`;
   }
 
+  async getAll(): Promise<NativeUserDto[]> {
+    return await this.prisma.$queryRaw`
+    SELECT
+    *
+    FROM
+    User
+    `;
+  }
+
   async updateById(userId: number, data: CompleteSignupUserDto) {
     //complete profile
     await this.prisma.$queryRaw`

@@ -49,6 +49,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document, {
     swaggerOptions: {
+      docExpansion: 'none',
+      filter: true,
+      tagsSorter: 'alpha',
       plugins: [
         (...args: any[]) => (window as any).HierarchicalTagsPlugin(...args),
         // This is added by nestjs by default and would be overridden if not included

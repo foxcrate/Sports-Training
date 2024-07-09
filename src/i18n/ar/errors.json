@@ -17,6 +17,7 @@
   "USER_NOT_FOUND": "الحساب غير موجود",
   "PLAYER_PROFILE_NOT_FOUND": "حساب اللاعب غير موجود",
   "TRAINER_PROFILE_NOT_FOUND": "الصفحة الشخصية للمدرد غير متوفر",
+  "INVALID_PACKAGE_SCHEDULE": "شهور الباقة غير مناسبة؛ تتشارك مع جدول المدرب",
   "SCHEDULE_NOT_FOUND": "جدول المواعيد غير متوفر",
   "AGE_GROUP_NOT_FOUND": "الفئة العمرية غير موجودة",
   "BOOKED_SESSION_NOT_FOUND": "الحصة غير موجودة",

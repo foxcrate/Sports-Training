@@ -35,6 +35,11 @@ export class UserService {
     return createdUser;
   }
 
+  async getAll(): Promise<NativeUserDto[]> {
+    let allUsers = await this.userRepository.getAll();
+    return allUsers;
+  }
+
   async completeSignup(userId: number, completeSignupUserDto: CompleteSignupUserDto) {
     let theUser = await this.userRepository.getById(userId);
 

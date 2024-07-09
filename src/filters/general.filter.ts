@@ -63,6 +63,10 @@ export class GeneralFilter implements ExceptionFilter {
       // console.log('-- General Filter -- third condition');
       // console.log({ errorType, errorMessage });
 
+      if (Array.isArray(errorMessage)) {
+        errorMessage = errorMessage[0].message;
+      }
+
       response.status(status).json({
         success: false,
         statusCode: status,
@@ -70,7 +74,7 @@ export class GeneralFilter implements ExceptionFilter {
         userRoles: req.userRoles ? req.userRoles : null,
         error: {
           type: errorType,
-          message: errorMessage[0].message,
+          message: errorMessage,
         },
       });
     }
