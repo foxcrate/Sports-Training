@@ -11,6 +11,7 @@ import * as AWS from 'aws-sdk';
 import admin from 'firebase-admin';
 import { Prisma } from '@prisma/client';
 import { GlobalRepository } from './global.repository';
+import { GlobalReturnDTO } from './dtos/global-return.dto';
 
 @Injectable()
 export class GlobalService {
@@ -108,31 +109,31 @@ export class GlobalService {
     }
   }
 
-  async getAllAgeGroups(): Promise<[]> {
+  async getAllAgeGroups(): Promise<GlobalReturnDTO[]> {
     let allAgeGroups = await this.globalRepository.allAgeGroups();
 
     return allAgeGroups;
   }
 
-  async getAllLevels(): Promise<[]> {
+  async getAllLevels(): Promise<GlobalReturnDTO[]> {
     let allLevels = await this.globalRepository.allLevels();
 
     return allLevels;
   }
 
-  async getAllGenders(): Promise<[]> {
+  async getAllGenders(): Promise<GlobalReturnDTO[]> {
     let allGenders = await this.globalRepository.allGenders();
 
     return allGenders;
   }
 
-  async getAllFeedbacks(): Promise<[]> {
+  async getAllFeedbacks(): Promise<GlobalReturnDTO[]> {
     let allFeedbacks = await this.globalRepository.allFeedbacks();
 
     return allFeedbacks;
   }
 
-  async getAllWeekDays(): Promise<[]> {
+  async getAllWeekDays(): Promise<GlobalReturnDTO[]> {
     let allWeekDays = await this.globalRepository.allWeekDays();
 
     return allWeekDays;

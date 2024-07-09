@@ -47,21 +47,21 @@ enum Provider {
   native
 }
 
-enum LanguageEnum{
+enum LanguageEnum {
   en
   ar
 }
 
-enum NotificationSentTo{
+enum NotificationSentTo {
   playerProfile
   trainerProfile
 }
 
-enum NotificationAbout{
+enum NotificationAbout {
   trainerSession
 }
 
-enum NotificationType{
+enum NotificationType {
   request
   accept
   reject
@@ -118,7 +118,7 @@ model User {
   parentsChilds         ParentsChilds[]            @relation("ParentsChilds")
   childsParents         ParentsChilds[]            @relation("ChildsParents")
   rates                 Rate[]
-  notifications Notification[]
+  notifications         Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
@@ -129,7 +129,7 @@ model Gender {
 
   name String
 
-  user User[]
+  user              User[]
   genderTranslation GenderTranslation[]
 
   createdAt DateTime @default(now())
@@ -141,24 +141,24 @@ model GenderTranslation {
 
   name String
 
-  language  LanguageEnum?
+  language LanguageEnum?
 
-  gender   Gender? @relation(fields: [genderId], references: [id],onDelete: Cascade)
+  gender   Gender? @relation(fields: [genderId], references: [id], onDelete: Cascade)
   genderId Int?
-
-  @@unique([genderId, language])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+
+  @@unique([genderId, language])
 }
 
 model ParentsChilds {
   id Int @id @default(autoincrement())
 
-  parent   User @relation("ParentsChilds", fields: [parentId], references: [id],onDelete: Cascade)
+  parent   User @relation("ParentsChilds", fields: [parentId], references: [id], onDelete: Cascade)
   parentId Int
 
-  child   User @relation("ChildsParents", fields: [childId], references: [id],onDelete: Cascade)
+  child   User @relation("ChildsParents", fields: [childId], references: [id], onDelete: Cascade)
   childId Int
 
   createdAt DateTime @default(now())
@@ -179,13 +179,14 @@ model PlayerProfile {
   id Int @id @default(autoincrement())
 
   regionId Int?
-  region   Region? @relation(fields: [regionId], references: [id],onDelete: Cascade)
+  region   Region? @relation(fields: [regionId], references: [id], onDelete: Cascade)
 
   levelId Int?
-  level   Level? @relation(fields: [levelId], references: [id],onDelete: SetNull)
+  level   Level? @relation(fields: [levelId], references: [id], onDelete: SetNull)
 
   sports PlayerProfileSports[]
   rates  Rate[]
+  packages PlayerProfilePackages[]
 
   userId Int  @unique
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -195,9 +196,9 @@ model PlayerProfile {
 }
 
 model PlayerProfileSports {
-  playerProfile   PlayerProfile @relation(fields: [playerProfileId], references: [id],onDelete: Cascade)
+  playerProfile   PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
   playerProfileId Int
-  sport           Sport         @relation(fields: [sportId], references: [id],onDelete: Cascade)
+  sport           Sport         @relation(fields: [sportId], references: [id], onDelete: Cascade)
   sportId         Int
 
   createdAt DateTime @default(now())
@@ -209,11 +210,11 @@ model PlayerProfileSports {
 model TrainerProfile {
   id Int @id @default(autoincrement())
 
-  ageGroup   AgeGroup? @relation(fields: [ageGroupId], references: [id],onDelete: SetNull)
+  ageGroup   AgeGroup? @relation(fields: [ageGroupId], references: [id], onDelete: SetNull)
   ageGroupId Int?
 
   levelId Int?
-  level   Level? @relation(fields: [levelId], references: [id],onDelete: SetNull)
+  level   Level? @relation(fields: [levelId], references: [id], onDelete: SetNull)
 
   sessionDescription String?
 
@@ -231,17 +232,19 @@ model TrainerProfile {
 
   fields TrainerProfileFields[]
 
-  userId Int  @unique
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  regionId Int?
-  region   Region? @relation(fields: [regionId], references: [id],onDelete: Cascade)
-
   schedules Schedule[]
 
   notAvailableDays TrainerProfileNotAvailableDays[]
 
   trainerBookedSessions TrainerBookedSession[]
+
+  packages Package[]
+  
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  regionId Int?
+  region   Region? @relation(fields: [regionId], references: [id], onDelete: Cascade)
 
   defaultCancellationTime Int?
 
@@ -254,8 +257,8 @@ model Level {
 
   name String
 
-  trainerProfiles TrainerProfile[]
-  playerProfiles PlayerProfile[]
+  trainerProfiles  TrainerProfile[]
+  playerProfiles   PlayerProfile[]
   levelTranslation LevelTranslation[]
 
   createdAt DateTime @default(now())
@@ -267,15 +270,15 @@ model LevelTranslation {
 
   name String
 
-  language  LanguageEnum?
+  language LanguageEnum?
 
-  level   Level? @relation(fields: [levelId], references: [id],onDelete: Cascade)
+  level   Level? @relation(fields: [levelId], references: [id], onDelete: Cascade)
   levelId Int?
-
-  @@unique([levelId, language])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+
+  @@unique([levelId, language])
 }
 
 model AgeGroup {
@@ -283,7 +286,7 @@ model AgeGroup {
 
   name String
 
-  trainerProfiles TrainerProfile[]
+  trainerProfiles     TrainerProfile[]
   ageGroupTranslation AgeGroupTranslation[]
 
   createdAt DateTime @default(now())
@@ -295,15 +298,15 @@ model AgeGroupTranslation {
 
   name String
 
-  language  LanguageEnum?
+  language LanguageEnum?
 
-  ageGroup   AgeGroup? @relation(fields: [ageGroupId], references: [id],onDelete: Cascade)
+  ageGroup   AgeGroup? @relation(fields: [ageGroupId], references: [id], onDelete: Cascade)
   ageGroupId Int?
-
-  @@unique([ageGroupId, language])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+
+  @@unique([ageGroupId, language])
 }
 
 model Schedule {
@@ -313,7 +316,7 @@ model Schedule {
 
   slots Slot[]
 
-  TrainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id],onDelete: Cascade)
+  TrainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
   trainerProfileId Int
 
   months SchedulesMonths[]
@@ -332,10 +335,10 @@ model Slot {
 
   cost Int?
 
-  weekDay   WeekDay? @relation(fields: [weekDayId], references: [id],onDelete: Cascade)
+  weekDay   WeekDay? @relation(fields: [weekDayId], references: [id], onDelete: Cascade)
   weekDayId Int?
 
-  Schedule   Schedule? @relation(fields: [scheduleId], references: [id],onDelete: SetNull)
+  Schedule   Schedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
   scheduleId Int?
 
   field   Field? @relation(fields: [fieldId], references: [id], onDelete: Cascade)
@@ -353,9 +356,9 @@ model WeekDay {
   dayNumber Int?
   dayName   String?
 
-  slots          Slot[]
+  slots Slot[]
 
-  weekDayTranslation  WeekDayTranslation[]
+  weekDayTranslation WeekDayTranslation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
@@ -364,17 +367,17 @@ model WeekDay {
 model WeekDayTranslation {
   id Int @id @default(autoincrement())
 
-  dayName   String?
+  dayName String?
 
-  language  LanguageEnum?
+  language LanguageEnum?
 
-  weekDay   WeekDay? @relation(fields: [weekDayId], references: [id],onDelete: Cascade)
+  weekDay   WeekDay? @relation(fields: [weekDayId], references: [id], onDelete: Cascade)
   weekDayId Int?
-
-  @@unique([weekDayId, language])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+
+  @@unique([weekDayId, language])
 }
 
 model Month {
@@ -383,8 +386,8 @@ model Month {
   monthNumber Int?
   monthName   String?
 
-  schedules SchedulesMonths[]
-  monthTranslation  MonthTranslation[]
+  schedules        SchedulesMonths[]
+  monthTranslation MonthTranslation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
@@ -393,26 +396,26 @@ model Month {
 model MonthTranslation {
   id Int @id @default(autoincrement())
 
-  monthName   String?
+  monthName String?
 
-  language  LanguageEnum?
+  language LanguageEnum?
 
-  month   Month? @relation(fields: [monthId], references: [id],onDelete: Cascade)
+  month   Month? @relation(fields: [monthId], references: [id], onDelete: Cascade)
   monthId Int?
-
-  @@unique([monthId, language])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+
+  @@unique([monthId, language])
 }
 
 model SchedulesMonths {
   id Int @id @default(autoincrement())
 
-  schedule   Schedule @relation(fields: [scheduleId], references: [id],onDelete: Cascade)
+  schedule   Schedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
   scheduleId Int
 
-  month   Month @relation(fields: [monthId], references: [id],onDelete: Cascade)
+  month   Month @relation(fields: [monthId], references: [id], onDelete: Cascade)
   monthId Int
 
   createdAt DateTime @default(now())
@@ -422,10 +425,10 @@ model SchedulesMonths {
 }
 
 model TrainerProfileSports {
-  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id],onDelete: Cascade)
+  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
   trainerProfileId Int
 
-  sport   Sport @relation(fields: [sportId], references: [id],onDelete: Cascade)
+  sport   Sport @relation(fields: [sportId], references: [id], onDelete: Cascade)
   sportId Int
 
   createdAt DateTime @default(now())
@@ -437,10 +440,10 @@ model TrainerProfileSports {
 model TrainerProfileFields {
   id Int @id @default(autoincrement())
 
-  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id],onDelete: Cascade)
+  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
   trainerProfileId Int
 
-  field   Field @relation(fields: [fieldId], references: [id],onDelete: Cascade)
+  field   Field @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   fieldId Int
 
   createdAt DateTime @default(now())
@@ -469,19 +472,19 @@ model TrainerBookedSession {
   cancellationReasons   CancellationReasons? @relation(fields: [cancellationReasonsId], references: [id], onDelete: SetNull)
   cancellationReasonsId Int?
 
-  user   User @relation(fields: [userId], references: [id],onDelete: Cascade)
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId Int
 
-  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id],onDelete: Cascade)
+  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
   trainerProfileId Int
 
-  slot   Slot @relation(fields: [slotId], references: [id],onDelete: Cascade)
+  slot   Slot @relation(fields: [slotId], references: [id], onDelete: Cascade)
   slotId Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 
-  @@unique([date, slotId,userId])
+  @@unique([date, slotId, userId])
 }
 
 model SessionRequest {
@@ -490,51 +493,63 @@ model SessionRequest {
   trainerBookedSession   TrainerBookedSession @relation(fields: [trainerBookedSessionId], references: [id], onDelete: Cascade)
   trainerBookedSessionId Int                  @unique
 
-  cancelReason   CancellationReasons? @relation(fields: [declineReasonId], references: [id], onDelete: SetNull)
+  cancelReason    CancellationReasons? @relation(fields: [declineReasonId], references: [id], onDelete: SetNull)
   declineReasonId Int?
 
-  type       SessionRequestType   @default(new)
-  status     SessionRequestStatus @default(pending)
+  type   SessionRequestType   @default(new)
+  status SessionRequestStatus @default(pending)
 
-  newSessionDate  DateTime? @db.Date
-  newSlotId Int?
+  newSessionDate DateTime? @db.Date
+  newSlotId      Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model PackageRequest {
+  id Int @id @default(autoincrement())
+
+  package   Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  packageId Int                  @unique
+
+  status SessionRequestStatus @default(pending)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 }
 
 model CancellationReasons {
-  id             Int              @id @default(autoincrement())
-  name           String?
+  id   Int     @id @default(autoincrement())
+  name String?
 
-  trainerBookedSessions TrainerBookedSession[]
-  sessionRequest SessionRequest[]
-  cancellationReasonsTranslation    CancellationReasonsTranslation[]
+  trainerBookedSessions          TrainerBookedSession[]
+  sessionRequest                 SessionRequest[]
+  cancellationReasonsTranslation CancellationReasonsTranslation[]
 
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
 }
 
 model CancellationReasonsTranslation {
-  id             Int              @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  name           String?
-  language  LanguageEnum?
+  name     String?
+  language LanguageEnum?
 
-  cancellationReasons   CancellationReasons? @relation(fields: [cancellationReasonsId], references: [id],onDelete: Cascade)
+  cancellationReasons   CancellationReasons? @relation(fields: [cancellationReasonsId], references: [id], onDelete: Cascade)
   cancellationReasonsId Int?
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
   @@unique([cancellationReasonsId, language])
-  
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @default(now())
 }
 
 model TrainerProfileNotAvailableDays {
   id      Int      @id @default(autoincrement())
   dayDate DateTime
 
-  trainerProfile TrainerProfile @relation(fields: [trainerProfileId], references: [id],onDelete: Cascade)
+  trainerProfile TrainerProfile @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
 
   trainerProfileId Int
 
@@ -560,14 +575,15 @@ model Field {
   rates             Rate[]
 
   slots Slot[]
+  packages  Package[]
 
   addedByUserId Int?
   addedByUser   User? @relation(fields: [addedByUserId], references: [id], onDelete: SetNull)
 
-  sport   Sport? @relation(fields: [sportId], references: [id],onDelete: SetNull)
+  sport   Sport? @relation(fields: [sportId], references: [id], onDelete: SetNull)
   sportId Int?
 
-  region   Region? @relation(fields: [regionId], references: [id],onDelete: SetNull)
+  region   Region? @relation(fields: [regionId], references: [id], onDelete: SetNull)
   regionId Int?
 
   users            FieldsBookedHours[]
@@ -663,10 +679,10 @@ model DoctorClinic {
   addedByUserId Int?
   addedByUser   User? @relation(fields: [addedByUserId], references: [id], onDelete: Cascade)
 
-  region   Region? @relation(fields: [regionId], references: [id],onDelete: SetNull)
+  region   Region? @relation(fields: [regionId], references: [id], onDelete: SetNull)
   regionId Int?
 
-  doctorClinicSpecialization   DoctorClinicSpecialization? @relation(fields: [doctorClinicSpecializationId], references: [id],onDelete: SetNull)
+  doctorClinicSpecialization   DoctorClinicSpecialization? @relation(fields: [doctorClinicSpecializationId], references: [id], onDelete: SetNull)
   doctorClinicSpecializationId Int?
 
   users            DoctorClinicsBookedHours[]
@@ -676,12 +692,53 @@ model DoctorClinic {
   updatedAt DateTime @default(now())
 }
 
+model Package {
+  id                Int              @id @default(autoincrement())
+
+  name              String
+  description       String?
+  numberOfSessions              Int?
+  maxAttendees              Int?
+  minAttendees              Int?
+  price              Int?
+  ExpirationDate  DateTime @db.Date
+  sessionsDateTime Json?
+
+  field   Field? @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  fieldId Int?
+
+  trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
+  trainerProfileId Int
+
+  packageRequests  PackageRequest[]
+
+  playerProfiles PlayerProfilePackages[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+}
+
+model PlayerProfilePackages {
+  id Int @id @default(autoincrement())
+
+  playerProfile   PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
+  playerProfileId Int
+
+  package   Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  packageId Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  @@unique([playerProfileId, packageId])
+}
+
 model DoctorClinicSpecialization {
   id Int @id @default(autoincrement())
 
   name String
 
-  doctorClinc DoctorClinic[]
+  doctorClinc                           DoctorClinic[]
   doctorClinicSpecializationTranslation DoctorClinicSpecializationTranslation[]
 
   createdAt DateTime @default(now())
@@ -691,24 +748,24 @@ model DoctorClinicSpecialization {
 model DoctorClinicSpecializationTranslation {
   id Int @id @default(autoincrement())
 
-  name   String?
+  name String?
 
-  language  LanguageEnum?
+  language LanguageEnum?
 
-  doctorClinicSpecialization   DoctorClinicSpecialization? @relation(fields: [doctorClinicSpecializationId], references: [id],onDelete: Cascade)
+  doctorClinicSpecialization   DoctorClinicSpecialization? @relation(fields: [doctorClinicSpecializationId], references: [id], onDelete: Cascade)
   doctorClinicSpecializationId Int?
-
-  @@unique([doctorClinicSpecializationId, language])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+
+  @@unique([doctorClinicSpecializationId, language])
 }
 
 model FieldNotAvailableDays {
   id      Int      @id @default(autoincrement())
   dayDate DateTime
 
-  field   Field @relation(fields: [fieldId], references: [id],onDelete: Cascade)
+  field   Field @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   fieldId Int
 
   createdAt DateTime @default(now())
@@ -719,7 +776,7 @@ model DoctorClinicNotAvailableDays {
   id      Int      @id @default(autoincrement())
   dayDate DateTime
 
-  doctorClinic   DoctorClinic @relation(fields: [doctorClinicId], references: [id],onDelete: Cascade)
+  doctorClinic   DoctorClinic @relation(fields: [doctorClinicId], references: [id], onDelete: Cascade)
   doctorClinicId Int
 
   createdAt DateTime @default(now())
@@ -732,10 +789,10 @@ model FieldsBookedHours {
   fromDateTime DateTime
   gmt          Int      @default(0)
 
-  user   User @relation(fields: [userId], references: [id],onDelete: Cascade)
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId Int
 
-  field   Field @relation(fields: [fieldId], references: [id],onDelete: Cascade)
+  field   Field @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   fieldId Int
 
   createdAt DateTime @default(now())
@@ -748,10 +805,10 @@ model DoctorClinicsBookedHours {
   fromDateTime DateTime
   gmt          Int      @default(0)
 
-  user   User @relation(fields: [userId], references: [id],onDelete: Cascade)
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId Int
 
-  doctorClinic   DoctorClinic @relation(fields: [doctorClinicId], references: [id],onDelete: Cascade)
+  doctorClinic   DoctorClinic @relation(fields: [doctorClinicId], references: [id], onDelete: Cascade)
   doctorClinicId Int
 
   createdAt DateTime @default(now())
@@ -763,29 +820,29 @@ model Sport {
 
   name String?
 
-  playerProfiles  PlayerProfileSports[]
-  trainerProfiles TrainerProfileSports[]
-  fields          Field[]
-  sportTranslation          SportTranslation[]
+  playerProfiles   PlayerProfileSports[]
+  trainerProfiles  TrainerProfileSports[]
+  fields           Field[]
+  sportTranslation SportTranslation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 }
 
-model SportTranslation{
+model SportTranslation {
   id Int @id @default(autoincrement())
 
-  name  String?
+  name String?
 
-  language  LanguageEnum?
+  language LanguageEnum?
 
-  sport   Sport? @relation(fields: [sportId], references: [id],onDelete: Cascade)
+  sport   Sport? @relation(fields: [sportId], references: [id], onDelete: Cascade)
   sportId Int?
-
-  @@unique([sportId, language])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+
+  @@unique([sportId, language])
 }
 
 model Region {
@@ -793,30 +850,30 @@ model Region {
 
   name String?
 
-  playerProfile  PlayerProfile[]
-  trainerProfile TrainerProfile[]
-  fields         Field[]
-  doctorClinc    DoctorClinic[]
-  regionTranslation    RegionTranslation[]
+  playerProfile     PlayerProfile[]
+  trainerProfile    TrainerProfile[]
+  fields            Field[]
+  doctorClinc       DoctorClinic[]
+  regionTranslation RegionTranslation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 }
 
-model RegionTranslation{
+model RegionTranslation {
   id Int @id @default(autoincrement())
 
-  name  String?
+  name String?
 
-  language  LanguageEnum?
+  language LanguageEnum?
 
-  region   Region? @relation(fields: [regionId], references: [id],onDelete: Cascade)
+  region   Region? @relation(fields: [regionId], references: [id], onDelete: Cascade)
   regionId Int?
-
-  @@unique([regionId, language])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+
+  @@unique([regionId, language])
 }
 
 model Feedback {
@@ -824,7 +881,7 @@ model Feedback {
 
   content String?
 
-  feedbackTranslation    FeedbackTranslation[]
+  feedbackTranslation FeedbackTranslation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
@@ -835,50 +892,49 @@ model FeedbackTranslation {
 
   content String?
 
-  language  LanguageEnum?
+  language LanguageEnum?
 
-  feedback   Feedback? @relation(fields: [feedbackId], references: [id],onDelete: Cascade)
+  feedback   Feedback? @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
   feedbackId Int?
-
-  @@unique([feedbackId, language])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+
+  @@unique([feedbackId, language])
 }
 
 model Notification {
   id Int @id @default(autoincrement())
 
-  sentTo  NotificationSentTo?
+  sentTo NotificationSentTo?
 
   about NotificationAbout?
 
-  type  NotificationType?
+  type NotificationType?
 
-  notificationContent   NotificationContent? @relation(fields: [notificationContentId], references: [id],onDelete: SetNull)
+  notificationContent   NotificationContent? @relation(fields: [notificationContentId], references: [id], onDelete: SetNull)
   notificationContentId Int?
 
   seen Boolean @default(false)
-  
-  user   User @relation(fields: [userId], references: [id],onDelete: Cascade)
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId Int
-  
+
   trainerBookedSession   TrainerBookedSession? @relation(fields: [trainerBookedSessionId], references: [id], onDelete: Cascade)
   trainerBookedSessionId Int?
-
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 }
 
-model NotificationContent{
+model NotificationContent {
   id Int @id @default(autoincrement())
 
   content String?
 
-  notificationContentTranslation  NotificationContentTranslation[]
+  notificationContentTranslation NotificationContentTranslation[]
 
-  notification  Notification[]
+  notification Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
@@ -887,16 +943,15 @@ model NotificationContent{
 model NotificationContentTranslation {
   id Int @id @default(autoincrement())
 
-  content   String?
+  content String?
 
-  language  LanguageEnum?
+  language LanguageEnum?
 
-  notificationContent   NotificationContent? @relation(fields: [notificationContentId], references: [id],onDelete: Cascade)
+  notificationContent   NotificationContent? @relation(fields: [notificationContentId], references: [id], onDelete: Cascade)
   notificationContentId Int?
-
-  @@unique([notificationContentId, language])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
-}
 
+  @@unique([notificationContentId, language])
+}

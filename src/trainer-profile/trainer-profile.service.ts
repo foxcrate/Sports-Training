@@ -41,7 +41,10 @@ export class TrainerProfileService {
     return trainerProfileWithSports;
   }
 
-  async create(createData: TrainerProfileCreateDto, userId): Promise<any> {
+  async create(
+    createData: TrainerProfileCreateDto,
+    userId,
+  ): Promise<ReturnTrainerProfileDetailsDto> {
     // console.log(createData);
     // return createData;
 

@@ -22,11 +22,39 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { RoleGuard } from 'src/guards/role.guard';
 import { ChildIdValidation } from './validations/child-id.validation';
 import { ChildProfileIdValidation } from './validations/child-profile-id.validaiton';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
+import { SwaggerErrorResponse } from 'src/global/classes/swagger-error-response';
+import { PlayerProfileCreateDto } from 'src/player-profile/dtos/create.dto';
+import { ReturnPlayerProfileDto } from 'src/player-profile/dtos/return.dto';
+import { ReturnPlayerProfileWithUserAndSportsDto } from 'src/player-profile/dtos/return-with-user-and-sports.dto';
 
 @Controller('child-profile')
 export class ChildProfileController {
   constructor(private childProfileService: ChildProfileService) {}
 
+  @ApiParam({
+    name: 'childId',
+    required: false,
+  })
+  @ApiBody({
+    type: PlayerProfileCreateDto,
+  })
+  @ApiCreatedResponse({
+    type: ReturnPlayerProfileDto,
+  })
+  @ApiForbiddenResponse(new SwaggerErrorResponse('NOT_ALLOWED').init())
+  @ApiTags('Child-Profile: Create')
+  @ApiBearerAuth()
+  //
   @Post('/:childId')
   @Version('1')
   @Roles('user')
@@ -39,6 +67,20 @@ export class ChildProfileController {
     return await this.childProfileService.create(reqBody, params.childId, req['id']);
   }
 
+  @ApiParam({
+    name: 'childProfileId',
+    required: false,
+  })
+  @ApiBody({
+    type: PlayerProfileCreateDto,
+  })
+  @ApiCreatedResponse({
+    type: ReturnPlayerProfileDto,
+  })
+  @ApiNotFoundResponse(new SwaggerErrorResponse('RECORD_NOT_FOUND').init())
+  @ApiTags('Child-Profile: Update')
+  @ApiBearerAuth()
+  //
   @Put('/:childProfileId')
   @Version('1')
   @Roles('user')
@@ -56,6 +98,17 @@ export class ChildProfileController {
     );
   }
 
+  @ApiParam({
+    name: 'childProfileId',
+    required: false,
+  })
+  @ApiCreatedResponse({
+    type: ReturnPlayerProfileDto,
+  })
+  @ApiNotFoundResponse(new SwaggerErrorResponse('RECORD_NOT_FOUND').init())
+  @ApiTags('Child-Profile: Delete')
+  @ApiBearerAuth()
+  //
   @Delete('/:childProfileId')
   @Version('1')
   @Roles('user')
@@ -66,6 +119,13 @@ export class ChildProfileController {
     return await this.childProfileService.delete(req['id'], childProfileId);
   }
 
+  @ApiCreatedResponse({
+    type: ReturnPlayerProfileWithUserAndSportsDto,
+    isArray: true,
+  })
+  @ApiTags('Child-Profile: Get All')
+  @ApiBearerAuth()
+  //
   @Get()
   @Version('1')
   @Roles('user')
@@ -74,6 +134,17 @@ export class ChildProfileController {
     return await this.childProfileService.getAll(req['id']);
   }
 
+  @ApiParam({
+    name: 'childProfileId',
+    required: false,
+  })
+  @ApiCreatedResponse({
+    type: ReturnPlayerProfileWithUserAndSportsDto,
+  })
+  @ApiNotFoundResponse(new SwaggerErrorResponse('RECORD_NOT_FOUND').init())
+  @ApiTags('Child-Profile: GetOne')
+  @ApiBearerAuth()
+  //
   @Get('/:childProfileId')
   @Version('1')
   @Roles('user')

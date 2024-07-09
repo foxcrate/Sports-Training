@@ -35,6 +35,11 @@ export class UserService {
     return createdUser;
   }
 
+  async getAll(): Promise<NativeUserDto[]> {
+    let allUsers = await this.userRepository.getAll();
+    return allUsers;
+  }
+
   async completeSignup(userId: number, completeSignupUserDto: CompleteSignupUserDto) {
     let theUser = await this.userRepository.getById(userId);
 
@@ -44,7 +49,7 @@ export class UserService {
     return await this.userRepository.getById(theUser.id);
   }
 
-  async update(reqBody, userId) {
+  async update(reqBody, userId): Promise<ReturnUserDto> {
     let user = await this.userRepository.getById(userId);
 
     //update

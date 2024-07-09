@@ -47,6 +47,7 @@ export class AuthGuard implements CanActivate {
 
     request['id'] = payload.id;
     request['authType'] = payload.authType;
+    
 
     let userMetaData = await this.userRepository.getUserMetaData(request['id']);
 

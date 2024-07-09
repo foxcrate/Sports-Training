@@ -48,7 +48,7 @@ export class GeneralFilter implements ExceptionFilter {
     }
 
     if (status >= 500) {
-      // console.log('-- General Filter -- first condition');
+      // console.log('-- General Filter -- second condition');
       response.status(status).json({
         success: false,
         statusCode: status,
@@ -60,6 +60,13 @@ export class GeneralFilter implements ExceptionFilter {
         },
       });
     } else {
+      // console.log('-- General Filter -- third condition');
+      // console.log({ errorType, errorMessage });
+
+      if (Array.isArray(errorMessage)) {
+        errorMessage = errorMessage[0].message;
+      }
+
       response.status(status).json({
         success: false,
         statusCode: status,

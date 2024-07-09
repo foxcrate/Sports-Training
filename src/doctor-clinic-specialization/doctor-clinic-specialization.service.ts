@@ -15,7 +15,7 @@ export class DoctorClinicSpecializationService {
     return await this.doctorClinicSpecializationRepository.create(createData);
   }
 
-  async getAll() {
+  async getAll(): Promise<ReturnDoctorClinicSpecializationDto[]> {
     let allDoctorClinicSpecialization =
       await this.doctorClinicSpecializationRepository.getAll();
     return allDoctorClinicSpecialization;

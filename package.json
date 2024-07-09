@@ -11,7 +11,7 @@
     "start": "nest start",
     "dev": "NODE_PORT=3000 nest start --watch",
     "start:dev": "nest start --watch",
-    "start:dev2": "killall -9 node;nest start --watch",
+    "start:local": "killall -9 node; dotenv -e .env.local -- nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/src/main",
     "start:prod2": "killall -9 node;node dist/src/main",
@@ -20,7 +20,9 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "migrate:local": "dotenv -e .env.local -- npx prisma migrate dev",
+    "migrate:dev": "dotenv -e .env -- npx prisma migrate dev"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -36,18 +38,23 @@
     "@nestjs/core": "^10.0.0",
     "@nestjs/jwt": "^10.1.1",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/swagger": "^7.3.1",
+    "adminjs": "^7.8.1",
     "aws-sdk": "^2.1311.0",
     "axios": "^1.5.0",
     "bcrypt": "^5.1.1",
+    "dotenv-cli": "^7.4.2",
     "firebase-admin": "^11.11.0",
     "joi": "^17.10.1",
     "jsonwebtoken": "^9.0.2",
     "jwks-rsa": "^3.1.0",
+    "moment": "^2.30.1",
     "moment-timezone": "^0.5.43",
     "nestjs-i18n": "^10.3.6",
     "object-inspect": "^1.12.3",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
+    "swagger-ui-express": "^5.0.1",
     "util": "^0.12.5"
   },
   "devDependencies": {

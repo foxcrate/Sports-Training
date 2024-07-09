@@ -49,7 +49,11 @@ export class TrainerScheduleService {
     return await this.authorizeResource(timezone, userId, scheduleId);
   }
 
-  async create(timezone, userId: number, reqBody: ScheduleCreateDto): Promise<any> {
+  async create(
+    timezone,
+    userId: number,
+    reqBody: ScheduleCreateDto,
+  ): Promise<ScheduleSlotsDetailsDTO> {
     let trainerProfile = await this.trainerProfileRepository.getByUserId(userId);
 
     ///////// Temproray, Trainer has one schedule /////////
@@ -87,7 +91,7 @@ export class TrainerScheduleService {
     userId: number,
     scheduleId: number,
     reqBody: ScheduleCreateDto,
-  ): Promise<any> {
+  ): Promise<ScheduleSlotsDetailsDTO> {
     let schedule = await this.authorizeResource(timezone, userId, scheduleId);
     await this.validateUpdateScheduleMonths(
       schedule.id,
@@ -510,7 +514,7 @@ export class TrainerScheduleService {
     });
   }
 
-  private async authorizeResource(
+  async authorizeResource(
     timezone,
     userId: number,
     scheduleId: number,

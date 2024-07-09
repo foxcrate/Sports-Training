@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
@@ -23,6 +24,10 @@ import { VerifyOtpDto } from './dtos/verify-otp.dto';
 import { CompleteSignupUserDto } from 'src/user/dtos/complete-signup.dto';
 import { UserRepository } from 'src/user/user.repository';
 import { USER_TYPES_ENUM } from 'src/global/enums';
+import { ReturnUserDto } from 'src/user/dtos/return.dto';
+import * as admin from 'firebase-admin';
+import moment from 'moment';
+import { DecodedIdToken, UserRecord } from 'firebase-admin/auth';
 
 @Injectable()
 export class AuthService {
@@ -36,7 +41,7 @@ export class AuthService {
     private readonly i18n: I18nService,
   ) {}
 
-  async userSignup(signupData: SignupUserDto) {
+  async userSignup(signupData: SignupUserDto): Promise<ReturnUserDto> {
     let repeatedAccount = await this.userService.findRepeated(
       signupData.email,
       signupData.mobileNumber,
@@ -84,71 +89,75 @@ export class AuthService {
     }
   }
 
-  async sendSignupOtp(mobileNumber: string) {
-    await this.userService.findRepeatedMobile(mobileNumber);
+  // async sendSignupOtp(mobileNumber: string) {
+  //   await this.userService.findRepeatedMobile(mobileNumber);
 
-    await this.saveOTP(mobileNumber, '1234');
-    //send otp
-    return 'OTP sent successfully';
-  }
+  //   await this.saveOTP(mobileNumber, '1234');
+  //   //send otp
+  //   return 'OTP sent successfully';
+  // }
 
-  async sendChangeMobileOtp(mobileNumber: string) {
-    await this.userService.findRepeatedMobile(mobileNumber);
+  // async sendChangeMobileOtp(mobileNumber: string) {
+  //   await this.userService.findRepeatedMobile(mobileNumber);
 
-    await this.saveOTP(mobileNumber, '1234');
-    //send otp
-    return 'OTP sent successfully';
-  }
+  //   await this.saveOTP(mobileNumber, '1234');
+  //   //send otp
+  //   return 'OTP sent successfully';
+  // }
 
-  async sendMobileOtp(mobileNumber: string) {
-    let theUser = await this.userRepository.getByMobileNumber(mobileNumber);
-    if (!theUser) {
-      throw new NotFoundException(
-        this.i18n.t(`errors.USER_NOT_FOUND`, { lang: I18nContext.current().lang }),
-      );
-    }
+  // async sendMobileOtp(mobileNumber: string) {
+  //   let theUser = await this.userRepository.getByMobileNumber(mobileNumber);
+  //   if (!theUser) {
+  //     throw new NotFoundException(
+  //       this.i18n.t(`errors.USER_NOT_FOUND`, { lang: I18nContext.current().lang }),
+  //     );
+  //   }
 
-    await this.saveOTP(theUser.mobileNumber, '1234');
-    //send otp
-    return 'OTP sent successfully';
-  }
+  //   await this.saveOTP(theUser.mobileNumber, '1234');
+  //   //send otp
+  //   return 'OTP sent successfully';
+  // }
 
-  async sendForgetPasswordOtp(mobileNumber: string) {
-    await this.userService.findByMobile(mobileNumber);
+  // async sendForgetPasswordOtp(mobileNumber: string) {
+  //   await this.userService.findByMobile(mobileNumber);
 
-    await this.saveOTP(mobileNumber, '1234');
-    //send otp
-    return 'OTP sent successfully';
-  }
+  //   await this.saveOTP(mobileNumber, '1234');
+  //   //send otp
+  //   return 'OTP sent successfully';
+  // }
 
-  async verifySignupOTP(data: VerifyOtpDto, req) {
+  async verifySignupOTP(data: VerifyOtpDto, req): Promise<AuthTokensDTO> {
     //account already saved
-    await this.userService.findRepeatedMobile(data.mobileNumber);
+    let userMobileNumber = await this.checkFirebaseOTP(data.token);
 
-    //throw error if not passed
-    await this.checkSavedOTP(data.mobileNumber, data.otp);
+    await this.userService.findRepeatedMobile(userMobileNumber);
 
-    await this.deletePastOTP(data.mobileNumber);
+    // //throw error if not passed
+    // await this.checkSavedOTP(data.mobileNumber, data.otp);
+
+    // await this.deletePastOTP(data.mobileNumber);
 
     //return token to user
-    return await this.signupUserAndReturnToken(data.mobileNumber, req);
+    return await this.signupUserAndReturnToken(userMobileNumber, req);
   }
 
   async verifyChangeMobileOTP(data: VerifyOtpDto, userId: number) {
-    //throw error if not passed
-    await this.checkSavedOTP(data.mobileNumber, data.otp);
+    // //throw error if not passed
+    // await this.checkSavedOTP(data.mobileNumber, data.otp);
 
-    await this.deletePastOTP(data.mobileNumber);
+    // await this.deletePastOTP(data.mobileNumber);
+    let userMobileNumber = await this.checkFirebaseOTP(data.token);
 
     //return token to user
-    return await this.userRepository.updateMobile(userId, data.mobileNumber);
+    return await this.userRepository.updateMobile(userId, userMobileNumber);
   }
 
-  async verifyMobileOtp(data: VerifyOtpDto, req) {
+  async verifyMobileOtp(data: VerifyOtpDto, req): Promise<AuthTokensDTO> {
     //throw error if not passed
-    await this.checkSavedOTP(data.mobileNumber, data.otp);
+    // await this.checkSavedOTP(data.mobileNumber, data.otp);
+    let userMobileNumber = await this.checkFirebaseOTP(data.token);
 
-    let theUser = await this.userRepository.getByMobileNumber(data.mobileNumber);
+    let theUser = await this.userRepository.getByMobileNumber(userMobileNumber);
 
     if (!theUser) {
       throw new NotFoundException(
@@ -156,7 +165,7 @@ export class AuthService {
       );
     }
 
-    await this.deletePastOTP(data.mobileNumber);
+    // await this.deletePastOTP(data.mobileNumber);
 
     //return token to user
     return await this.generateNormalAndRefreshJWTToken(
@@ -166,76 +175,89 @@ export class AuthService {
     );
   }
 
-  async verifyForgetPasswordOTP(data: VerifyOtpDto, req) {
+  async verifyForgetPasswordOTP(data: VerifyOtpDto, req): Promise<AuthTokensDTO> {
     //throw error if not passed
-    await this.checkSavedOTP(data.mobileNumber, data.otp);
+    // await this.checkSavedOTP(data.mobileNumber, data.otp);
 
-    await this.deletePastOTP(data.mobileNumber);
+    // await this.deletePastOTP(data.mobileNumber);
+    let userMobileNumber = await this.checkFirebaseOTP(data.token);
+
+    console.log('userMobileNumber:', userMobileNumber);
 
     //return token to user
-    let user = await this.userRepository.getByMobileNumber(data.mobileNumber);
-    return await this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id, req);
-  }
+    let user = await this.userRepository.getByMobileNumber(userMobileNumber);
 
-  private async saveOTP(mobileNumber: string, otp: string) {
-    let foundedNumber = await this.prisma.$queryRaw`
-      SELECT *
-      FROM OTP
-      WHERE mobileNumber = ${mobileNumber}
-    `;
-
-    if (foundedNumber[0]) {
-      await this.prisma.$queryRaw`
-      UPDATE OTP
-      SET
-      otp = ${otp}
-      WHERE
-      mobileNumber = ${mobileNumber}
-    `;
-    } else {
-      await this.prisma.$queryRaw`
-      INSERT INTO OTP
-      (
-        mobileNumber,
-        OTP
-      )
-      VALUES
-      (
-        ${mobileNumber},
-        ${otp}
-      )`;
-    }
-  }
-
-  private async checkSavedOTP(mobileNumber: string, otp: string): Promise<any> {
-    let obj = await this.prisma.$queryRaw`
-      SELECT
-      *
-      FROM OTP
-      WHERE
-      mobileNumber = ${mobileNumber}
-    `;
-
-    if (!obj[0] || obj[0].otp != otp) {
-      await this.deletePastOTP(mobileNumber);
+    console.log('user:', user);
+    if (!user) {
       throw new NotFoundException(
-        this.i18n.t(`errors.WRONG_OTP`, { lang: I18nContext.current().lang }),
+        this.i18n.t(`errors.USER_NOT_FOUND`, { lang: I18nContext.current().lang }),
       );
     }
 
-    return true;
+    return await this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id, req);
   }
 
-  private async deletePastOTP(mobileNumber: string): Promise<any> {
-    await this.prisma.$queryRaw`
-      DELETE
-      FROM OTP
-      WHERE
-      mobileNumber = ${mobileNumber}
-    `;
+  private async checkFirebaseOTP(firebaseToken: string): Promise<string> {
+    try {
+      // if (userFirebaseId === '01550307033') {
+      //   return true;
+      // }
+      const decodedToken: DecodedIdToken = await admin
+        .auth()
+        .verifyIdToken(firebaseToken, true);
+
+      const user: UserRecord = await admin.auth().getUser(decodedToken.uid);
+
+      console.log('firebaseUser: ', user);
+
+      const parsedDateTime = moment(user.metadata.lastSignInTime);
+      console.log('lastSignin: ', parsedDateTime);
+
+      const currentDateTime = moment();
+
+      console.log('current dataTime: ', currentDateTime);
+
+      const diffInMinutes = currentDateTime.diff(parsedDateTime, 'minutes');
+
+      console.log('diffInMinutes: ', diffInMinutes);
+
+      // if (diffInMinutes > 3) {
+      //   // throw new UnauthorizedException('Time expired for last otp');
+      //   throw new UnauthorizedException(
+      //     this.i18n.t(`errors.EXPIRED_FIREBASE_TOKEN_ERROR`, {
+      //       lang: I18nContext.current().lang,
+      //     }),
+      //   );
+      // }
+      return user.phoneNumber;
+    } catch (error: any) {
+      console.log('firebase error: ', error);
+
+      if (error instanceof UnauthorizedException) {
+        throw new UnauthorizedException(
+          this.i18n.t(`errors.EXPIRED_FIREBASE_TOKEN_ERROR`, {
+            lang: I18nContext.current().lang,
+          }),
+        );
+      }
+      // else if (error.errorInfo.code === 'auth/user-not-found') {
+      //   throw new UnauthorizedException('User not found');
+      // } else if (error.errorInfo.code === 'auth/invalid-phone-number') {
+      //   throw new BadRequestException('Invalid phone number');
+      // }
+
+      throw new UnauthorizedException(
+        this.i18n.t(`errors.FIREBASE_TOKEN_ERROR`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
   }
 
-  private async signupUserAndReturnToken(mobileNumber: string, req): Promise<any> {
+  private async signupUserAndReturnToken(
+    mobileNumber: string,
+    req,
+  ): Promise<AuthTokensDTO> {
     let createdUser = await this.userService.createByMobile(mobileNumber);
     return await this.generateNormalAndRefreshJWTToken(
       AvailableRoles.User,
@@ -264,7 +286,25 @@ export class AuthService {
       );
     }
 
-    return await this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id, req);
+    if (user.userType == AvailableRoles.User) {
+      return await this.generateNormalAndRefreshJWTToken(
+        AvailableRoles.User,
+        user.id,
+        req,
+      );
+    } else if (user.userType == AvailableRoles.Admin) {
+      return await this.generateNormalAndRefreshJWTToken(
+        AvailableRoles.Admin,
+        user.id,
+        req,
+      );
+    } else if (user.userType == AvailableRoles.Child) {
+      return await this.generateNormalAndRefreshJWTToken(
+        AvailableRoles.Child,
+        user.id,
+        req,
+      );
+    }
   }
 
   async childSignin(signinData: SigninUserDto, req): Promise<AuthTokensDTO> {

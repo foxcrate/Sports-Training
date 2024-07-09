@@ -10,6 +10,7 @@ import { FieldAcceptanceStatusDto } from './dtos/field-acceptance-status.dto';
 import { FieldReturnDto } from './dtos/return.dto';
 import { GlobalService } from 'src/global/global.service';
 import moment from 'moment-timezone';
+import { FieldCardFormatDto } from './dtos/field-card-format.dto';
 
 @Injectable()
 export class FieldRepository {
@@ -295,7 +296,11 @@ export class FieldRepository {
     return theField[0];
   }
 
-  async getFieldBookedHour(fieldId: number, userId: number, dateTime: string) {
+  async getFieldBookedHour(
+    fieldId: number,
+    userId: number,
+    dateTime: string,
+  ): Promise<FieldCardFormatDto> {
     let formatedDateTime = moment(dateTime).format('YYYY-MM-DD HH:mm:ss');
 
     let bookedSession = await this.prisma.$queryRaw`
@@ -483,7 +488,7 @@ export class FieldRepository {
         ${FieldAcceptanceStatusDto.Accepted},
         ${reqBody.sportId},
         ${reqBody.regionId},
-        ${reqBody.availableWeekDays},
+        ${JSON.stringify(reqBody.availableWeekDays)},
         ${{ from: reqBody.startTime, to: reqBody.endTime }}
       );`,
         this.prisma.$queryRaw`
@@ -533,7 +538,7 @@ export class FieldRepository {
         ${reqBody.profileImage},
         ${reqBody.sportId},
         ${reqBody.regionId},
-        ${reqBody.availableWeekDays},
+        ${JSON.stringify(reqBody.availableWeekDays)},
         ${{ from: reqBody.startTime, to: reqBody.endTime }},
         ${userId}
       );`,

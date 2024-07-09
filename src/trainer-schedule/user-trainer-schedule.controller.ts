@@ -19,11 +19,33 @@ import { FieldSlotsValidation } from './validations/field-slots.validation';
 import { TrainerDayFieldSlotsValidation } from './validations/trainer-day-field-slots.validation';
 import { BookTrainerSessionValidation } from './validations/book-trainer-session.validation';
 import { UserId } from 'src/decorators/user-id.decorator';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
+import { SwaggerErrorResponse } from 'src/global/classes/swagger-error-response';
+import { SimplifiedFieldReturn } from 'src/field/dtos/field-simplified-return.dto';
+import { UserSlotState } from './dtos/user-slot-state.dto';
+import { SessionCardDTO } from 'src/session/dtos/session-card.dto';
 
 @Controller('user/trainer-schedule')
 export class UserTrainerScheduleController {
   constructor(private scheduleService: TrainerScheduleService) {}
 
+  @ApiParam({
+    name: 'trainerProfileId',
+  })
+  @ApiCreatedResponse({
+    type: SimplifiedFieldReturn,
+    isArray: true,
+  })
+  @ApiTags('Trainer-Schedule: User: Get Trainer Fields')
+  @ApiBearerAuth()
+  //
   @Get('/:trainerProfileId/fields')
   @Version('1')
   @Roles('user')
@@ -32,6 +54,19 @@ export class UserTrainerScheduleController {
     return await this.scheduleService.getTrainerFields(params.trainerProfileId);
   }
 
+  @ApiParam({
+    name: 'trainerProfileId',
+  })
+  @ApiParam({
+    name: 'fieldId',
+  })
+  @ApiCreatedResponse({
+    type: String,
+    isArray: true,
+  })
+  @ApiTags('Trainer-Schedule: User: Get Trainer Field Days For This Week')
+  @ApiBearerAuth()
+  //
   @Get('/:trainerProfileId/available-upcoming-week/:fieldId')
   @Version('1')
   @Roles('user')
@@ -45,6 +80,22 @@ export class UserTrainerScheduleController {
     );
   }
 
+  @ApiParam({
+    name: 'trainerProfileId',
+  })
+  @ApiParam({
+    name: 'fieldId',
+  })
+  @ApiParam({
+    name: 'dayDate',
+  })
+  @ApiCreatedResponse({
+    type: UserSlotState,
+    isArray: true,
+  })
+  @ApiTags('Trainer-Schedule: User: Get Trainer Day Field Slots')
+  @ApiBearerAuth()
+  //
   @Get('/:trainerProfileId/day-field-slots/:fieldId/:dayDate')
   @Version('1')
   @Roles('user')
@@ -61,6 +112,30 @@ export class UserTrainerScheduleController {
     );
   }
 
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        trainerProfileId: {
+          type: 'number',
+        },
+        slotId: {
+          type: 'number',
+        },
+        dayDate: {
+          type: 'string',
+          // format: 'date-time',
+        },
+      },
+    },
+  })
+  @ApiCreatedResponse({
+    type: SessionCardDTO,
+  })
+  @ApiBadRequestResponse(new SwaggerErrorResponse('PASSED_DATE').init())
+  @ApiTags('Trainer-Schedule: User: Book Session')
+  @ApiBearerAuth()
+  //
   @Post('/book-session')
   @Version('1')
   @Roles('user')
