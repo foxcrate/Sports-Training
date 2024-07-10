@@ -40,16 +40,28 @@ export class PackageService {
       scheduleId,
     );
 
+    //validate number of sessions = length of sessionsDateTime[]
+    if (reqBody.numberOfSessions != reqBody.sessionsDateTime.length) {
+      console.log('-- reqBody.numberOfSessions != reqBody.sessionsDateTime.length --');
+      throw new BadRequestException(
+        this.i18n.t(`errors.INVALID_PACKAGE_SCHEDULE`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
     await this.validateCreatePackage(trainerSchedule, reqBody.sessionsDateTime);
-    //
-    // return true;
 
     reqBody.sessionsDateTime = reqBody.sessionsDateTime.map((item) => {
       return {
-        fromDateTime: moment(item.fromDateTime).toISOString(),
-        toDateTime: moment(item.toDateTime).toISOString(),
+        date: moment(item.date).format('YYYY-MM-DD'),
+        fromTime: moment(`${item.date} ${item.fromTime}`).toISOString(),
+        toTime: moment(`${item.date} ${item.toTime}`).toISOString(),
       };
     });
+
+    // console.log('reqBody', reqBody);
+    // return true;
 
     return await this.packageRepository.create(reqBody, trainerProfile.id);
   }
@@ -85,7 +97,7 @@ export class PackageService {
     // get all dates months from reqBody
 
     let packageMonths = sessionsDateTime.map((item) => {
-      return moment(item.fromDateTime).month() + 1;
+      return moment(item.date).month() + 1;
     });
 
     // check if package months are in trainer schedule
@@ -102,7 +114,7 @@ export class PackageService {
       });
 
       let packageDaysNumbers = sessionsDateTime.map((item) => {
-        return moment(item.fromDateTime).day();
+        return moment(item.date).day();
       });
 
       if (
@@ -119,34 +131,46 @@ export class PackageService {
         console.log('-------------------------');
 
         sessionsDateTime.forEach((packageSlot) => {
+          //validate fromTime is before toTime
+          if (moment(packageSlot.fromTime).isAfter(packageSlot.toTime)) {
+            console.log('-- fromTime is after toTime error --');
+
+            throw new BadRequestException(
+              this.i18n.t(`errors.INVALID_PACKAGE_SCHEDULE`, {
+                lang: I18nContext.current().lang,
+              }),
+            );
+          }
+
           console.log('---------------- PackageDateTime --------------------');
 
           //get schedule slots with the same weekday
-          console.log(
-            'pacakgeWeekDayNumber:',
-            moment(packageSlot.fromDateTime).weekday(),
-          );
+          console.log('packgeWeekDayNumber:', moment(packageSlot.date).weekday());
 
           let sameWeekDaySlots = trainerSchedule.ScheduleSlots.filter((item) => {
-            return item.weekDayNumber === moment(packageSlot.fromDateTime).weekday();
+            return item.weekDayNumber === moment(packageSlot.date).weekday();
           });
 
           console.log('sameWeekDaySlots:', sameWeekDaySlots);
 
           sameWeekDaySlots.forEach((scheduleSlot) => {
             //check if they have intersected time
-            let packageSlotFromTimeObject = moment(packageSlot.fromDateTime)
+            let packageSlotFromTimeObject = moment(
+              `${packageSlot.date} ${packageSlot.fromTime}`,
+            )
               .tz(this.configService.getOrThrow('TZ'))
               .format('HH:mm');
 
-            let packageSlotToTimeObject = moment(packageSlot.toDateTime)
+            let packageSlotToTimeObject = moment(
+              `${packageSlot.date} ${packageSlot.toTime}`,
+            )
               .tz(this.configService.getOrThrow('TZ'))
               .format('HH:mm');
 
             console.log('------------times-------------');
 
             let packageSlotFromTime = moment(packageSlotFromTimeObject, 'HH:mm');
-            console.log(packageSlotFromTime);
+            console.log('packageSlotFromTime:', packageSlotFromTime);
 
             let packageSlotToTime = moment(packageSlotToTimeObject, 'HH:mm');
             console.log('packageSlotToTime:', packageSlotToTime);
@@ -161,14 +185,6 @@ export class PackageService {
 
             console.log('-------------------------');
 
-            // const intersects =
-            //   moment(packageSlotFromTime, 'HH:mm').isBefore(
-            //     moment(scheduleSlot.toTime, 'HH:mm'),
-            //   ) &&
-            //   moment(packageSlotToTime, 'HH:mm').isAfter(
-            //     moment(scheduleSlot.fromTime, 'HH:mm'),
-            //   );
-
             let intersects =
               (scheduleSlotFromTime >= packageSlotFromTime &&
                 scheduleSlotFromTime < packageSlotToTime) ||
@@ -176,25 +192,14 @@ export class PackageService {
                 packageSlotFromTime < scheduleSlotToTime);
 
             if (intersects) {
+              console.log('-- package intersects with trainer schedule error --');
+
               throw new BadRequestException(
                 this.i18n.t(`errors.INVALID_PACKAGE_SCHEDULE`, {
                   lang: I18nContext.current().lang,
                 }),
               );
             }
-
-            // if (
-            //   moment(packageSlotTime, 'HH:mm').isBetween(
-            //     moment(scheduleSlot.fromTime, 'HH:mm'),
-            //     moment(scheduleSlot.toTime, 'HH:mm'),
-            //   )
-            // ) {
-            //   throw new BadRequestException(
-            //     this.i18n.t(`errors.INVALID_PACKAGE_SCHEDULE`, {
-            //       lang: I18nContext.current().lang,
-            //     }),
-            //   );
-            // }
           });
         });
       }

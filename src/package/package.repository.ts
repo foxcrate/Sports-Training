@@ -78,12 +78,13 @@ export class PackageRepository {
 
     thePackage[0].sessionsDateTime = thePackage[0].sessionsDateTime.map((item) => {
       return {
-        fromDateTime: moment(item.fromDateTime)
+        date: moment(item.date).format('YYYY-MM-DD'),
+        fromTime: moment(item.fromTime)
           .tz(this.configService.getOrThrow('TZ'))
-          .format('YYYY-MM-DD HH:mm'),
-        toDateTime: moment(item.toDateTime)
+          .format('HH:mm'),
+        toTime: moment(item.toTime)
           .tz(this.configService.getOrThrow('TZ'))
-          .format('YYYY-MM-DD HH:mm'),
+          .format('HH:mm'),
       };
     });
 
