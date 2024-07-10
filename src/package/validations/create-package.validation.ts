@@ -11,8 +11,18 @@ export const CreatePackageValidation = Joi.object({
   fieldId: Joi.number().required(),
   sessionsDateTime: Joi.array()
     .items({
-      fromDateTime: Joi.string().required(),
-      toDateTime: Joi.string().required(),
+      date: Joi.string()
+        .pattern(/^\d{4}-\d{2}-\d{1,2}$/)
+        .message('Date must be in YYYY-MM-DD format')
+        .required(),
+      fromTime: Joi.string()
+        .regex(/^([0-9]{2})\:([0-9]{2})( [AaPp][Mm])?$/)
+        .message('Time must be in HH:mm format')
+        .required(),
+      toTime: Joi.string()
+        .regex(/^([0-9]{2})\:([0-9]{2})( [AaPp][Mm])?$/)
+        .message('Time must be in HH:mm format')
+        .required(),
     })
     .required()
     .min(1),

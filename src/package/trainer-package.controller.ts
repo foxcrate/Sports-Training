@@ -32,20 +32,22 @@ export class TrainerPackageController {
         value: {
           name: 'Basic Package',
           description: 'Basic Package Description',
-          numberOfSessions: 5,
+          numberOfSessions: 2,
           minAttendees: 1,
           maxAttendees: 5,
           price: 100,
-          ExpirationDate: '2022-12-31',
+          ExpirationDate: '2024-12-31',
           fieldId: 1,
           sessionsDateTime: [
             {
-              fromDateTime: '2022-01-01T10:00:00.000Z',
-              toDateTime: '2022-01-01T11:00:00.000Z',
+              date: '2024-01-01',
+              fromTime: '10:00',
+              toTime: '11:00',
             },
             {
-              fromDateTime: '2022-01-01T12:00:00.000Z',
-              toDateTime: '2022-01-01T13:00:00.000Z',
+              date: '2024-01-01',
+              fromTime: '12:00',
+              toTime: '13:00',
             },
           ],
         },
@@ -67,7 +69,6 @@ export class TrainerPackageController {
     @Body(new JoiValidation(CreatePackageValidation)) reqBody: PackageCreateDto,
     @UserId() userId: number,
   ) {
-    // return reqBody;
     return await this.packageService.create(reqBody, userId);
   }
 

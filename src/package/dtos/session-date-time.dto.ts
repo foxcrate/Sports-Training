@@ -2,8 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class SessionDateTimeDto {
   @ApiProperty()
-  fromDateTime: string;
+  date: string;
 
   @ApiProperty()
-  toDateTime: string;
+  fromTime: string;
+
+  @ApiProperty()
+  toTime: string;
 }
