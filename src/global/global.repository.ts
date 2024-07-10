@@ -26,6 +26,21 @@ export class GlobalRepository {
     return allAgeGroups;
   }
 
+  async allRegions(): Promise<[]> {
+    let allRegions: [] = await this.prisma.$queryRaw`
+        SELECT
+        Region.id,
+        RegionTranslation.name AS name
+        FROM
+        Region
+        LEFT JOIN RegionTranslation
+        ON RegionTranslation.regionId = Region.id
+        AND RegionTranslation.language = ${I18nContext.current().lang}
+      `;
+
+    return allRegions;
+  }
+
   async allLevels(): Promise<[]> {
     let allLevels: [] = await this.prisma.$queryRaw`
         SELECT

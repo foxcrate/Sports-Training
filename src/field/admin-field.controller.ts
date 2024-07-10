@@ -22,6 +22,7 @@ import { FieldIdValidation } from './validations/field-id.validaiton';
 import { AdminFieldService } from './admin-field.service';
 import { NotAvailableDatesValidation } from './validations/not-available-dates.valdiaiton';
 import { FieldAcceptanceStatusDto } from './dtos/field-acceptance-status.dto';
+import { GetAllFilterDto } from './dtos/get-all-filter.dto';
 
 @Controller('admin/field')
 export class AdminFieldController {
@@ -31,8 +32,8 @@ export class AdminFieldController {
   @Version('1')
   @Roles('admin')
   @UseGuards(AuthGuard, RoleGuard)
-  async getAll1() {
-    return await this.adminFieldService.getAll();
+  async getAll1(@Query() filter: GetAllFilterDto) {
+    return await this.adminFieldService.getAll(filter);
   }
 
   @Post()

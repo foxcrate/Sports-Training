@@ -11,6 +11,7 @@ import { FieldReturnDto } from './dtos/return.dto';
 import { GlobalService } from 'src/global/global.service';
 import moment from 'moment-timezone';
 import { FieldCardFormatDto } from './dtos/field-card-format.dto';
+import { GetAllFilterDto } from './dtos/get-all-filter.dto';
 
 @Injectable()
 export class FieldRepository {
@@ -21,8 +22,13 @@ export class FieldRepository {
     private readonly i18n: I18nService,
   ) {}
 
-  async allFields(): Promise<FieldBookingDetailsDTO[]> {
-    let allFields: FieldBookingDetailsDTO[] = await this.prisma.$queryRaw`
+  async allFields(filter: GetAllFilterDto): Promise<FieldBookingDetailsDTO[]> {
+    // console.log({ filter });
+
+    let allFields: FieldBookingDetailsDTO[];
+
+    if (filter.regionId) {
+      allFields = await this.prisma.$queryRaw`
     WITH FieldDetailsWithBookedHours AS (
       SELECT
         f.id,
@@ -33,7 +39,7 @@ export class FieldRepository {
         CASE WHEN AVG(r.ratingNumber) IS NULL THEN 5
           ELSE
           ROUND(AVG(r.ratingNumber),1)
-          END 
+          END
           AS RatingNumber,
         f.availableWeekDays AS availableWeekDays,
         f.availableDayHours AS availableDayHours,
@@ -60,12 +66,13 @@ export class FieldRepository {
       GROUP BY f.id
     ),
     FieldDetailsWithBookedHoursWithRegion AS(
-      SELECT 
+      SELECT
       fdwbh.id,
       fdwbh.name,
       fdwbh.acceptanceStatus,
       fdwbh.profileImage,
       fdwbh.ratingNumber,
+      rg.id as regionId,
       CASE
       WHEN COUNT(rg.id ) = 0 THEN null
       ELSE
@@ -81,14 +88,15 @@ export class FieldRepository {
     LEFT JOIN Region AS rg ON fdwbh.regionId = rg.id
     LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = rg.id
     AND RegionTranslation.language = ${I18nContext.current().lang}
-    GROUP BY  fdwbh.id
+    GROUP BY fdwbh.id
     )
-    SELECT 
+    SELECT
       fdwbhwr.id,
       fdwbhwr.name,
       fdwbhwr.acceptanceStatus,
       fdwbhwr.profileImage,
       fdwbhwr.ratingNumber,
+      fdwbhwr.regionId AS regionId,
       fdwbhwr.region,
       fdwbhwr.availableWeekDays AS availableWeekDays,
       fdwbhwr.availableDayHours AS availableDayHours,
@@ -106,8 +114,99 @@ export class FieldRepository {
     FieldNotAvailableDays AS fnad
     ON
     fdwbhwr.id = fnad.fieldId
-    GROUP BY  fdwbhwr.id
+    WHERE fdwbhwr.regionId = ${filter.regionId}
+    GROUP BY fdwbhwr.id
     `;
+    } else {
+      allFields = await this.prisma.$queryRaw`
+    WITH FieldDetailsWithBookedHours AS (
+      SELECT
+        f.id,
+        f.name,
+        f.acceptanceStatus,
+        f.profileImage,
+        f.regionId,
+        CASE WHEN AVG(r.ratingNumber) IS NULL THEN 5
+          ELSE
+          ROUND(AVG(r.ratingNumber),1)
+          END
+          AS RatingNumber,
+        f.availableWeekDays AS availableWeekDays,
+        f.availableDayHours AS availableDayHours,
+        CASE
+        WHEN COUNT(fbh.id ) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(JSON_OBJECT(
+          'id',fbh.id,
+          'fromDateTime', fbh.fromDateTime,
+          'userId',fbh.userId
+          ))
+        END AS fieldBookedHours
+      FROM Field AS f
+      LEFT JOIN
+      FieldsBookedHours AS fbh
+      ON
+      f.id = fbh.fieldId
+      LEFT JOIN
+      Rate AS r
+      ON
+      f.id = r.fieldId
+      WHERE
+      f.acceptanceStatus = 'accepted'
+      GROUP BY f.id
+    ),
+    FieldDetailsWithBookedHoursWithRegion AS(
+      SELECT
+      fdwbh.id,
+      fdwbh.name,
+      fdwbh.acceptanceStatus,
+      fdwbh.profileImage,
+      fdwbh.ratingNumber,
+      rg.id as regionId,
+      CASE
+      WHEN COUNT(rg.id ) = 0 THEN null
+      ELSE
+      JSON_ARRAYAGG(JSON_OBJECT(
+        'id',rg.id,
+        'name', RegionTranslation.name
+        ))
+      END AS region,
+      fdwbh.availableWeekDays AS availableWeekDays,
+      fdwbh.availableDayHours AS availableDayHours,
+      fdwbh.fieldBookedHours AS fieldBookedHours
+    FROM FieldDetailsWithBookedHours AS fdwbh
+    LEFT JOIN Region AS rg ON fdwbh.regionId = rg.id
+    LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = rg.id
+    AND RegionTranslation.language = ${I18nContext.current().lang}
+    GROUP BY fdwbh.id
+    )
+    SELECT
+      fdwbhwr.id,
+      fdwbhwr.name,
+      fdwbhwr.acceptanceStatus,
+      fdwbhwr.profileImage,
+      fdwbhwr.ratingNumber,
+      fdwbhwr.regionId AS regionId,
+      fdwbhwr.region,
+      fdwbhwr.availableWeekDays AS availableWeekDays,
+      fdwbhwr.availableDayHours AS availableDayHours,
+      fdwbhwr.fieldBookedHours AS fieldBookedHours,
+      CASE
+      WHEN COUNT(fnad.id ) = 0 THEN null
+      ELSE
+      JSON_ARRAYAGG(JSON_OBJECT(
+        'id',fnad.id,
+        'dayDate', fnad.dayDate
+        ))
+      END AS fieldNotAvailableDays
+    FROM FieldDetailsWithBookedHoursWithRegion AS fdwbhwr
+    LEFT JOIN
+    FieldNotAvailableDays AS fnad
+    ON
+    fdwbhwr.id = fnad.fieldId
+    GROUP BY fdwbhwr.id
+    `;
+    }
 
     return allFields;
   }

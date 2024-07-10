@@ -80,6 +80,21 @@ export class GlobalController {
     type: GlobalReturnDTO,
     isArray: true,
   })
+  @ApiTags('Global: Get All Regions')
+  @ApiBearerAuth()
+  //
+  @Get('regions')
+  @Roles(AvailableRoles.User)
+  @UseGuards(AuthGuard, RoleGuard)
+  @Version('1')
+  async getRegions() {
+    return await this.globalService.getAllRegions();
+  }
+
+  @ApiCreatedResponse({
+    type: GlobalReturnDTO,
+    isArray: true,
+  })
   @ApiTags('Global: Get All Levels')
   @ApiBearerAuth()
   //

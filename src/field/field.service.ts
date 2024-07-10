@@ -9,6 +9,7 @@ import { FieldReturnDto } from './dtos/return.dto';
 import { FreeSlots } from './dtos/free-slots.dto';
 import moment from 'moment-timezone';
 import { FieldCardFormatDto } from './dtos/field-card-format.dto';
+import { GetAllFilterDto } from './dtos/get-all-filter.dto';
 
 @Injectable()
 export class FieldService {
@@ -18,8 +19,8 @@ export class FieldService {
     private globalSerice: GlobalService,
   ) {}
 
-  async getAll(): Promise<FieldBookingDetailsDTO[]> {
-    return this.fieldRepository.allFields();
+  async getAll(filter: GetAllFilterDto): Promise<FieldBookingDetailsDTO[]> {
+    return this.fieldRepository.allFields(filter);
   }
 
   async getOne(id: number): Promise<FieldBookingDetailsDTO> {

@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Post,
+  Query,
 } from '@nestjs/common';
 import { FieldService } from './field.service';
 import { Roles } from 'src/decorators/roles.decorator';
@@ -24,6 +25,7 @@ import {
   ApiBody,
   ApiCreatedResponse,
   ApiParam,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { FieldBookingDetailsDTO } from './dtos/fieldBookingDetails.dto';
@@ -33,11 +35,14 @@ import { FieldCreateDto } from './dtos/create.dto';
 import { FieldReturnDto } from './dtos/return.dto';
 import { ReserveSlotDto } from 'src/doctor-clinic/dtos/reserve-slot.dto';
 import { FieldCardFormatDto } from './dtos/field-card-format.dto';
+import { RegionIdValidation } from './validations/regionId.validation';
+import { GetAllFilterDto } from './dtos/get-all-filter.dto';
 
 @Controller('field')
 export class FieldController {
   constructor(private fieldService: FieldService) {}
 
+  @ApiQuery({ name: 'regionId', required: false })
   @ApiCreatedResponse({
     type: FieldBookingDetailsDTO,
     isArray: true,
@@ -49,8 +54,8 @@ export class FieldController {
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  async getAll1() {
-    return await this.fieldService.getAll();
+  async getAll1(@Query() filter: GetAllFilterDto) {
+    return await this.fieldService.getAll(filter);
   }
 
   @ApiParam({
