@@ -6,6 +6,7 @@ import { FieldUpdateDto } from './dtos/update.dto';
 import { FieldAcceptanceStatusDto } from './dtos/field-acceptance-status.dto';
 import { FieldBookingDetailsDTO } from './dtos/fieldBookingDetails.dto';
 import { FieldReturnDto } from './dtos/return.dto';
+import { GetAllFilterDto } from './dtos/get-all-filter.dto';
 
 @Injectable()
 export class AdminFieldService {
@@ -14,8 +15,8 @@ export class AdminFieldService {
     private readonly i18n: I18nService,
   ) {}
 
-  async getAll(): Promise<FieldBookingDetailsDTO[]> {
-    return await this.fieldRepository.allFields();
+  async getAll(filter: GetAllFilterDto): Promise<FieldBookingDetailsDTO[]> {
+    return await this.fieldRepository.allFields(filter);
   }
 
   async getOne(id: number): Promise<FieldBookingDetailsDTO> {

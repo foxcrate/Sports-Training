@@ -115,6 +115,12 @@ export class GlobalService {
     return allAgeGroups;
   }
 
+  async getAllRegions(): Promise<GlobalReturnDTO[]> {
+    let allRegions = await this.globalRepository.allRegions();
+
+    return allRegions;
+  }
+
   async getAllLevels(): Promise<GlobalReturnDTO[]> {
     let allLevels = await this.globalRepository.allLevels();
 
