@@ -245,22 +245,22 @@ export class AuthController {
     return await this.authService.userSignin(signinData, req);
   }
 
-  @ApiBody({
-    type: SigninUserDto,
-  })
-  @ApiCreatedResponse({
-    type: AuthTokensDTO,
-  })
-  @ApiUnauthorizedResponse(new SwaggerErrorResponse('ACCOUNT_NOT_ACTIVATED').init())
-  @ApiTags('Auth: Child Signin')
-  @Post('/child/signin')
-  @Version('1')
-  async childSignin(
-    @Body(new JoiValidation(UserSigninValidation)) signinData: SigninUserDto,
-    @Request() req: ExpressRequest,
-  ) {
-    return await this.authService.childSignin(signinData, req);
-  }
+  // @ApiBody({
+  //   type: SigninUserDto,
+  // })
+  // @ApiCreatedResponse({
+  //   type: AuthTokensDTO,
+  // })
+  // @ApiUnauthorizedResponse(new SwaggerErrorResponse('ACCOUNT_NOT_ACTIVATED').init())
+  // @ApiTags('Auth: Child Signin')
+  // @Post('/child/signin')
+  // @Version('1')
+  // async childSignin(
+  //   @Body(new JoiValidation(UserSigninValidation)) signinData: SigninUserDto,
+  //   @Request() req: ExpressRequest,
+  // ) {
+  //   return await this.authService.childSignin(signinData, req);
+  // }
 
   @ApiBody({
     schema: {

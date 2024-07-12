@@ -269,9 +269,15 @@ export class AuthService {
   async userSignin(signinData: SigninUserDto, req): Promise<AuthTokensDTO> {
     const user = await this.userService.findByMobile(signinData.mobileNumber);
 
+    if (!user.isActivated) {
+      throw new UnauthorizedException(
+        this.i18n.t(`errors.ACCOUNT_NOT_ACTIVATED`, { lang: I18nContext.current().lang }),
+      );
+    }
+
     if (!user.password) {
       throw new UnauthorizedException(
-        this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
+        this.i18n.t(`errors.ACCOUNT_NOT_ACTIVATED`, { lang: I18nContext.current().lang }),
       );
     }
 
@@ -307,32 +313,32 @@ export class AuthService {
     }
   }
 
-  async childSignin(signinData: SigninUserDto, req): Promise<AuthTokensDTO> {
-    const child = await this.userService.findByMobile(signinData.mobileNumber);
+  // async childSignin(signinData: SigninUserDto, req): Promise<AuthTokensDTO> {
+  //   const child = await this.userService.findByMobile(signinData.mobileNumber);
 
-    if (!child.isActivated) {
-      throw new UnauthorizedException(
-        this.i18n.t(`errors.ACCOUNT_NOT_ACTIVATED`, { lang: I18nContext.current().lang }),
-      );
-    }
+  //   if (!child.isActivated) {
+  //     throw new UnauthorizedException(
+  //       this.i18n.t(`errors.ACCOUNT_NOT_ACTIVATED`, { lang: I18nContext.current().lang }),
+  //     );
+  //   }
 
-    const validPassword = await this.globalService.verifyPassword(
-      signinData.password,
-      child.password,
-    );
+  //   const validPassword = await this.globalService.verifyPassword(
+  //     signinData.password,
+  //     child.password,
+  //   );
 
-    if (!validPassword) {
-      throw new UnauthorizedException(
-        this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
-      );
-    }
+  //   if (!validPassword) {
+  //     throw new UnauthorizedException(
+  //       this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
+  //     );
+  //   }
 
-    return await this.generateNormalAndRefreshJWTToken(
-      AvailableRoles.Child,
-      child.id,
-      req,
-    );
-  }
+  //   return await this.generateNormalAndRefreshJWTToken(
+  //     AvailableRoles.Child,
+  //     child.id,
+  //     req,
+  //   );
+  // }
 
   async refreshToken(refreshToken: string, req) {
     let payload: IAuthToken = this.verifyRefreshToken(refreshToken);
