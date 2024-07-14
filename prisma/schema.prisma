@@ -707,6 +707,7 @@ model Package {
   numberOfSessions              Int?
   maxAttendees              Int?
   minAttendees              Int?
+  currentAttendeesNumber    Int?
   price              Int?
   ExpirationDate  DateTime @db.Date
   sessionsDateTime Json?
@@ -733,6 +734,8 @@ model PlayerProfilePackages {
 
   playerProfile   PlayerProfile @relation(fields: [playerProfileId], references: [id], onDelete: Cascade)
   playerProfileId Int
+
+  sessionsTaken   Int @default(0)
 
   package   Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
   packageId Int

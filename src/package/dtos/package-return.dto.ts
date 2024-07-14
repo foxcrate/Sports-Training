@@ -21,6 +21,9 @@ export class PackageReturnDto {
   numberOfSessions: number;
 
   @ApiProperty()
+  currentAttendeesNumber: number;
+
+  @ApiProperty()
   minAttendees: number;
 
   @ApiProperty()

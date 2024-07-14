@@ -21,6 +21,8 @@
   "FLEXIBLE_PACKAGE_SCHEDULE": "Flexible Package can't have a schedule",
   "SCHEDULE_PACKAGE_SCHEDULE": "Schedule Package should have a schedule",
   "SCHEDULE_PACKAGE_ATTENDEES": "Schedule Package should have a max and min attendees",
+  "SCHEDULE_PACKAGE_FIELDS": "Schedule Package should have fields",
+  "PACKAGE_FULL": "Package is full",
   "NOT_BELONG_RESOURCE": "This resource doesn't belong to this user",
   "CANT_BOOK_YOUR_PACKAGE": "You can't book your own package",
   "SCHEDULE_NOT_FOUND": "Schedule not found",

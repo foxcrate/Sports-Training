@@ -16,6 +16,7 @@ import { ConfigService } from '@nestjs/config';
 import { SessionDateTimeDto } from './dtos/session-date-time.dto';
 import { ScheduleSlotsDetailsDTO } from 'src/trainer-schedule/dtos/schedule-slots-details';
 import { PlayerProfileRepository } from 'src/player-profile/player-profile.repository';
+import { ReturnPlayerProfileDto } from 'src/player-profile/dtos/return.dto';
 
 @Injectable()
 export class PackageService {
@@ -51,6 +52,14 @@ export class PackageService {
     if (reqBody.type === 'schedule' && (!reqBody.minAttendees || !reqBody.maxAttendees)) {
       throw new BadRequestException(
         this.i18n.t(`errors.SCHEDULE_PACKAGE_ATTENDEES`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
+    if (reqBody.type === 'schedule' && (!reqBody.fieldId || !reqBody.secondaryFieldId)) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.SCHEDULE_PACKAGE_FIELDS`, {
           lang: I18nContext.current().lang,
         }),
       );
@@ -127,8 +136,30 @@ export class PackageService {
     if (thePackage.type === 'schedule') {
       await this.validateBookPackage(userId, thePackage);
     }
+
+    //save player to package
+    await this.savePlayerToPackage(thePackage, thePlayerProfile);
+
     return true;
-    //save the booking
+  }
+
+  async savePlayerToPackage(
+    thePackage: PackageReturnDto,
+    playerProfile: ReturnPlayerProfileDto,
+  ) {
+    //check package current attendees < maxAttendees
+    if (thePackage.currentAttendeesNumber >= thePackage.maxAttendees) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.PACKAGE_FULL`, { lang: I18nContext.current().lang }),
+      );
+    }
+
+    // check if the player already in the packag
+
+    await this.packageRepository.createPlayerPackageRelation(
+      thePackage.id,
+      playerProfile.id,
+    );
   }
 
   private async authorizeResource(packageId: number, userId: number): Promise<any> {
@@ -152,9 +183,8 @@ export class PackageService {
 
   private async validateBookPackage(userId: number, thePackage: PackageReturnDto) {
     for (let index = 0; index < thePackage.sessionsDateTime.length; index++) {
-      let sessionDate = moment(thePackage.sessionsDateTime[index].date).format(
-        'YYYY-MM-DD',
-      );
+      let packageSlot = thePackage.sessionsDateTime[index];
+      let sessionDate = moment(packageSlot.date).format('YYYY-MM-DD');
       console.log('sessionDate:', sessionDate);
 
       let playerSessionsThisDay = await this.trainerScheduleRepository.getUserBookedTimes(
@@ -162,6 +192,53 @@ export class PackageService {
         sessionDate,
       );
       console.log('playerSessionsThisDay:', playerSessionsThisDay);
+
+      playerSessionsThisDay.forEach((playerSession) => {
+        //check if they have intersected time
+        let packageSlotFromTimeObject = moment(
+          `${packageSlot.date} ${packageSlot.fromTime}`,
+        )
+          .tz(this.configService.getOrThrow('TZ'))
+          .format('HH:mm');
+
+        let packageSlotToTimeObject = moment(`${packageSlot.date} ${packageSlot.toTime}`)
+          .tz(this.configService.getOrThrow('TZ'))
+          .format('HH:mm');
+
+        console.log('------------times-------------');
+
+        let packageSlotFromTime = moment(packageSlotFromTimeObject, 'HH:mm');
+        console.log('packageSlotFromTime:', packageSlotFromTime);
+
+        let packageSlotToTime = moment(packageSlotToTimeObject, 'HH:mm');
+        console.log('packageSlotToTime:', packageSlotToTime);
+
+        console.log('-------------------------');
+
+        let scheduleSlotFromTime = moment(playerSession.fromTime, 'HH:mm');
+        console.log('scheduleSlot.fromTime:', moment(playerSession.fromTime, 'HH:mm'));
+
+        let scheduleSlotToTime = moment(playerSession.toTime, 'HH:mm');
+        console.log('scheduleSlot.toTime:', moment(playerSession.toTime, 'HH:mm'));
+
+        console.log('-------------------------');
+
+        let intersects =
+          (scheduleSlotFromTime >= packageSlotFromTime &&
+            scheduleSlotFromTime < packageSlotToTime) ||
+          (packageSlotFromTime >= scheduleSlotFromTime &&
+            packageSlotFromTime < scheduleSlotToTime);
+
+        if (intersects) {
+          console.log('-- package intersects with player schedule error --');
+
+          throw new BadRequestException(
+            this.i18n.t(`errors.BOOKED_TIME`, {
+              lang: I18nContext.current().lang,
+            }),
+          );
+        }
+      });
     }
   }
 
