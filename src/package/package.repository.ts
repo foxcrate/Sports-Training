@@ -68,6 +68,7 @@ export class PackageRepository {
         Package.name,
         Package.description,
         Package.type,
+        Package.currentAttendeesNumber,
         Package.numberOfSessions,
         Package.maxAttendees,
         Package.minAttendees,
@@ -118,6 +119,21 @@ export class PackageRepository {
 
     return thePackage[0];
   }
+
+  async createPlayerPackageRelation(packageId: number, playerProfileId: number) {
+    await this.prisma.$queryRaw`
+    INSERT INTO PlayerProfilePackages
+      (
+        packageId,
+        playerProfileId
+      )
+      VALUES
+    (
+        ${packageId},
+        ${playerProfileId}
+    )`;
+  }
+
   // async getOneByTrainerProfileId(trainerProfileId: number): Promise<any> {
   //   let thePackage = await this.prisma.$queryRaw`
   //       SELECT

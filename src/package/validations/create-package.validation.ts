@@ -10,8 +10,8 @@ export const CreatePackageValidation = Joi.object({
   maxAttendees: Joi.number().max(15),
   price: Joi.number().required(),
   ExpirationDate: Joi.string().required(),
-  fieldId: Joi.number().required(),
-  secondaryFieldId: Joi.number().required(),
+  fieldId: Joi.number(),
+  secondaryFieldId: Joi.number(),
   sessionsDateTime: Joi.array()
     .items({
       date: Joi.string()
