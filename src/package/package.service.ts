@@ -28,6 +28,22 @@ export class PackageService {
   ) {}
 
   async create(reqBody: PackageCreateDto, userId: number): Promise<PackageReturnDto> {
+    // validate flexible package having a schedule
+    if (reqBody.type === 'flexible' && reqBody.sessionsDateTime) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.FLEXIBLE_PACKAGE_SCHEDULE`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+    if (reqBody.type === 'schedule' && !reqBody.sessionsDateTime) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.SCHEDULE_PACKAGE_SCHEDULE`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
     let trainerProfile = await this.trainerProfileRepository.getByUserId(userId);
 
     let scheduleId = await this.trainerScheduleRepository.getTrainerScheduleId(
@@ -40,28 +56,27 @@ export class PackageService {
       scheduleId,
     );
 
-    //validate number of sessions = length of sessionsDateTime[]
-    if (reqBody.numberOfSessions != reqBody.sessionsDateTime.length) {
-      console.log('-- reqBody.numberOfSessions != reqBody.sessionsDateTime.length --');
-      throw new BadRequestException(
-        this.i18n.t(`errors.INVALID_PACKAGE_SCHEDULE`, {
-          lang: I18nContext.current().lang,
-        }),
-      );
+    if (reqBody.sessionsDateTime) {
+      //validate number of sessions = length of sessionsDateTime[]
+      if (reqBody.numberOfSessions != reqBody.sessionsDateTime.length) {
+        console.log('-- reqBody.numberOfSessions != reqBody.sessionsDateTime.length --');
+        throw new BadRequestException(
+          this.i18n.t(`errors.INVALID_PACKAGE_SCHEDULE`, {
+            lang: I18nContext.current().lang,
+          }),
+        );
+      }
+
+      await this.validateCreatePackage(trainerSchedule, reqBody.sessionsDateTime);
+
+      reqBody.sessionsDateTime = reqBody.sessionsDateTime.map((item) => {
+        return {
+          date: moment(item.date).format('YYYY-MM-DD'),
+          fromTime: moment(`${item.date} ${item.fromTime}`).toISOString(),
+          toTime: moment(`${item.date} ${item.toTime}`).toISOString(),
+        };
+      });
     }
-
-    await this.validateCreatePackage(trainerSchedule, reqBody.sessionsDateTime);
-
-    reqBody.sessionsDateTime = reqBody.sessionsDateTime.map((item) => {
-      return {
-        date: moment(item.date).format('YYYY-MM-DD'),
-        fromTime: moment(`${item.date} ${item.fromTime}`).toISOString(),
-        toTime: moment(`${item.date} ${item.toTime}`).toISOString(),
-      };
-    });
-
-    // console.log('reqBody', reqBody);
-    // return true;
 
     return await this.packageRepository.create(reqBody, trainerProfile.id);
   }
@@ -69,6 +84,17 @@ export class PackageService {
   async GetOne(packageId: number, userId: number): Promise<PackageReturnDto> {
     await this.authorizeResource(packageId, userId);
     return await this.packageRepository.getOneById(packageId);
+  }
+
+  async playerBookTrainerPackage(
+    userId: number,
+    trainerProfileId: number,
+    packageId: number,
+  ) {
+    // validate the package belong to the trainerProfile
+    // get package data
+    // if package in a schedule package; validate the player schedule relative to package schedule
+    //save the booking
   }
 
   private async authorizeResource(packageId: number, userId: number): Promise<any> {

@@ -32,12 +32,14 @@ export class TrainerPackageController {
         value: {
           name: 'Basic Package',
           description: 'Basic Package Description',
+          type: 'flexible or schedule',
           numberOfSessions: 2,
           minAttendees: 1,
           maxAttendees: 5,
           price: 100,
           ExpirationDate: '2024-12-31',
           fieldId: 1,
+          secondaryFieldId: 2,
           sessionsDateTime: [
             {
               date: '2024-01-01',

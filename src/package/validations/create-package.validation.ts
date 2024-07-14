@@ -1,14 +1,17 @@
 import Joi from 'joi';
+import { PACKAGE_TYPE } from 'src/global/enums';
 
 export const CreatePackageValidation = Joi.object({
   name: Joi.string().required(),
   description: Joi.string().required(),
+  type: Joi.required().valid(...Object.values(PACKAGE_TYPE)),
   numberOfSessions: Joi.number().required(),
   minAttendees: Joi.number().required(),
   maxAttendees: Joi.number().max(15).required(),
   price: Joi.number().required(),
   ExpirationDate: Joi.string().required(),
   fieldId: Joi.number().required(),
+  secondaryFieldId: Joi.number().required(),
   sessionsDateTime: Joi.array()
     .items({
       date: Joi.string()
@@ -24,6 +27,5 @@ export const CreatePackageValidation = Joi.object({
         .message('Time must be in HH:mm format')
         .required(),
     })
-    .required()
     .min(1),
 });

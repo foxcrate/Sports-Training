@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Certificate } from './certificate.dto';
 import { GlobalReturnDTO } from 'src/global/dtos/global-return.dto';
+import { Package } from './package.dto';
+import { PACKAGE_TYPE } from 'src/global/enums';
 
 export class ReturnTrainerProfileDetailsDto {
   @ApiProperty()
@@ -15,6 +17,11 @@ export class ReturnTrainerProfileDetailsDto {
   @ApiProperty()
   sessionDescription: String;
 
+  @ApiProperty({
+    enum: PACKAGE_TYPE,
+  })
+  type: PACKAGE_TYPE;
+
   @ApiProperty()
   cost: number;
 
@@ -26,17 +33,32 @@ export class ReturnTrainerProfileDetailsDto {
   })
   region: GlobalReturnDTO;
 
-  @ApiProperty()
-  sports: number[];
+  @ApiProperty({
+    type: GlobalReturnDTO,
+    isArray: true,
+  })
+  sports: GlobalReturnDTO[];
 
-  @ApiProperty()
-  fields: number[];
+  @ApiProperty({
+    type: GlobalReturnDTO,
+    isArray: true,
+  })
+  fields: GlobalReturnDTO[];
 
   @ApiProperty()
   userId: number;
 
-  @ApiProperty()
+  @ApiProperty({
+    type: Certificate,
+    isArray: true,
+  })
   certificates: Certificate[];
+
+  @ApiProperty({
+    type: Package,
+    isArray: true,
+  })
+  packages: Package[];
 
   @ApiProperty()
   createdAt: number;
