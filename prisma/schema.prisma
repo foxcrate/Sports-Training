@@ -15,6 +15,11 @@ enum ScheduleType {
   override
 }
 
+enum PackageType {
+  flexible
+  schedule
+}
+
 enum AcceptanceStatus {
   accepted
   pending
@@ -575,7 +580,8 @@ model Field {
   rates             Rate[]
 
   slots Slot[]
-  packages  Package[]
+  packages  Package[] @relation("PrimaryPackages")
+  secondaryPackages  Package[] @relation("SecondaryPackages")
 
   addedByUserId Int?
   addedByUser   User? @relation(fields: [addedByUserId], references: [id], onDelete: SetNull)
@@ -697,6 +703,7 @@ model Package {
 
   name              String
   description       String?
+  type    PackageType?
   numberOfSessions              Int?
   maxAttendees              Int?
   minAttendees              Int?
@@ -704,8 +711,11 @@ model Package {
   ExpirationDate  DateTime @db.Date
   sessionsDateTime Json?
 
-  field   Field? @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  field   Field? @relation(name: "PrimaryPackages" ,fields: [fieldId], references: [id], onDelete: Cascade)
   fieldId Int?
+
+  secondaryField   Field? @relation(name: "SecondaryPackages" ,fields: [secondaryFieldId], references: [id], onDelete: Cascade)
+  secondaryFieldId Int?
 
   trainerProfile   TrainerProfile @relation(fields: [trainerProfileId], references: [id], onDelete: Cascade)
   trainerProfileId Int

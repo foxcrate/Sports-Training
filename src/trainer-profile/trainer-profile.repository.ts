@@ -155,6 +155,29 @@ export class TrainerProfileRepository {
         && feedback IS NOT NULL
         LIMIT 5
       ),
+      TrainerPackages AS(
+        SELECT trainerProfileId,
+        CASE WHEN COUNT(Package.id) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(JSON_OBJECT(
+          'id',Package.id,
+          'name', Package.name,
+          'description', Package.description,
+          'type', Package.type,
+          'price', Package.price,
+          'numberOfSessions', Package.numberOfSessions,
+          'maxAttendees', Package.maxAttendees,
+          'minAttendees', Package.minAttendees,
+          'location', Region.name
+          ))
+          END AS Packages
+          FROM
+          Package
+          LEFT JOIN Field ON Package.fieldId = Field.id
+          LEFT JOIN Region ON Field.regionId = Region.id
+          WHERE trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
+          GROUP BY Package.trainerProfileId
+      ),
     trainerProfileFields AS (
       SELECT
       tp.id AS trainerProfileId,
@@ -240,6 +263,7 @@ export class TrainerProfileRepository {
     (SELECT certificates FROM TrainerCertificates ) AS certificates,
     (SELECT ratingNumber FROM RatingAvgTable) AS ratingNumber,
     (SELECT JSON_ARRAYAGG(feedback) FROM Last5Feedbacks) AS feedbacks,
+    (SELECT packages FROM TrainerPackages) AS packages,
     tpws.sports AS sports,
     tpf.fields AS fields
     FROM

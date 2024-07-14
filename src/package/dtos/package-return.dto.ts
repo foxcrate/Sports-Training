@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { SessionDateTimeDto } from './session-date-time.dto';
+import { PACKAGE_TYPE } from 'src/global/enums';
 
 export class PackageReturnDto {
   @ApiProperty()
@@ -10,6 +11,11 @@ export class PackageReturnDto {
 
   @ApiProperty()
   description: string;
+
+  @ApiProperty({
+    enum: PACKAGE_TYPE,
+  })
+  type: PACKAGE_TYPE;
 
   @ApiProperty()
   numberOfSessions: number;
@@ -28,6 +34,9 @@ export class PackageReturnDto {
 
   @ApiProperty()
   fieldId: number;
+
+  @ApiProperty()
+  secondaryFieldId: number;
 
   @ApiProperty()
   trainerProfileId: number;

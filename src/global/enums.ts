@@ -16,6 +16,11 @@ export enum HOME_SEARCH_TYPES_ENUM {
   ALL = 'all',
 }
 
+export enum PACKAGE_TYPE {
+  FLEXIBLE = 'flexible',
+  SCHEDULE = 'schedule',
+}
+
 export enum RATEABLE_TYPES_ENUM {
   TRAINER = 'trainerProfile',
   FIELD = 'field',

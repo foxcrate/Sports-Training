@@ -13,6 +13,8 @@ import { AuthGuard } from 'src/guards/auth.guard';
 import { RoleGuard } from 'src/guards/role.guard';
 import { JoiValidation } from 'src/pipes/joi-validaiton.pipe';
 import { UserId } from 'src/decorators/user-id.decorator';
+import { BookTrainerPackageValidation } from './validations/book-trianer-package.validation';
+import { BookTrainerPackageDto } from './dtos/book-trainer-package.dto';
 
 @Controller('player/package')
 export class PlayerPackageController {
@@ -25,12 +27,8 @@ export class PlayerPackageController {
         trainerProfileId: {
           type: 'number',
         },
-        slotId: {
+        packageId: {
           type: 'number',
-        },
-        dayDate: {
-          type: 'string',
-          // format: 'date-time',
         },
       },
     },
@@ -39,22 +37,21 @@ export class PlayerPackageController {
     // type: SessionCardDTO,
   })
   @ApiBadRequestResponse(new SwaggerErrorResponse('PASSED_DATE').init())
-  @ApiTags('Trainer-Schedule: User: Book Session')
+  @ApiTags('Package: User: Book Package')
   @ApiBearerAuth()
   //
-  @Post('/book')
+  @Post('/book-package')
   @Version('1')
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
-  async bookTrainerSession(
-    // @Body(new JoiValidation(BookTrainerSessionValidation)) reqBody,
+  async bookTrainerPackage(
+    @Body(new JoiValidation(BookTrainerPackageValidation)) reqBody: BookTrainerPackageDto,
     @UserId() userId: number,
   ) {
-    // return await this.packageService.bookTrainerSession(
-    //   userId,
-    //   reqBody.trainerProfileId,
-    //   reqBody.dayDate,
-    //   reqBody.slotId,
-    // );
+    return await this.packageService.playerBookTrainerPackage(
+      userId,
+      reqBody.trainerProfileId,
+      reqBody.packageId,
+    );
   }
 }
