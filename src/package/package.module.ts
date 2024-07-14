@@ -5,10 +5,11 @@ import { TrainerPackageController } from './trainer-package.controller';
 import { PackageRepository } from './package.repository';
 import { TrainerProfileModule } from 'src/trainer-profile/trainer-profile.module';
 import { TrainerScheduleModule } from 'src/trainer-schedule/trainer-schedule.module';
+import { PlayerProfileModule } from 'src/player-profile/player-profile.module';
 
 @Module({
   controllers: [PlayerPackageController, TrainerPackageController],
   providers: [PackageService, PackageRepository],
-  imports: [TrainerProfileModule, TrainerScheduleModule],
+  imports: [TrainerProfileModule, TrainerScheduleModule, PlayerProfileModule],
 })
 export class PackageModule {}

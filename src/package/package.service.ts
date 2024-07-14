@@ -15,6 +15,7 @@ import { TrainerScheduleRepository } from 'src/trainer-schedule/trainer-schedule
 import { ConfigService } from '@nestjs/config';
 import { SessionDateTimeDto } from './dtos/session-date-time.dto';
 import { ScheduleSlotsDetailsDTO } from 'src/trainer-schedule/dtos/schedule-slots-details';
+import { PlayerProfileRepository } from 'src/player-profile/player-profile.repository';
 
 @Injectable()
 export class PackageService {
@@ -24,10 +25,13 @@ export class PackageService {
     private trainerProfileRepository: TrainerProfileRepository,
     private trainerScheduleService: TrainerScheduleService,
     private trainerScheduleRepository: TrainerScheduleRepository,
+    private playerProfileRepository: PlayerProfileRepository,
     private configService: ConfigService,
   ) {}
 
   async create(reqBody: PackageCreateDto, userId: number): Promise<PackageReturnDto> {
+    // validate field existance
+    // ??????????
     // validate flexible package having a schedule
     if (reqBody.type === 'flexible' && reqBody.sessionsDateTime) {
       throw new BadRequestException(
@@ -39,6 +43,14 @@ export class PackageService {
     if (reqBody.type === 'schedule' && !reqBody.sessionsDateTime) {
       throw new BadRequestException(
         this.i18n.t(`errors.SCHEDULE_PACKAGE_SCHEDULE`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
+    if (reqBody.type === 'schedule' && (!reqBody.minAttendees || !reqBody.maxAttendees)) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.SCHEDULE_PACKAGE_ATTENDEES`, {
           lang: I18nContext.current().lang,
         }),
       );
@@ -92,8 +104,30 @@ export class PackageService {
     packageId: number,
   ) {
     // validate the package belong to the trainerProfile
-    // get package data
+    let thePackage = await this.packageRepository.getOneById(packageId);
+    let theTrainerProfile = await this.trainerProfileRepository.getByID(trainerProfileId);
+    let thePlayerProfile =
+      await this.playerProfileRepository.getOneDetailedByUserId(userId);
+
+    if (thePackage.trainerProfileId != theTrainerProfile.id) {
+      throw new ForbiddenException(
+        this.i18n.t(`errors.NOT_BELONG_RESOURCE`, { lang: I18nContext.current().lang }),
+      );
+    }
+
+    if (userId == theTrainerProfile.userId) {
+      throw new ForbiddenException(
+        this.i18n.t(`errors.CANT_BOOK_YOUR_PACKAGE`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
     // if package in a schedule package; validate the player schedule relative to package schedule
+    if (thePackage.type === 'schedule') {
+      await this.validateBookPackage(userId, thePackage);
+    }
+    return true;
     //save the booking
   }
 
@@ -114,6 +148,21 @@ export class PackageService {
       );
     }
     return true;
+  }
+
+  private async validateBookPackage(userId: number, thePackage: PackageReturnDto) {
+    for (let index = 0; index < thePackage.sessionsDateTime.length; index++) {
+      let sessionDate = moment(thePackage.sessionsDateTime[index].date).format(
+        'YYYY-MM-DD',
+      );
+      console.log('sessionDate:', sessionDate);
+
+      let playerSessionsThisDay = await this.trainerScheduleRepository.getUserBookedTimes(
+        userId,
+        sessionDate,
+      );
+      console.log('playerSessionsThisDay:', playerSessionsThisDay);
+    }
   }
 
   private async validateCreatePackage(
