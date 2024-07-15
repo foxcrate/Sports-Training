@@ -4,6 +4,7 @@ import { PackageCreateDto } from './dtos/package-create.dto';
 import { PackageReturnDto } from './dtos/package-return.dto';
 import moment, { MomentInput } from 'moment';
 import { ConfigService } from '@nestjs/config';
+import { PACKAGE_STATUS } from 'src/global/enums';
 
 @Injectable()
 export class PackageRepository {
@@ -132,6 +133,47 @@ export class PackageRepository {
         ${packageId},
         ${playerProfileId}
     )`;
+  }
+
+  async addOneToPackageCurrentAttendeesNumber(
+    packageId: number,
+  ): Promise<PackageReturnDto> {
+    await this.prisma.$queryRaw`
+    UPDATE Package
+    SET currentAttendeesNumber = currentAttendeesNumber + 1
+    WHERE id = ${packageId}
+    `;
+    return await this.getOneById(packageId);
+  }
+
+  async updatePackageStatus(pacakgeId: number, status: PACKAGE_STATUS) {
+    await this.prisma.$queryRaw`
+    UPDATE Package
+    SET status = ${status}
+    WHERE id = ${pacakgeId}
+    `;
+  }
+
+  async PlayerHasPackageRelation(
+    packageId: number,
+    playerProfileId: number,
+  ): Promise<boolean> {
+    let playerPackageRelation: [] = await this.prisma.$queryRaw`
+    SELECT
+    *
+    FROM PlayerProfilePackages
+    WHERE
+    packageId = ${packageId} AND
+    playerProfileId = ${playerProfileId}
+    LIMIT 1
+    `;
+    console.log('playerPackageRelation:', playerPackageRelation);
+
+    if (playerPackageRelation.length > 0) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   // async getOneByTrainerProfileId(trainerProfileId: number): Promise<any> {

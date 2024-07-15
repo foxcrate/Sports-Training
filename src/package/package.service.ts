@@ -17,6 +17,7 @@ import { SessionDateTimeDto } from './dtos/session-date-time.dto';
 import { ScheduleSlotsDetailsDTO } from 'src/trainer-schedule/dtos/schedule-slots-details';
 import { PlayerProfileRepository } from 'src/player-profile/player-profile.repository';
 import { ReturnPlayerProfileDto } from 'src/player-profile/dtos/return.dto';
+import { PACKAGE_STATUS } from 'src/global/enums';
 
 @Injectable()
 export class PackageService {
@@ -118,6 +119,10 @@ export class PackageService {
     let thePlayerProfile =
       await this.playerProfileRepository.getOneDetailedByUserId(userId);
 
+    console.log('thePackage', thePackage);
+    console.log('theTrainerProfile', theTrainerProfile);
+    console.log('thePlayerProfile', thePlayerProfile);
+
     if (thePackage.trainerProfileId != theTrainerProfile.id) {
       throw new ForbiddenException(
         this.i18n.t(`errors.NOT_BELONG_RESOURCE`, { lang: I18nContext.current().lang }),
@@ -132,14 +137,10 @@ export class PackageService {
       );
     }
 
-    // if package in a schedule package; validate the player schedule relative to package schedule
-    if (thePackage.type === 'schedule') {
-      await this.validateBookPackage(userId, thePackage);
-    }
+    await this.validateBookPackage(userId, thePackage);
 
     //save player to package
     await this.savePlayerToPackage(thePackage, thePlayerProfile);
-
     return true;
   }
 
@@ -147,19 +148,30 @@ export class PackageService {
     thePackage: PackageReturnDto,
     playerProfile: ReturnPlayerProfileDto,
   ) {
-    //check package current attendees < maxAttendees
-    if (thePackage.currentAttendeesNumber >= thePackage.maxAttendees) {
-      throw new BadRequestException(
-        this.i18n.t(`errors.PACKAGE_FULL`, { lang: I18nContext.current().lang }),
-      );
-    }
-
-    // check if the player already in the packag
-
     await this.packageRepository.createPlayerPackageRelation(
       thePackage.id,
       playerProfile.id,
     );
+
+    let updatedPackage =
+      await this.packageRepository.addOneToPackageCurrentAttendeesNumber(thePackage.id);
+
+    if ((updatedPackage.currentAttendeesNumber = updatedPackage.maxAttendees)) {
+      await this.packageRepository.updatePackageStatus(
+        thePackage.id,
+        PACKAGE_STATUS.ACTIVE,
+      );
+    }
+
+    // if package is schedule; save its future sessions to user schedule
+    if (thePackage.type === 'schedule') {
+      await this.trainerScheduleService.savePackageSessions(
+        playerProfile.userId,
+        thePackage,
+      );
+    }
+
+    return true;
   }
 
   private async authorizeResource(packageId: number, userId: number): Promise<any> {
@@ -182,63 +194,100 @@ export class PackageService {
   }
 
   private async validateBookPackage(userId: number, thePackage: PackageReturnDto) {
-    for (let index = 0; index < thePackage.sessionsDateTime.length; index++) {
-      let packageSlot = thePackage.sessionsDateTime[index];
-      let sessionDate = moment(packageSlot.date).format('YYYY-MM-DD');
-      console.log('sessionDate:', sessionDate);
+    let thePlayerProfile =
+      await this.playerProfileRepository.getOneDetailedByUserId(userId);
 
-      let playerSessionsThisDay = await this.trainerScheduleRepository.getUserBookedTimes(
-        userId,
-        sessionDate,
+    //check package current attendees < maxAttendees
+    if (thePackage.currentAttendeesNumber >= thePackage.maxAttendees) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.PACKAGE_FULL`, { lang: I18nContext.current().lang }),
       );
-      console.log('playerSessionsThisDay:', playerSessionsThisDay);
+    }
 
-      playerSessionsThisDay.forEach((playerSession) => {
-        //check if they have intersected time
-        let packageSlotFromTimeObject = moment(
-          `${packageSlot.date} ${packageSlot.fromTime}`,
-        )
-          .tz(this.configService.getOrThrow('TZ'))
-          .format('HH:mm');
+    // check if the player already in the package
+    if (
+      await this.packageRepository.PlayerHasPackageRelation(
+        thePackage.id,
+        thePlayerProfile.id,
+      )
+    ) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.PLAYER_PACKAGE_EXIST`, { lang: I18nContext.current().lang }),
+      );
+    }
 
-        let packageSlotToTimeObject = moment(`${packageSlot.date} ${packageSlot.toTime}`)
-          .tz(this.configService.getOrThrow('TZ'))
-          .format('HH:mm');
+    // check package expiration date
+    if (moment() >= moment(thePackage.ExpirationDate)) {
+      console.log('current moment():', moment());
 
-        console.log('------------times-------------');
+      await this.packageRepository.updatePackageStatus(
+        thePackage.id,
+        PACKAGE_STATUS.EXPIRED,
+      );
+      throw new BadRequestException(
+        this.i18n.t(`errors.PACKAGE_EXPIRED`, { lang: I18nContext.current().lang }),
+      );
+    }
+    // return true;
+    if (thePackage.type === 'schedule') {
+      for (let index = 0; index < thePackage.sessionsDateTime.length; index++) {
+        let packageSlot = thePackage.sessionsDateTime[index];
+        let sessionDate = moment(packageSlot.date).format('YYYY-MM-DD');
+        console.log('sessionDate:', sessionDate);
 
-        let packageSlotFromTime = moment(packageSlotFromTimeObject, 'HH:mm');
-        console.log('packageSlotFromTime:', packageSlotFromTime);
+        let playerSessionsThisDay =
+          await this.trainerScheduleRepository.getUserBookedTimes(userId, sessionDate);
+        console.log('playerSessionsThisDay:', playerSessionsThisDay);
 
-        let packageSlotToTime = moment(packageSlotToTimeObject, 'HH:mm');
-        console.log('packageSlotToTime:', packageSlotToTime);
+        playerSessionsThisDay.forEach((playerSession) => {
+          //check if they have intersected time
+          let packageSlotFromTimeObject = moment(
+            `${packageSlot.date} ${packageSlot.fromTime}`,
+          )
+            .tz(this.configService.getOrThrow('TZ'))
+            .format('HH:mm');
 
-        console.log('-------------------------');
+          let packageSlotToTimeObject = moment(
+            `${packageSlot.date} ${packageSlot.toTime}`,
+          )
+            .tz(this.configService.getOrThrow('TZ'))
+            .format('HH:mm');
 
-        let scheduleSlotFromTime = moment(playerSession.fromTime, 'HH:mm');
-        console.log('scheduleSlot.fromTime:', moment(playerSession.fromTime, 'HH:mm'));
+          console.log('------------times-------------');
 
-        let scheduleSlotToTime = moment(playerSession.toTime, 'HH:mm');
-        console.log('scheduleSlot.toTime:', moment(playerSession.toTime, 'HH:mm'));
+          let packageSlotFromTime = moment(packageSlotFromTimeObject, 'HH:mm');
+          console.log('packageSlotFromTime:', packageSlotFromTime);
 
-        console.log('-------------------------');
+          let packageSlotToTime = moment(packageSlotToTimeObject, 'HH:mm');
+          console.log('packageSlotToTime:', packageSlotToTime);
 
-        let intersects =
-          (scheduleSlotFromTime >= packageSlotFromTime &&
-            scheduleSlotFromTime < packageSlotToTime) ||
-          (packageSlotFromTime >= scheduleSlotFromTime &&
-            packageSlotFromTime < scheduleSlotToTime);
+          console.log('-------------------------');
 
-        if (intersects) {
-          console.log('-- package intersects with player schedule error --');
+          let scheduleSlotFromTime = moment(playerSession.fromTime, 'HH:mm');
+          console.log('scheduleSlot.fromTime:', moment(playerSession.fromTime, 'HH:mm'));
 
-          throw new BadRequestException(
-            this.i18n.t(`errors.BOOKED_TIME`, {
-              lang: I18nContext.current().lang,
-            }),
-          );
-        }
-      });
+          let scheduleSlotToTime = moment(playerSession.toTime, 'HH:mm');
+          console.log('scheduleSlot.toTime:', moment(playerSession.toTime, 'HH:mm'));
+
+          console.log('-------------------------');
+
+          let intersects =
+            (scheduleSlotFromTime >= packageSlotFromTime &&
+              scheduleSlotFromTime < packageSlotToTime) ||
+            (packageSlotFromTime >= scheduleSlotFromTime &&
+              packageSlotFromTime < scheduleSlotToTime);
+
+          if (intersects) {
+            console.log('-- package intersects with player schedule error --');
+
+            throw new BadRequestException(
+              this.i18n.t(`errors.BOOKED_TIME`, {
+                lang: I18nContext.current().lang,
+              }),
+            );
+          }
+        });
+      }
     }
   }
 

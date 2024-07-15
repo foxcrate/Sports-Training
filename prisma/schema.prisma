@@ -20,6 +20,12 @@ enum PackageType {
   schedule
 }
 
+enum PackageStatus{
+  active
+  pending
+  expired
+}
+
 enum AcceptanceStatus {
   accepted
   pending
@@ -486,6 +492,9 @@ model TrainerBookedSession {
   slot   Slot @relation(fields: [slotId], references: [id], onDelete: Cascade)
   slotId Int
 
+  package   Package? @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  packageId Int?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
 
@@ -703,11 +712,12 @@ model Package {
 
   name              String
   description       String?
+  status    PackageStatus? @default(pending)
   type    PackageType?
   numberOfSessions              Int?
   maxAttendees              Int?
   minAttendees              Int?
-  currentAttendeesNumber    Int?
+  currentAttendeesNumber    Int? @default(0)
   price              Int?
   ExpirationDate  DateTime @db.Date
   sessionsDateTime Json?
@@ -724,6 +734,8 @@ model Package {
   packageRequests  PackageRequest[]
 
   playerProfiles PlayerProfilePackages[]
+
+  trainerBookedSession  TrainerBookedSession[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
