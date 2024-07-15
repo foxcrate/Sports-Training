@@ -10,6 +10,7 @@ import { FieldReturnDto } from 'src/field/dtos/return.dto';
 import { SportService } from 'src/sport/sport.service';
 import { GlobalRepository } from 'src/global/global.repository';
 import { SimplifiedFieldReturn } from 'src/field/dtos/field-simplified-return.dto';
+import { PACKAGE_STATUS } from 'src/global/enums';
 
 @Injectable()
 export class TrainerProfileRepository {
@@ -165,7 +166,10 @@ export class TrainerProfileRepository {
           'description', Package.description,
           'type', Package.type,
           'price', Package.price,
+          'status', Package.status,
           'numberOfSessions', Package.numberOfSessions,
+          'ExpirationDate', Package.ExpirationDate,
+          'currentAttendeesNumber', Package.currentAttendeesNumber,
           'maxAttendees', Package.maxAttendees,
           'minAttendees', Package.minAttendees,
           'location', Region.name
@@ -176,6 +180,9 @@ export class TrainerProfileRepository {
           LEFT JOIN Field ON Package.fieldId = Field.id
           LEFT JOIN Region ON Field.regionId = Region.id
           WHERE trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
+          AND ( Package.status = ${PACKAGE_STATUS.ACTIVE} OR Package.status = ${
+            PACKAGE_STATUS.PENDING
+          })
           GROUP BY Package.trainerProfileId
       ),
     trainerProfileFields AS (
