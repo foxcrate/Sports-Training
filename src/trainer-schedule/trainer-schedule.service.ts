@@ -21,6 +21,7 @@ import {
 } from 'src/global/enums';
 import { NotificationRepository } from 'src/notification/notification.repository';
 import { FieldRepository } from 'src/field/field.repository';
+import { PackageReturnDto } from 'src/package/dtos/package-return.dto';
 
 @Injectable()
 export class TrainerScheduleService {
@@ -238,6 +239,28 @@ export class TrainerScheduleService {
     ).format('hh:mm A');
 
     return trainerBookedSessionCard;
+  }
+
+  async savePackageSessions(userId: number, thePackage: PackageReturnDto) {
+    // create trainer package slots
+    for (let index = 0; index < thePackage.sessionsDateTime.length; index++) {
+      let createSlot = await this.trainerScheduleRepository.createPackageSlot(
+        thePackage.id,
+        thePackage.name,
+        thePackage.price,
+        thePackage.fieldId,
+        thePackage.sessionsDateTime[index],
+      );
+
+      // create package sessions
+      await this.sessionRepository.createPackageSession(
+        userId,
+        thePackage.sessionsDateTime[index].date,
+        thePackage.trainerProfileId,
+        createSlot.id,
+        thePackage.id,
+      );
+    }
   }
 
   // // private // //

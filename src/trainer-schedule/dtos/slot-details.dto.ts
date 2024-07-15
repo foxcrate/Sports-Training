@@ -27,4 +27,7 @@ export class SlotDetailsDto {
 
   @ApiProperty()
   scheduleId: number;
+
+  @ApiProperty()
+  packageId: number;
 }

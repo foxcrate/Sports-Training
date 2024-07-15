@@ -22,6 +22,8 @@
   "SCHEDULE_PACKAGE_SCHEDULE": "الباكدج المجدولة يجب ان يحتوي على جدول",
   "SCHEDULE_PACKAGE_ATTENDEES": "يجب وجود حد ادنى وحد اقصى للباكدج المجدولة",
   "SCHEDULE_PACKAGE_FIELDS": "يجب وجود ملاعب للباكدج المجدولة",
+  "PLAYER_PACKAGE_EXIST": "اللاعب موجود بالفعل في هذا الباكدج",
+  "PACKAGE_EXPIRED": "الباكدج منتهي الصلاحية",
   "PACKAGE_FULL": "الباكدج ممتلئة",
   "SCHEDULE_NOT_FOUND": "جدول المواعيد غير متوفر",
   "CANT_BOOK_YOUR_PACKAGE": "لا يمكنك حجز المجموعة الخاصة بك",

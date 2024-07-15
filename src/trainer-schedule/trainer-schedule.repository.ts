@@ -13,6 +13,7 @@ import { ReturnTrainerProfileDto } from 'src/trainer-profile/dtos/return.dto';
 import { SESSIONS_STATUSES_ENUM } from 'src/global/enums';
 import { UserSlotState } from './dtos/user-slot-state.dto';
 import { TrainerFieldSlots } from './dtos/trainer-field-slots.dto';
+import { SessionDateTimeDto } from 'src/package/dtos/session-date-time.dto';
 
 @Injectable()
 export class TrainerScheduleRepository {
@@ -486,6 +487,48 @@ export class TrainerScheduleRepository {
     VALUES
     ${Prisma.join(schedulesSlotsArray.map((row) => Prisma.sql`(${Prisma.join(row)})`))}
     `;
+  }
+
+  async createPackageSlot(
+    packageId,
+    packageName,
+    packagePrice,
+    packageFieldId,
+    packageSessionDateTime: SessionDateTimeDto,
+  ): Promise<SlotDetailsDto> {
+    let weekDay = moment(packageSessionDateTime.date).weekday();
+    await this.prisma.$queryRaw`
+      INSERT INTO Slot
+      (name,
+      fromTime,
+      toTime,
+      cost,
+      weekDayId,
+      fieldId,
+      scheduleId,
+      packageId)
+      VALUES
+      (
+        ${packageName},
+        ${packageSessionDateTime.fromTime},
+        ${packageSessionDateTime.toTime},
+        ${packagePrice},
+        ${weekDay},
+        ${packageFieldId},
+        ${null},
+        ${packageId}
+      )
+      `;
+
+    let newSlot: SlotDetailsDto = await this.prisma.$queryRaw`
+      SELECT
+        id,name,fromTime,toTime,cost,weekDayNumber,weekDayName,fieldId,scheduleId,packageId
+      FROM Slot
+      WHERE
+      id = LAST_INSERT_ID()
+      `;
+
+    return newSlot;
   }
 
   private async deleteScheduleMonths(scheduleId: number) {

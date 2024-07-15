@@ -21,6 +21,12 @@ export enum PACKAGE_TYPE {
   SCHEDULE = 'schedule',
 }
 
+export enum PACKAGE_STATUS {
+  ACTIVE = 'active',
+  PENDING = 'pending',
+  EXPIRED = 'expired',
+}
+
 export enum RATEABLE_TYPES_ENUM {
   TRAINER = 'trainerProfile',
   FIELD = 'field',

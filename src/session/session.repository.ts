@@ -268,6 +268,35 @@ export class SessionRepository {
     return createdTrainerBookedSession[1][0];
   }
 
+  async createPackageSession(
+    userId: number,
+    dayDate: string,
+    trainerProfileId: number,
+    slotId: number,
+    packageId: number,
+  ) {
+    let createdTrainerBookedSession: any = await this.prisma.$queryRaw`
+        INSERT INTO TrainerBookedSession
+        (
+          userId,
+          date,
+          trainerProfileId,
+          slotId,
+          packageId,
+          status
+        )
+        VALUES
+      (
+        ${userId},
+        ${dayDate},
+        ${trainerProfileId},
+        ${slotId},
+        ${packageId},
+        ${SESSIONS_STATUSES_ENUM.ACTIVE}
+      )`;
+    return true;
+  }
+
   async markSessionAsComplete(userId: number, theDateTime: string) {
     // console.log({ theDateTime });
 
