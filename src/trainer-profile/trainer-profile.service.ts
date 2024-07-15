@@ -5,6 +5,7 @@ import { I18nContext, I18nService } from 'nestjs-i18n';
 import { TrainerProfileRepository } from './trainer-profile.repository';
 import { ReturnTrainerProfileDetailsDto } from './dtos/details-return.dto';
 import { TrainerScheduleRepository } from 'src/trainer-schedule/trainer-schedule.repository';
+import { PACKAGE_STATUS } from 'src/global/enums';
 
 @Injectable()
 export class TrainerProfileService {
@@ -37,6 +38,12 @@ export class TrainerProfileService {
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
       );
     }
+
+    trainerProfileWithSports.packages = trainerProfileWithSports.packages.filter((p) => {
+      if (p.status == PACKAGE_STATUS.PENDING) {
+        return p;
+      }
+    });
 
     return trainerProfileWithSports;
   }

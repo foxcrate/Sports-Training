@@ -7,6 +7,7 @@ import { SportService } from 'src/sport/sport.service';
 import { PlayerProfileCreateDto } from './dtos/create.dto';
 import { ReturnPlayerProfileWithUserAndSportsDto } from './dtos/return-with-user-and-sports.dto';
 import { RegionService } from 'src/region/region.service';
+import { PACKAGE_STATUS } from 'src/global/enums';
 
 @Injectable()
 export class PlayerProfileRepository {
@@ -75,6 +76,7 @@ export class PlayerProfileRepository {
   }
 
   async getOneDetailedByUserId(userId): Promise<ReturnPlayerProfileDto> {
+    let playerProfile = await this.getOneByUserId(userId);
     let playerProfileWithSports = await this.prisma.$queryRaw`
     WITH UserDetails AS (
       SELECT
@@ -92,6 +94,45 @@ export class PlayerProfileRepository {
       ON GenderTranslation.genderId = Gender.id
       AND GenderTranslation.language = ${I18nContext.current().lang}
       WHERE User.id = ${userId}
+    ),
+    UserPackages AS (
+      SELECT
+      CASE
+      WHEN COUNT(Package.id) = 0 THEN null
+      ELSE
+      JSON_ARRAYAGG(
+        JSON_OBJECT(
+          'id',Package.id,
+          'name', Package.name,
+          'description', Package.description,
+          'type', Package.type,
+          'price', Package.price,
+          'status', Package.status,
+          'numberOfSessions', Package.numberOfSessions,
+          'ExpirationDate', Package.ExpirationDate,
+          'currentAttendeesNumber', Package.currentAttendeesNumber,
+          'maxAttendees', Package.maxAttendees,
+          'minAttendees', Package.minAttendees,
+          'location', Region.name,
+          'sessionTaken', PlayerProfilePackages.sessionsTaken,
+          'trainerProfileId', Package.trainerProfileId,
+          'coachFirstName', User.firstName,
+          'coachLastName', User.lastName,
+          'profileImage', User.profileImage
+          )
+        )
+      END AS packages
+      FROM
+      PlayerProfilePackages
+      LEFT JOIN Package ON PlayerProfilePackages.packageId = Package.id
+      LEFT JOIN TrainerProfile ON Package.trainerProfileId = TrainerProfile.id
+      LEFT JOIN User ON TrainerProfile.userId = User.id
+      LEFT JOIN Field ON Package.fieldId = Field.id
+      LEFT JOIN Region ON Field.regionId = Region.id
+      WHERE playerProfileId = ${playerProfile.id}
+       AND ( Package.status = ${PACKAGE_STATUS.ACTIVE} OR Package.status = ${
+         PACKAGE_STATUS.PENDING
+       })
     ),
     playerProfileWithSports AS (
       SELECT
@@ -135,6 +176,7 @@ export class PlayerProfileRepository {
       pps.level,
       pps.region AS region,
       pps.sports AS sports,
+      (SELECT * FROM UserPackages) AS packages,
       JSON_ARRAYAGG(JSON_OBJECT(
       'id',ud.id,
       'firstName',ud.firstName,
