@@ -66,6 +66,8 @@ export class PlayerProfileRepository {
   }
 
   async getOneByUserId(userId): Promise<ReturnPlayerProfileDto> {
+    console.log('userId', userId);
+
     let playerProfile = await this.prisma.$queryRaw`
       SELECT *
       FROM PlayerProfile
