@@ -72,6 +72,9 @@ export class PlayerProfileRepository {
       WHERE userId = ${userId}
       LIMIT 1
     `;
+
+    console.log('in repo', playerProfile);
+
     return playerProfile[0];
   }
 
