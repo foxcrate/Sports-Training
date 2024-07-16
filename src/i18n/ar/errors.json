@@ -24,6 +24,8 @@
   "SCHEDULE_PACKAGE_FIELDS": "يجب وجود ملاعب للباكدج المجدولة",
   "PLAYER_PACKAGE_EXIST": "اللاعب موجود بالفعل في هذا الباكدج",
   "PACKAGE_EXPIRED": "الباكدج منتهي الصلاحية",
+  "PACKAGE_ALREADY_ACTIVE": "الباكدج مفعل بالفعل",
+  "EXPIRED_PACKAGE": "الباكدج منتهي الصلاحية",
   "PACKAGE_FULL": "الباكدج ممتلئة",
   "SCHEDULE_NOT_FOUND": "جدول المواعيد غير متوفر",
   "CANT_BOOK_YOUR_PACKAGE": "لا يمكنك حجز المجموعة الخاصة بك",

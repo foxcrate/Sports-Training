@@ -2,14 +2,21 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SearchFiltersDto } from './dto/search-filters.dto';
 import { GlobalService } from 'src/global/global.service';
-import { ACCEPTANCE_STATUSES_ENUM, RATEABLE_TYPES_ENUM } from 'src/global/enums';
+import {
+  ACCEPTANCE_STATUSES_ENUM,
+  RATEABLE_TYPES_ENUM,
+  SESSIONS_STATUSES_ENUM,
+} from 'src/global/enums';
 import { SearchResultDto, SearchResultsDto } from './dto/search-result.dto';
+import { ReturnSportDto } from 'src/sport/dtos/return.dto';
+import { I18nContext, I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class HomeModel {
   constructor(
     private prisma: PrismaService,
     private globalService: GlobalService,
+    private readonly i18n: I18nService,
   ) {}
 
   generateCoachesQuery(filters: SearchFiltersDto) {
@@ -288,4 +295,282 @@ export class HomeModel {
       count: parseInt(count || 0) as number,
     };
   }
+  async getSports(userId: number) {
+    let allSports: ReturnSportDto[] = await this.prisma.$queryRaw`
+    SELECT
+    Sport.id,
+    SportTranslation.name AS name
+    FROM Sport
+    LEFT JOIN SportTranslation
+    ON SportTranslation.sportId = Sport.id
+    AND SportTranslation.language = ${I18nContext.current().lang}
+    `;
+  }
+
+  async getPackages(userId: number) {
+    // get children
+    // get children sports
+    // get coaches who work in this sports
+    // get the packages of theses coaches
+
+    let allPackages: ReturnSportDto[] = await this.prisma.$queryRaw`
+    WITH children AS (
+      SELECT
+      childId
+      FROM
+      ParentsChilds
+      WHERE
+      parentId = ${userId}
+    ),
+    childrenProfiles AS (
+      SELECT
+      PlayerProfile.id AS id
+      FROM
+      PlayerProfile
+      WHERE userId in (SELECT childId FROM children)
+    ),
+    childrenSports AS (
+      SELECT
+      sportId
+      FROM
+      PlayerProfileSports
+      WHERE playerProfileId in (SELECT id FROM childrenProfiles)
+    ),
+    sportsTrainers AS (
+      SELECT
+      trainerProfileId
+      FROM
+      TrainerProfileSports
+      WHERE
+      sportId in (SELECT sportId FROM childrenSports)
+    ),
+    trainerPackages AS (
+      SELECT
+      Package.id AS id
+      FROM
+      Package
+      WHERE
+      Package.trainerProfileId in (SELECT trainerProfileId FROM sportsTrainers)
+    )
+    SELECT
+    CASE
+        WHEN COUNT(Package.id ) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'id',Package.id,
+            'name', Package.name,
+            'description', Package.description,
+            'type', Package.type,
+            'price', Package.price,
+            'numberOfSessions', Package.numberOfSessions,
+            'ExpirationDate', Package.ExpirationDate,
+            'maxAttendees', Package.maxAttendees,
+            'minAttendees', Package.minAttendees,
+            'location', Region.name,
+            'trainerProfileId', Package.trainerProfileId,
+            'coachFirstName', User.firstName,
+            'coachLastName', User.lastName,
+            'coachProfileImage', User.profileImage
+            )
+        )
+        END AS packages
+    FROM
+    Package
+    LEFT JOIN TrainerProfile ON Package.trainerProfileId = TrainerProfile.id
+    LEFT JOIN User ON TrainerProfile.userId = User.id
+    LEFT JOIN Field ON Package.fieldId = Field.id
+    LEFT JOIN Region ON Field.regionId = Region.id
+    WHERE Package.id in (SELECT id FROM trainerPackages)
+    `;
+    return allPackages;
+  }
+
+  async getChildrenNames(userId: number) {
+    let childrenNames: [] = await this.prisma.$queryRaw`
+    WITH children AS (
+      SELECT
+      childId
+      FROM
+      ParentsChilds
+      WHERE
+      parentId = ${userId}
+    )
+    SELECT
+    firstName
+    FROM
+    User
+    WHERE
+    id in (SELECT childId FROM children)
+    `;
+    return childrenNames.map((child: any) => child.firstName);
+  }
+
+  async getPlayerSessions(userId: number) {
+    let playerSessions: [] = await this.prisma.$queryRaw`
+      SELECT
+      CASE
+        WHEN COUNT(TrainerBookedSession.id) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'id',TrainerBookedSession.id,
+            'date', TrainerBookedSession.date,
+            'coachFirstName',User.firstName,
+            'coachLastName',User.lastName,
+            'coachProfileImage',User.profileImage,
+            'fieldId',Field.id,
+            'fieldName',Field.name,
+            'location',Region.name,
+            'startTime',Slot.FromTime,
+            'endTime',Slot.ToTime
+          )
+        )
+      END AS sessions
+      FROM
+      TrainerBookedSession
+      LEFT JOIN TrainerProfile ON TrainerBookedSession.trainerProfileId = TrainerProfile.id
+      LEFT JOIN User ON TrainerProfile.userId = User.id
+      LEFT JOIN TrainerProfileSports ON TrainerProfileSports.trainerProfileId = TrainerProfile.id
+      LEFT JOIN Sport ON TrainerProfileSports.sportId = Sport.id
+      LEFT JOIN Slot ON TrainerBookedSession.slotId = Slot.id
+      LEFT JOIN Field ON Slot.fieldId = Field.id
+      LEFT JOIN Region ON Field.regionId = Region.id
+      WHERE
+      TrainerBookedSession.userId = ${userId}
+      AND
+      TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
+      AND
+      TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+    `;
+
+    console.log(playerSessions);
+
+    return playerSessions;
+  }
+
+  async getTrainerSessions(userId: number) {
+    let trainerSessions: [] = await this.prisma.$queryRaw`
+      SELECT
+      CASE
+        WHEN COUNT(TrainerBookedSession.id) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'id',TrainerBookedSession.id,
+            'date', TrainerBookedSession.date,
+            'playerFirstName',User.firstName,
+            'playerLastName',User.lastName,
+            'playerProfileImage',User.profileImage,
+            'fieldId',Field.id,
+            'fieldName',Field.name,
+            'location',Region.name,
+            'startTime',Slot.FromTime,
+            'endTime',Slot.ToTime
+          )
+        )
+      END AS sessions
+      FROM
+      TrainerBookedSession
+      LEFT JOIN TrainerProfile ON TrainerBookedSession.trainerProfileId = TrainerProfile.id
+      LEFT JOIN User ON TrainerBookedSession.userId = User.id
+      LEFT JOIN TrainerProfileSports ON TrainerProfileSports.trainerProfileId = TrainerProfile.id
+      LEFT JOIN Sport ON TrainerProfileSports.sportId = Sport.id
+      LEFT JOIN Slot ON TrainerBookedSession.slotId = Slot.id
+      LEFT JOIN Field ON Slot.fieldId = Field.id
+      LEFT JOIN Region ON Field.regionId = Region.id
+      WHERE
+      TrainerBookedSession.trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
+      AND
+      TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
+      AND
+      TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+    `;
+
+    // console.log(trainerSessions);
+
+    return trainerSessions;
+  }
+
+  async getTrainerPendingSessions(userId: number) {
+    let trainerSessions: [] = await this.prisma.$queryRaw`
+      SELECT
+      CASE
+        WHEN COUNT(TrainerBookedSession.id) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'id',TrainerBookedSession.id,
+            'date', TrainerBookedSession.date,
+            'playerFirstName',User.firstName,
+            'playerLastName',User.lastName,
+            'playerProfileImage',User.profileImage,
+            'fieldId',Field.id,
+            'fieldName',Field.name,
+            'location',Region.name,
+            'startTime',Slot.FromTime,
+            'endTime',Slot.ToTime
+          )
+        )
+      END AS sessions
+      FROM
+      TrainerBookedSession
+      LEFT JOIN TrainerProfile ON TrainerBookedSession.trainerProfileId = TrainerProfile.id
+      LEFT JOIN User ON TrainerBookedSession.userId = User.id
+      LEFT JOIN TrainerProfileSports ON TrainerProfileSports.trainerProfileId = TrainerProfile.id
+      LEFT JOIN Sport ON TrainerProfileSports.sportId = Sport.id
+      LEFT JOIN Slot ON TrainerBookedSession.slotId = Slot.id
+      LEFT JOIN Field ON Slot.fieldId = Field.id
+      LEFT JOIN Region ON Field.regionId = Region.id
+      WHERE
+      TrainerBookedSession.trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
+      AND
+      TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.NOT_ACTIVE}
+      AND
+      TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+    `;
+
+    // console.log(trainerSessions);
+
+    return trainerSessions;
+  }
+
+  async getSportsFields(userId: number) {
+    let sportsFields: [] = await this.prisma.$queryRaw`
+      WITH TrainerSports AS (
+        SELECT
+        sportId
+        FROM
+        TrainerProfileSports
+        WHERE
+        trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
+      )
+      SELECT
+      Field.id AS id,
+      Field.name AS name,
+      Field.profileImage AS profileImage,
+      Region.name AS region,
+      Sport.name AS sport
+      FROM
+      Field
+      LEFT JOIN Sport ON Field.sportId = Sport.id
+      LEFT JOIN Region ON Field.regionId = Region.id
+      WHERE
+      Field.sportId in (SELECT sportId FROM TrainerSports)
+    `;
+    // console.log(sportsFields);
+
+    return sportsFields;
+  }
 }
+
+// ,
+//     trainerPackages AS (
+//       SELECT
+//       id
+//       Package
+//       WHERE
+//       trainerProfileId in (SELECT trainerProfileId FROM sportsTrainers)
+//     )
+// ,
+// (SELECT * FROM trainerPackages) AS trainerPackages

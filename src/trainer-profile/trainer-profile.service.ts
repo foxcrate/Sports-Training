@@ -39,11 +39,15 @@ export class TrainerProfileService {
       );
     }
 
-    trainerProfileWithSports.packages = trainerProfileWithSports.packages.filter((p) => {
-      if (p.status == PACKAGE_STATUS.PENDING) {
-        return p;
-      }
-    });
+    if (trainerProfileWithSports.packages.length > 0) {
+      trainerProfileWithSports.packages = trainerProfileWithSports.packages.filter(
+        (p) => {
+          if (p.status == PACKAGE_STATUS.PENDING) {
+            return p;
+          }
+        },
+      );
+    }
 
     return trainerProfileWithSports;
   }

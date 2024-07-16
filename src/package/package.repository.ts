@@ -69,6 +69,7 @@ export class PackageRepository {
         Package.name,
         Package.description,
         Package.type,
+        Package.status,
         Package.currentAttendeesNumber,
         Package.numberOfSessions,
         Package.maxAttendees,
@@ -174,6 +175,26 @@ export class PackageRepository {
     } else {
       return false;
     }
+  }
+
+  async deletePackage(pacakgeId: number) {
+    //delete package relation
+    await this.prisma.$queryRaw`
+    DELETE FROM PlayerProfilePackages
+    WHERE packageId = ${pacakgeId}
+    `;
+
+    // delete package sessions
+    await this.prisma.$queryRaw`
+    DELETE FROM TrainerBookedSessions
+    WHERE packageId = ${pacakgeId}
+    `;
+
+    // delete package
+    await this.prisma.$queryRaw`
+    DELETE FROM Package
+    WHERE id = ${pacakgeId}
+    `;
   }
 
   // async getOneByTrainerProfileId(trainerProfileId: number): Promise<any> {

@@ -108,6 +108,49 @@ export class PackageService {
     return await this.packageRepository.getOneById(packageId);
   }
 
+  async activatePackage(packageId: number, userId: number) {
+    await this.authorizeResource(packageId, userId);
+    // validate if its already active
+    let thePackage = await this.packageRepository.getOneById(packageId);
+    if (thePackage.status == PACKAGE_STATUS.ACTIVE) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.PACKAGE_ALREADY_ACTIVE`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
+    if (thePackage.status == PACKAGE_STATUS.EXPIRED) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.EXPIRED_PACKAGE`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
+    await this.packageRepository.updatePackageStatus(packageId, PACKAGE_STATUS.ACTIVE);
+    return true;
+  }
+
+  async cancelPackage(packageId: number, userId: number) {
+    await this.authorizeResource(packageId, userId);
+    // validate if its already canceled
+    let thePackage = await this.packageRepository.getOneById(packageId);
+    if (thePackage.status == PACKAGE_STATUS.EXPIRED) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.EXPIRED_PACKAGE`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
+    await this.packageRepository.deletePackage(packageId);
+
+    //notify player about package cancellation and return the money
+
+    return true;
+  }
+
   async playerBookTrainerPackage(
     userId: number,
     trainerProfileId: number,

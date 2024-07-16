@@ -71,6 +71,43 @@ export class SessionService {
     return true;
   }
 
+  async trainerRatePlayer(userId: number, reqBody: RateTrainerDto): Promise<boolean> {
+    // throw an error if playerProfile don't exist
+    let theTrainerProfile = await this.trainerProfileRepository.getByUserId(userId);
+    if (!theTrainerProfile) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.TRAINER_PROFILE_NOT_FOUND`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
+    // throw error if session don't exist
+    let theSession = await this.sessionRepository.getBookedSessionBySessionId(
+      reqBody.sessionId,
+    );
+
+    let thePlayerProfile = await this.playerProfileRepository.getOneByUserId(
+      theSession.userId,
+    );
+    if (!thePlayerProfile) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.PLAYER_PROFILE_NOT_FOUND`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
+    this.validateTrainerRatingSession(theTrainerProfile.id, theSession.trainerProfileId);
+    await this.sessionRepository.saveTrainerPlayerRating(
+      theTrainerProfile.userId,
+      thePlayerProfile.id,
+      reqBody.ratingNumber,
+      reqBody.feedback,
+    );
+    return true;
+  }
+
   async getTrainingSession(
     userId: number,
     sessionId: number,
@@ -688,6 +725,21 @@ export class SessionService {
   private validatePlayerRatingSession(userId: number, sessionUserID: number): boolean {
     //check if this session is done by this trainer
     if (sessionUserID != userId) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.WRONG_TRAINER_SESSION_MIX`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+    return true;
+  }
+
+  private validateTrainerRatingSession(
+    trianerProfileId: number,
+    sessionTrainerId: number,
+  ): boolean {
+    //check if this session is done by this trainer
+    if (sessionTrainerId != trianerProfileId) {
       throw new BadRequestException(
         this.i18n.t(`errors.WRONG_TRAINER_SESSION_MIX`, {
           lang: I18nContext.current().lang,

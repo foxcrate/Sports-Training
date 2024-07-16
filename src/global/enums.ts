@@ -31,6 +31,7 @@ export enum RATEABLE_TYPES_ENUM {
   TRAINER = 'trainerProfile',
   FIELD = 'field',
   DOCTOR_CLINIC = 'doctorClinic',
+  PLAYER = 'playerProfile',
 }
 
 export enum ACCEPTANCE_STATUSES_ENUM {
