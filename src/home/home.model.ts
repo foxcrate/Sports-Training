@@ -299,12 +299,12 @@ export class HomeModel {
     let allSports: ReturnSportDto[] = await this.prisma.$queryRaw`
     SELECT
     Sport.id,
-    SportTranslation.name AS name
+    Sport.name AS name
     FROM Sport
-    LEFT JOIN SportTranslation
-    ON SportTranslation.sportId = Sport.id
-    AND SportTranslation.language = ${I18nContext.current().lang}
     `;
+    console.log('allSports:', allSports);
+
+    return allSports;
   }
 
   async getPackages(userId: number) {
@@ -313,7 +313,7 @@ export class HomeModel {
     // get coaches who work in this sports
     // get the packages of theses coaches
 
-    let allPackages: ReturnSportDto[] = await this.prisma.$queryRaw`
+    let allPackages: any = await this.prisma.$queryRaw`
     WITH children AS (
       SELECT
       childId
@@ -383,7 +383,13 @@ export class HomeModel {
     LEFT JOIN Region ON Field.regionId = Region.id
     WHERE Package.id in (SELECT id FROM trainerPackages)
     `;
-    return allPackages;
+
+    console.log('allPackages:', allPackages);
+
+    if (allPackages[0].packages == null) {
+      return [];
+    }
+    return allPackages[0].packages;
   }
 
   async getChildrenNames(userId: number) {
@@ -403,11 +409,16 @@ export class HomeModel {
     WHERE
     id in (SELECT childId FROM children)
     `;
+    console.log('childrenNames:', childrenNames);
+
+    if (childrenNames.length == 0) {
+      return [];
+    }
     return childrenNames.map((child: any) => child.firstName);
   }
 
   async getPlayerSessions(userId: number) {
-    let playerSessions: [] = await this.prisma.$queryRaw`
+    let playerSessions: any = await this.prisma.$queryRaw`
       SELECT
       CASE
         WHEN COUNT(TrainerBookedSession.id) = 0 THEN null
@@ -444,13 +455,17 @@ export class HomeModel {
       TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
     `;
 
-    console.log(playerSessions);
+    console.log('playerSessions:', playerSessions);
 
-    return playerSessions;
+    if (playerSessions[0].sessions == null) {
+      return [];
+    }
+
+    return playerSessions[0].sessions;
   }
 
   async getTrainerSessions(userId: number) {
-    let trainerSessions: [] = await this.prisma.$queryRaw`
+    let trainerSessions: any = await this.prisma.$queryRaw`
       SELECT
       CASE
         WHEN COUNT(TrainerBookedSession.id) = 0 THEN null
@@ -487,13 +502,17 @@ export class HomeModel {
       TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
     `;
 
-    // console.log(trainerSessions);
+    console.log('trainerSessions:', trainerSessions);
 
-    return trainerSessions;
+    if (trainerSessions[0].sessions == null) {
+      return [];
+    }
+
+    return trainerSessions[0].sessions;
   }
 
   async getTrainerPendingSessions(userId: number) {
-    let trainerSessions: [] = await this.prisma.$queryRaw`
+    let trainerSessions: any = await this.prisma.$queryRaw`
       SELECT
       CASE
         WHEN COUNT(TrainerBookedSession.id) = 0 THEN null
@@ -530,9 +549,13 @@ export class HomeModel {
       TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
     `;
 
-    // console.log(trainerSessions);
+    console.log('trainerSessions:', trainerSessions);
 
-    return trainerSessions;
+    if (trainerSessions[0].sessions == null) {
+      return [];
+    }
+
+    return trainerSessions[0].sessions;
   }
 
   async getSportsFields(userId: number) {
@@ -558,9 +581,82 @@ export class HomeModel {
       WHERE
       Field.sportId in (SELECT sportId FROM TrainerSports)
     `;
-    // console.log(sportsFields);
+
+    console.log('sportsFields:', sportsFields);
 
     return sportsFields;
+  }
+
+  async getLastSessionsTrainees(userId: number) {
+    let lastSessionsTrainees: any = await this.prisma.$queryRaw`
+      SELECT
+      CASE
+        WHEN COUNT(TrainerBookedSession.id) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'id',User.id,
+            'firstName',User.firstName,
+            'lastName',User.lastName,
+            'profileImage',User.profileImage,
+            'date', TrainerBookedSession.date
+          )
+        )
+      END AS trainees
+      FROM
+      TrainerBookedSession
+      LEFT JOIN User ON TrainerBookedSession.userId = User.id
+      WHERE
+      TrainerBookedSession.trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
+      AND
+      TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
+      AND
+      TrainerBookedSession.date <= CURDATE() AND TrainerBookedSession.date > DATE_ADD(CURDATE(), INTERVAL -7 DAY)
+      `;
+
+    console.log('lastSessionsTrainees:', lastSessionsTrainees);
+
+    if (lastSessionsTrainees[0].trainees == null) {
+      return [];
+    }
+
+    return lastSessionsTrainees[0].trainees;
+  }
+
+  async getPlayerFeedbacks(userId: number) {
+    let playerFeedbacks: any = await this.prisma.$queryRaw`
+      SELECT
+      CASE
+        WHEN COUNT(Rate.id) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'id',Rate.id,
+            'feedback',Rate.feedback,
+            'rate',Rate.ratingNumber,
+            'coachFirstName',User.firstName,
+            'coachLastName',User.lastName,
+            'date', Rate.createdAt
+          )
+        )
+      END AS feedbacks
+      FROM
+      Rate
+      LEFT JOIN TrainerProfile ON TrainerProfile.id = (SELECT id FROM TrainerProfile WHERE userId = Rate.userId)
+      LEFT JOIN User ON User.id = TrainerProfile.userId
+      WHERE
+      Rate.playerProfileId = (SELECT id FROM PlayerProfile WHERE userId = ${userId})
+      AND
+      Rate.rateableType = ${RATEABLE_TYPES_ENUM.PLAYER}
+      `;
+
+    console.log(playerFeedbacks);
+
+    if (playerFeedbacks[0].feedbacks == null) {
+      return [];
+    }
+
+    return playerFeedbacks[0].feedbacks;
   }
 }
 

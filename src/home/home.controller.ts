@@ -19,6 +19,9 @@ import {
 } from '@nestjs/swagger';
 import { SwaggerErrorResponse } from 'src/global/classes/swagger-error-response';
 import { UserId } from 'src/decorators/user-id.decorator';
+import { ChildHomeDto } from './dto/child-home.dto';
+import { TrainerHomeDto } from './dto/trainer-home.dto';
+import { PlayerHomeDto } from './dto/player-home.dto';
 
 // @Roles(AvailableRoles.User)
 // @UseGuards(AuthGuard, RoleGuard)
@@ -48,24 +51,9 @@ export class HomeController {
     return this.homeService.getSearchResults(filters);
   }
 
-  // @ApiCreatedResponse({
-  //   type: SearchResultsDto,
-  // })
-  // @ApiBadRequestResponse(new SwaggerErrorResponse('WRONG_FILTER_TYPE').init())
-  @ApiTags('Home: Trainer')
-  @ApiBearerAuth()
-  //
-  @Post('trainer')
-  @Version('1')
-  @Roles('user')
-  @UseGuards(AuthGuard, RoleGuard)
-  async trainerHome(@UserId() userId: number) {
-    return this.homeService.getTrainerHome(userId);
-  }
-
-  // @ApiCreatedResponse({
-  //   type: SearchResultsDto,
-  // })
+  @ApiCreatedResponse({
+    type: PlayerHomeDto,
+  })
   // @ApiBadRequestResponse(new SwaggerErrorResponse('WRONG_FILTER_TYPE').init())
   @ApiTags('Home: Player')
   @ApiBearerAuth()
@@ -78,11 +66,26 @@ export class HomeController {
     return this.homeService.getPlayerHome(userId);
   }
 
+  @ApiCreatedResponse({
+    type: TrainerHomeDto,
+  })
+  // @ApiBadRequestResponse(new SwaggerErrorResponse('WRONG_FILTER_TYPE').init())
+  @ApiTags('Home: Trainer')
+  @ApiBearerAuth()
+  //
+  @Post('trainer')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async trainerHome(@UserId() userId: number) {
+    return this.homeService.getTrainerHome(userId);
+  }
+
   // @ApiBody({
   //   type: SearchFiltersDto,
   // })
   @ApiCreatedResponse({
-    type: SearchResultsDto,
+    type: ChildHomeDto,
   })
   // @ApiBadRequestResponse(new SwaggerErrorResponse('WRONG_FILTER_TYPE').init())
   @ApiTags('Home: Child')
