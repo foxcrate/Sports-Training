@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
-import { I18nContext } from 'nestjs-i18n';
 import { ReturnPlayerProfileDto } from './dtos/return.dto';
 import { SportService } from 'src/sport/sport.service';
 import { PlayerProfileCreateDto } from './dtos/create.dto';
 import { ReturnPlayerProfileWithUserAndSportsDto } from './dtos/return-with-user-and-sports.dto';
 import { RegionService } from 'src/region/region.service';
 import { PACKAGE_STATUS } from 'src/global/enums';
+import { I18nContext, I18nService } from 'nestjs-i18n';
 
 @Injectable()
 export class PlayerProfileRepository {
@@ -15,6 +15,7 @@ export class PlayerProfileRepository {
     private prisma: PrismaService,
     private sportService: SportService,
     private regionService: RegionService,
+    private readonly i18n: I18nService,
   ) {}
 
   async getOneById(playerProfileId): Promise<ReturnPlayerProfileDto> {
@@ -85,6 +86,11 @@ export class PlayerProfileRepository {
     console.log('in getOneDetailedByUserId');
 
     console.log({ playerProfile });
+    if (!playerProfile) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
+    }
 
     let playerProfileWithSports = await this.prisma.$queryRaw`
     WITH UserDetails AS (
