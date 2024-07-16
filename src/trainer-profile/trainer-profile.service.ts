@@ -39,7 +39,10 @@ export class TrainerProfileService {
       );
     }
 
-    if (trainerProfileWithSports.packages.length > 0) {
+    if (
+      trainerProfileWithSports.packages &&
+      trainerProfileWithSports.packages.length > 0
+    ) {
       trainerProfileWithSports.packages = trainerProfileWithSports.packages.filter(
         (p) => {
           if (p.status == PACKAGE_STATUS.PENDING) {
