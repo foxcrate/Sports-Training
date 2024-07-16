@@ -72,6 +72,27 @@ export class SessionController {
     return await this.sessionService.playerRateTrainer(userId, reqBody);
   }
 
+  @ApiBody({
+    type: RateTrainerDto,
+  })
+  @ApiCreatedResponse({
+    type: Boolean,
+  })
+  @ApiNotFoundResponse(new SwaggerErrorResponse('PLAYER_PROFILE_NOT_FOUND').init())
+  @ApiTags('Session: Rate Player')
+  @ApiBearerAuth()
+  //
+  @Post('rate-player')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async rateSession2(
+    @Body(new JoiValidation(RateTrainerValidation)) reqBody: RateTrainerDto,
+    @UserId() userId: number,
+  ) {
+    return await this.sessionService.trainerRatePlayer(userId, reqBody);
+  }
+
   @ApiParam({
     name: 'sessionId',
   })

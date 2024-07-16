@@ -24,6 +24,8 @@
   "SCHEDULE_PACKAGE_FIELDS": "Schedule Package should have fields",
   "PLAYER_PACKAGE_EXIST": "Player already have this package",
   "PACKAGE_EXPIRED": "Package expired",
+  "PACKAGE_ALREADY_ACTIVE": "Package already active",
+  "EXPIRED_PACKAGE": "Package expired",
   "PACKAGE_FULL": "Package is full",
   "NOT_BELONG_RESOURCE": "This resource doesn't belong to this user",
   "CANT_BOOK_YOUR_PACKAGE": "You can't book your own package",

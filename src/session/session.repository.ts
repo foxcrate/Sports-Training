@@ -128,6 +128,33 @@ export class SessionRepository {
   )`;
   }
 
+  async saveTrainerPlayerRating(
+    userId: number,
+    playerProfileId: number,
+    ratingNumber: number,
+    feedback: string,
+  ) {
+    await this.prisma.$queryRaw`
+    INSERT INTO Rate
+    (
+      userId,
+      playerProfileId,
+      rateableType,
+      ratingNumber,
+      feedback,
+      profileType
+    )
+    VALUES
+  (
+    ${userId},
+    ${playerProfileId},
+    ${RATEABLE_TYPES_ENUM.PLAYER},
+    ${ratingNumber},
+    ${feedback},
+    ${PROFILE_TYPES_ENUM.TRAINER}
+  )`;
+  }
+
   async getTrainerBookedSessionCard(
     trainerBookedSessionId: number,
   ): Promise<SessionCardDTO> {

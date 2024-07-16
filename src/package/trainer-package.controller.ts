@@ -94,4 +94,46 @@ export class TrainerPackageController {
   ) {
     return await this.packageService.GetOne(Number(params.packageId), userId);
   }
+
+  @ApiParam({
+    name: 'packageId',
+  })
+  @ApiCreatedResponse({
+    type: PackageReturnDto,
+  })
+  @ApiNotFoundResponse(new SwaggerErrorResponse('RECORD_NOT_FOUND').init())
+  @ApiTags('Package: Trainer: Activate Package')
+  @ApiBearerAuth()
+  //
+  @Get('/activate/:packageId')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async activatePackage(
+    @Param(new JoiValidation(PackageIdValidation)) params,
+    @UserId() userId: number,
+  ) {
+    return await this.packageService.activatePackage(Number(params.packageId), userId);
+  }
+
+  @ApiParam({
+    name: 'packageId',
+  })
+  @ApiCreatedResponse({
+    type: PackageReturnDto,
+  })
+  @ApiNotFoundResponse(new SwaggerErrorResponse('RECORD_NOT_FOUND').init())
+  @ApiTags('Package: Trainer: Cancel Package')
+  @ApiBearerAuth()
+  //
+  @Get('/cancel/:packageId')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async cancelPackage(
+    @Param(new JoiValidation(PackageIdValidation)) params,
+    @UserId() userId: number,
+  ) {
+    return await this.packageService.cancelPackage(Number(params.packageId), userId);
+  }
 }
