@@ -152,7 +152,7 @@ export class AuthService {
     return await this.userRepository.updateMobile(userId, userMobileNumber);
   }
 
-  async verifyMobileOtp(data: VerifyOtpDto, req): Promise<AuthTokensDTO> {
+  async verifyChildMobileOtp(data: VerifyOtpDto, req): Promise<AuthTokensDTO> {
     //throw error if not passed
     // await this.checkSavedOTP(data.mobileNumber, data.otp);
     let userMobileNumber = await this.checkFirebaseOTP(data.token);
@@ -299,7 +299,7 @@ export class AuthService {
 
     if (!user.password) {
       throw new UnauthorizedException(
-        this.i18n.t(`errors.ACCOUNT_NOT_ACTIVATED`, { lang: I18nContext.current().lang }),
+        this.i18n.t(`errors.USER_HAS_NO_PASSWORD`, { lang: I18nContext.current().lang }),
       );
     }
 
