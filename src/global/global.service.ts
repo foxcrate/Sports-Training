@@ -13,9 +13,7 @@ import { Prisma } from '@prisma/client';
 import { GlobalRepository } from './global.repository';
 import { GlobalReturnDTO } from './dtos/global-return.dto';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import dotenv from 'dotenv';
 import crypto from 'crypto';
-dotenv.config();
 
 @Injectable()
 export class GlobalService {
