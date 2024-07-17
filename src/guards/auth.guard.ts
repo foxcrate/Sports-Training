@@ -47,7 +47,14 @@ export class AuthGuard implements CanActivate {
 
     request['id'] = payload.id;
     request['authType'] = payload.authType;
-    
+
+    //Check if user exists
+    let user = await this.userRepository.getById(request['id']);
+    if (!user) {
+      throw new UnauthorizedException(
+        this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
+      );
+    }
 
     let userMetaData = await this.userRepository.getUserMetaData(request['id']);
 
