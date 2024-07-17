@@ -176,7 +176,7 @@ export class AuthController {
   @ApiUnauthorizedResponse(
     new SwaggerErrorResponse('EXPIRED_FIREBASE_TOKEN_ERROR').init(),
   )
-  @ApiTags('Auth: Verify Mobile OTP')
+  @ApiTags('Auth: Verify Child Mobile OTP')
   //
   @Post('user/verify-mobile-otp')
   @Version('1')
@@ -185,7 +185,7 @@ export class AuthController {
     @Body(new JoiValidation(VerifyOtpValidation)) verifyOtpData: VerifyOtpDto,
     @Request() req: ExpressRequest,
   ) {
-    return await this.authService.verifyMobileOtp(verifyOtpData, req);
+    return await this.authService.verifyChildMobileOtp(verifyOtpData, req);
   }
 
   @ApiBody({

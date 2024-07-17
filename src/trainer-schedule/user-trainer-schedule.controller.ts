@@ -138,7 +138,7 @@ export class UserTrainerScheduleController {
   //
   @Post('/book-session')
   @Version('1')
-  @Roles('user')
+  @Roles('user', 'child')
   @UseGuards(AuthGuard, RoleGuard)
   async bookTrainerSession(
     @Body(new JoiValidation(BookTrainerSessionValidation)) reqBody,

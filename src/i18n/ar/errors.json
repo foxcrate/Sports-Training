@@ -3,6 +3,7 @@
   "REPEATED_MOBILE_NUMBER": "رقم الموبيل مسجل مسبقا",
   "WRONG_CREDENTIALS": "معلومات الحساب غير صحيحة",
   "ACCOUNT_NOT_ACTIVATED": "هذا الحساب لم يفعل بعد",
+  "USER_HAS_NO_PASSWORD": "الحساب ليس لديه كلمة مرور",
   "FACEBOOK_TOKEN_ERROR": "توكين قيسبوك خاطئ",
   "GOOGLE_TOKEN_ERROR": "توكين جوجل خاطئ",
   "APPLE_TOKEN_ERROR": "توكين آبل خاطئ",
