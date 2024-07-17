@@ -12,6 +12,10 @@ import admin from 'firebase-admin';
 import { Prisma } from '@prisma/client';
 import { GlobalRepository } from './global.repository';
 import { GlobalReturnDTO } from './dtos/global-return.dto';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import dotenv from 'dotenv';
+import crypto from 'crypto';
+dotenv.config();
 
 @Injectable()
 export class GlobalService {
@@ -31,23 +35,60 @@ export class GlobalService {
     private readonly i18n: I18nService,
   ) {}
 
+  // async uploadFile2(file) {
+  //   let s3 = new AWS.S3({
+  //     accessKeyId: this.config.get('AWS_ACCESS_KEY'),
+  //     secretAccessKey: this.config.get('AWS_SECRET_ACCESS_KEY'),
+  //     region: this.config.get('AWS_S3_REGION'),
+  //   });
+
+  //   // console.log({ file });
+
+  //   return await this.s3_upload(
+  //     s3,
+  //     file.buffer,
+  //     this.config.get('AWS_S3_BUCKET'),
+  //     // originalname + Date.now() + extension,
+  //     this.getFileName(file.originalname),
+  //     file.mimetype,
+  //   );
+  // }
+
   async uploadFile(file) {
-    let s3 = new AWS.S3({
-      accessKeyId: this.config.get('AWS_ACCESS_KEY'),
-      secretAccessKey: this.config.get('AWS_SECRET_ACCESS_KEY'),
-      region: this.config.get('AWS_S3_REGION'),
+    const randomFilename = (bytes = 32) => crypto.randomBytes(bytes).toString('hex');
+
+    const s3Client = new S3Client({
+      endpoint: 'https://eu2.contabostorage.com', // Replace with your Contabo endpoint if different
+      region: 'EU',
+      credentials: {
+        accessKeyId: 'bff4cef759e07b1f841594515ecbceed', // Replace with your Contabo Access Key ID
+        secretAccessKey: '6f78190cbabd5a29053bbbd8e0270d03', // Replace with your Contabo Secret Access Key
+      },
+      forcePathStyle: true,
     });
 
-    // console.log({ file });
+    ////////////////////////////////////////////////
 
-    return await this.s3_upload(
-      s3,
-      file.buffer,
-      this.config.get('AWS_S3_BUCKET'),
-      // originalname + Date.now() + extension,
-      this.getFileName(file.originalname),
-      file.mimetype,
-    );
+    let mimetype = file?.mimetype;
+    let extension = mimetype.split('/')[1];
+
+    const fileName = `${randomFilename()}.${extension}`;
+
+    const params: any = {
+      Bucket: 'instaplay-bucket',
+      Key: fileName,
+      Body: file.buffer,
+      ContentType: mimetype,
+      ACL: 'public-read-write',
+    };
+    const command = new PutObjectCommand(params);
+
+    const result = await s3Client.send(command);
+
+    const S3link =
+      'https://eu2.contabostorage.com/acbe0d06f51f4ec78dc6143eaae4642f:instaplay-bucket/';
+
+    return S3link + fileName;
   }
 
   async s3_upload(s3, file, bucket, name, mimetype) {
