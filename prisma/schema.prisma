@@ -845,6 +845,8 @@ model Sport {
 
   name String?
 
+  profileImage String?
+
   playerProfiles   PlayerProfileSports[]
   trainerProfiles  TrainerProfileSports[]
   fields           Field[]

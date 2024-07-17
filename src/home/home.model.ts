@@ -7,9 +7,11 @@ import {
   RATEABLE_TYPES_ENUM,
   SESSIONS_STATUSES_ENUM,
 } from 'src/global/enums';
+import moment from 'moment-timezone';
 import { SearchResultDto, SearchResultsDto } from './dto/search-result.dto';
 import { ReturnSportDto } from 'src/sport/dtos/return.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class HomeModel {
@@ -17,6 +19,7 @@ export class HomeModel {
     private prisma: PrismaService,
     private globalService: GlobalService,
     private readonly i18n: I18nService,
+    private configService: ConfigService,
   ) {}
 
   generateCoachesQuery(filters: SearchFiltersDto) {
@@ -299,7 +302,8 @@ export class HomeModel {
     let allSports: ReturnSportDto[] = await this.prisma.$queryRaw`
     SELECT
     Sport.id,
-    Sport.name AS name
+    Sport.name AS name,
+    Sport.profileImage AS profileImage
     FROM Sport
     `;
     console.log('allSports:', allSports);
@@ -427,6 +431,64 @@ export class HomeModel {
           JSON_OBJECT(
             'id',TrainerBookedSession.id,
             'date', TrainerBookedSession.date,
+            'status', TrainerBookedSession.status,
+            'coachFirstName',User.firstName,
+            'coachLastName',User.lastName,
+            'coachProfileImage',User.profileImage,
+            'fieldId',Field.id,
+            'fieldName',Field.name,
+            'location',Region.name,
+            'startTime',Slot.FromTime,
+            'endTime',Slot.ToTime
+          )
+        )
+      END AS sessions
+      FROM
+      TrainerBookedSession
+      LEFT JOIN TrainerProfile ON TrainerBookedSession.trainerProfileId = TrainerProfile.id
+      LEFT JOIN User ON TrainerProfile.userId = User.id
+      LEFT JOIN TrainerProfileSports ON TrainerProfileSports.trainerProfileId = TrainerProfile.id
+      LEFT JOIN Sport ON TrainerProfileSports.sportId = Sport.id
+      LEFT JOIN Slot ON TrainerBookedSession.slotId = Slot.id
+      LEFT JOIN Field ON Slot.fieldId = Field.id
+      LEFT JOIN Region ON Field.regionId = Region.id
+      WHERE
+      TrainerBookedSession.userId = ${userId}
+      AND TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
+      AND
+      TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+    `;
+
+    console.log('playerSessions:', playerSessions[0].sessions);
+
+    if (playerSessions[0].sessions == null) {
+      return [];
+    }
+
+    playerSessions = playerSessions[0].sessions;
+
+    playerSessions.forEach((session) => {
+      session.startTime = moment(`${session.date} ${session.startTime}`)
+        .tz(this.configService.getOrThrow('TZ'))
+        .format('HH:mm');
+      session.endTime = moment(`${session.date} ${session.endTime}`)
+        .tz(this.configService.getOrThrow('TZ'))
+        .format('HH:mm');
+    });
+
+    return playerSessions;
+  }
+
+  async getPlayerOngoingSessions(userId: number) {
+    let playerTodaySessions: any = await this.prisma.$queryRaw`
+      SELECT
+      CASE
+        WHEN COUNT(TrainerBookedSession.id) = 0 THEN null
+        ELSE
+        JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'id',TrainerBookedSession.id,
+            'date', TrainerBookedSession.date,
             'coachFirstName',User.firstName,
             'coachLastName',User.lastName,
             'coachProfileImage',User.profileImage,
@@ -452,16 +514,42 @@ export class HomeModel {
       AND
       TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
       AND
-      TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+      TrainerBookedSession.date = CURDATE()
     `;
 
-    console.log('playerSessions:', playerSessions);
+    let todaySession = playerTodaySessions[0].sessions;
+    console.log('todaySession:', todaySession);
 
-    if (playerSessions[0].sessions == null) {
+    if (todaySession == null) {
       return [];
     }
 
-    return playerSessions[0].sessions;
+    let ongoingSessions = [];
+    let currentDateTime = moment();
+
+    for (let index = 0; index < todaySession.length; index++) {
+      console.log(todaySession[index]);
+      let sessionStartTime = moment(
+        `${todaySession[index].date} ${todaySession[index].startTime}`,
+      );
+      let sessionEndTime = moment(
+        `${todaySession[index].date} ${todaySession[index].endTime}`,
+      );
+      if (currentDateTime.isBetween(sessionStartTime, sessionEndTime)) {
+        ongoingSessions.push(todaySession[index]);
+      }
+    }
+
+    ongoingSessions.forEach((session) => {
+      session.startTime = moment(`${session.date} ${session.startTime}`)
+        .tz(this.configService.getOrThrow('TZ'))
+        .format('HH:mm');
+      session.endTime = moment(`${session.date} ${session.endTime}`)
+        .tz(this.configService.getOrThrow('TZ'))
+        .format('HH:mm');
+    });
+
+    return ongoingSessions;
   }
 
   async getTrainerSessions(userId: number) {
@@ -474,6 +562,7 @@ export class HomeModel {
           JSON_OBJECT(
             'id',TrainerBookedSession.id,
             'date', TrainerBookedSession.date,
+            'status', TrainerBookedSession.status,
             'playerFirstName',User.firstName,
             'playerLastName',User.lastName,
             'playerProfileImage',User.profileImage,
@@ -508,7 +597,18 @@ export class HomeModel {
       return [];
     }
 
-    return trainerSessions[0].sessions;
+    trainerSessions = trainerSessions[0].sessions;
+
+    trainerSessions.forEach((session) => {
+      session.startTime = moment(`${session.date} ${session.startTime}`)
+        .tz(this.configService.getOrThrow('TZ'))
+        .format('HH:mm');
+      session.endTime = moment(`${session.date} ${session.endTime}`)
+        .tz(this.configService.getOrThrow('TZ'))
+        .format('HH:mm');
+    });
+
+    return trainerSessions;
   }
 
   async getTrainerPendingSessions(userId: number) {
@@ -522,6 +622,7 @@ export class HomeModel {
             'id',TrainerBookedSession.id,
             'date', TrainerBookedSession.date,
             'playerFirstName',User.firstName,
+            'status', TrainerBookedSession.status,
             'playerLastName',User.lastName,
             'playerProfileImage',User.profileImage,
             'fieldId',Field.id,
@@ -549,13 +650,24 @@ export class HomeModel {
       TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
     `;
 
-    console.log('trainerSessions:', trainerSessions);
+    console.log('trainerSessions:', trainerSessions[0].sessions);
 
     if (trainerSessions[0].sessions == null) {
       return [];
     }
 
-    return trainerSessions[0].sessions;
+    trainerSessions = trainerSessions[0].sessions;
+
+    trainerSessions.forEach((session) => {
+      session.startTime = moment(`${session.date} ${session.startTime}`)
+        .tz(this.configService.getOrThrow('TZ'))
+        .format('HH:mm');
+      session.endTime = moment(`${session.date} ${session.endTime}`)
+        .tz(this.configService.getOrThrow('TZ'))
+        .format('HH:mm');
+    });
+
+    return trainerSessions;
   }
 
   async getSportsFields(userId: number) {
@@ -595,11 +707,12 @@ export class HomeModel {
         ELSE
         JSON_ARRAYAGG(
           JSON_OBJECT(
-            'id',User.id,
+            'userId',User.id,
             'firstName',User.firstName,
             'lastName',User.lastName,
             'profileImage',User.profileImage,
-            'date', TrainerBookedSession.date
+            'date', TrainerBookedSession.date,
+            'sessionId', TrainerBookedSession.id
           )
         )
       END AS trainees
@@ -614,13 +727,26 @@ export class HomeModel {
       TrainerBookedSession.date <= CURDATE() AND TrainerBookedSession.date > DATE_ADD(CURDATE(), INTERVAL -7 DAY)
       `;
 
+    lastSessionsTrainees = lastSessionsTrainees[0].trainees;
+
     console.log('lastSessionsTrainees:', lastSessionsTrainees);
 
-    if (lastSessionsTrainees[0].trainees == null) {
+    if (lastSessionsTrainees == null) {
       return [];
     }
 
-    return lastSessionsTrainees[0].trainees;
+    let foundedUserId = [];
+    let uniqueLastSessionsTrainees = [];
+
+    for (let index = 0; index < lastSessionsTrainees.length; index++) {
+      // const element = lastSessionsTrainees[index];
+      if (!foundedUserId.includes(lastSessionsTrainees[index].userId)) {
+        uniqueLastSessionsTrainees.push(lastSessionsTrainees[index]);
+        foundedUserId.push(lastSessionsTrainees[index].userId);
+      }
+    }
+
+    return uniqueLastSessionsTrainees;
   }
 
   async getPlayerFeedbacks(userId: number) {
@@ -636,6 +762,7 @@ export class HomeModel {
             'rate',Rate.ratingNumber,
             'coachFirstName',User.firstName,
             'coachLastName',User.lastName,
+            'coachProfileImage',User.profileImage,
             'date', Rate.createdAt
           )
         )
@@ -650,7 +777,7 @@ export class HomeModel {
       Rate.rateableType = ${RATEABLE_TYPES_ENUM.PLAYER}
       `;
 
-    console.log(playerFeedbacks);
+    console.log('feedbacks:', playerFeedbacks[0].feedbacks);
 
     if (playerFeedbacks[0].feedbacks == null) {
       return [];

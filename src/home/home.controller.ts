@@ -93,7 +93,7 @@ export class HomeController {
   //
   @Post('child')
   @Version('1')
-  @Roles('user')
+  @Roles('child')
   @UseGuards(AuthGuard, RoleGuard)
   async childHome(@UserId() userId: number) {
     return this.homeService.getChildHome(userId);

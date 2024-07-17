@@ -58,12 +58,16 @@ export class HomeService {
     // get player sessions
     let upcomingSession: any[] = await this.homeModel.getPlayerSessions(userId);
 
+    // get player ongoing session
+    let ongoingSessions: any[] = await this.homeModel.getPlayerOngoingSessions(userId);
+
     // get trainer packages for child
     let packages: any[] = await this.homeModel.getPackages(userId);
 
     return {
       sports: sports,
       upcomingSession: upcomingSession,
+      ongoingSessions: ongoingSessions,
       childrenNames: childrenNames,
       childPackages: packages,
     };

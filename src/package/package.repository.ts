@@ -186,7 +186,7 @@ export class PackageRepository {
 
     // delete package sessions
     await this.prisma.$queryRaw`
-    DELETE FROM TrainerBookedSessions
+    DELETE FROM TrainerBookedSession
     WHERE packageId = ${pacakgeId}
     `;
 
