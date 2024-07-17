@@ -13,6 +13,7 @@ export class SportRepository {
     let allSports: ReturnSportDto[] = await this.prisma.$queryRaw`
     SELECT
     Sport.id,
+    Sport.profileImage AS profileImage,
     SportTranslation.name AS name
     FROM Sport
     LEFT JOIN SportTranslation
