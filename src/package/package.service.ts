@@ -83,7 +83,7 @@ export class PackageService {
       if (reqBody.numberOfSessions != reqBody.sessionsDateTime.length) {
         console.log('-- reqBody.numberOfSessions != reqBody.sessionsDateTime.length --');
         throw new BadRequestException(
-          this.i18n.t(`errors.INVALID_PACKAGE_SCHEDULE`, {
+          this.i18n.t(`errors.INVALID_PACKAGE_SESSIONS`, {
             lang: I18nContext.current().lang,
           }),
         );
