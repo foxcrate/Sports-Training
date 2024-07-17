@@ -86,7 +86,7 @@ export class GlobalService {
     const S3link =
       'https://eu2.contabostorage.com/acbe0d06f51f4ec78dc6143eaae4642f:instaplay-bucket/';
 
-    return S3link + fileName;
+    return { image_url: S3link + fileName };
   }
 
   async s3_upload(s3, file, bucket, name, mimetype) {
