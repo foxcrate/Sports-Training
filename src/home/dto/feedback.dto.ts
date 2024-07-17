@@ -14,7 +14,10 @@ export class FeedbackDto {
   coachFirstName: String;
 
   @ApiProperty()
-  coachLastName: Number;
+  coachLastName: String;
+
+  @ApiProperty()
+  coachProfileImage: String;
 
   @ApiProperty()
   date: String;

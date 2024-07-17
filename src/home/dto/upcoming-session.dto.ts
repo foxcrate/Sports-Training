@@ -9,6 +9,9 @@ export class UpcomingSessionDto {
   date: String;
 
   @ApiProperty()
+  status: String;
+
+  @ApiProperty()
   coachFirstName: String;
 
   @ApiProperty()

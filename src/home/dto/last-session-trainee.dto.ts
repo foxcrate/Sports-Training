@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class LastSessionTraineeDto {
   @ApiProperty()
-  id: Number;
+  userId: Number;
 
   @ApiProperty()
   firstName: String;
@@ -15,4 +15,7 @@ export class LastSessionTraineeDto {
 
   @ApiProperty()
   date: String;
+
+  @ApiProperty()
+  sessionId: Number;
 }
