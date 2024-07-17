@@ -6,4 +6,7 @@ export class ReturnSportDto {
 
   @ApiProperty()
   name: String;
+
+  @ApiProperty()
+  profileImage: String;
 }
