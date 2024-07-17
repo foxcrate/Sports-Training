@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { GlobalReturnDTO } from 'src/global/dtos/global-return.dto';
-import { UpcomingSessionDto } from './upcoming-session.dto';
+import { PlayerUpcomingSessionDto } from './player-upcoming-session.dto';
 import { PackageDto } from './package.dto';
 import { ReturnSportDto } from 'src/sport/dtos/return.dto';
 
@@ -12,16 +12,16 @@ export class PlayerHomeDto {
   sports: ReturnSportDto[];
 
   @ApiProperty({
-    type: UpcomingSessionDto,
+    type: PlayerUpcomingSessionDto,
     isArray: true,
   })
-  upcomingSession: UpcomingSessionDto[];
+  upcomingSession: PlayerUpcomingSessionDto[];
 
   @ApiProperty({
-    type: UpcomingSessionDto,
+    type: PlayerUpcomingSessionDto,
     isArray: true,
   })
-  ongoingSessions: UpcomingSessionDto[];
+  ongoingSessions: PlayerUpcomingSessionDto[];
 
   @ApiProperty({
     type: String,
