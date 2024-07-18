@@ -612,7 +612,7 @@ export class HomeModel {
       TrainerBookedSession
       LEFT JOIN TrainerProfile ON TrainerBookedSession.trainerProfileId = TrainerProfile.id
       LEFT JOIN User ON TrainerBookedSession.userId = User.id
-      LEFT JOIN TrainerProfileSports ON TrainerProfileSports.trainerProfileId = TrainerProfile.id
+      LEFT JOIN Slot ON TrainerBookedSession.slotId = Slot.id
       LEFT JOIN Field ON Slot.fieldId = Field.id
       LEFT JOIN Region ON Field.regionId = Region.id
       WHERE
