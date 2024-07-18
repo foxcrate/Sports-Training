@@ -70,7 +70,12 @@ export class GlobalService {
     let mimetype = file?.mimetype;
     let extension = mimetype.split('/')[1];
 
+    console.log('mimetype: ', mimetype);
+    console.log('mimetype: ', mimetype);
+
     const fileName = `${randomFilename()}.${extension}`;
+
+    console.log('randomFilename(): ', randomFilename());
 
     const params: any = {
       Bucket: 'instaplay-bucket',
@@ -85,6 +90,8 @@ export class GlobalService {
 
     const S3link =
       'https://eu2.contabostorage.com/acbe0d06f51f4ec78dc6143eaae4642f:instaplay-bucket/';
+
+    console.log('final file name: ', S3link + fileName);
 
     return { image_url: S3link + fileName };
   }
