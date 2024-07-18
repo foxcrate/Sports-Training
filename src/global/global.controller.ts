@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Get,
   ParseFilePipe,
@@ -26,6 +27,7 @@ import { UploadImageReturnDto } from './dtos/upload-image-return.dto';
 import { GlobalReturnDTO } from './dtos/global-return.dto';
 import { FeedbackReturnDto } from './dtos/feedback-return.dto';
 import { WeekDayReturnDto } from './dtos/weekday-return.dto';
+import path from 'path';
 
 @Controller('global')
 export class GlobalController {
@@ -53,7 +55,16 @@ export class GlobalController {
   @Roles(AvailableRoles.User)
   @UseGuards(AuthGuard, RoleGuard)
   @Version('1')
-  @UseInterceptors(FileInterceptor('imageFile'))
+  @UseInterceptors(
+    FileInterceptor('imageFile', {
+      fileFilter: function (req, file, callback) {
+        if (!file.mimetype.startsWith('image/')) {
+          return callback(new BadRequestException('File is not an image'), false);
+        }
+        callback(null, true);
+      },
+    }),
+  )
   async uploadFile(
     @UploadedFile(new ParseFilePipe())
     file: Express.Multer.File,
