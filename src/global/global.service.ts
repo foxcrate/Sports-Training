@@ -59,8 +59,8 @@ export class GlobalService {
       endpoint: 'https://eu2.contabostorage.com', // Replace with your Contabo endpoint if different
       region: 'EU',
       credentials: {
-        accessKeyId: 'd1c8c113cea80b7172d90c12d883e935', // Replace with your Contabo Access Key ID
-        secretAccessKey: '19175090c7a22e49ef1e153766442a09', // Replace with your Contabo Secret Access Key
+        accessKeyId: '9fc67155963dc77c69605f2961c7a4b3', // Replace with your Contabo Access Key ID
+        secretAccessKey: '22ac689859e807eb7f21b66cc4a9c976', // Replace with your Contabo Secret Access Key
       },
       forcePathStyle: true,
     });
@@ -71,7 +71,7 @@ export class GlobalService {
     const fileName = `${randomFilename()}.${extension}`;
 
     const params: any = {
-      Bucket: 'instaplay-test',
+      Bucket: 'instaplay-bucket',
       Key: fileName,
       Body: file.buffer,
       ContentType: mimetype,
@@ -82,7 +82,7 @@ export class GlobalService {
     const result = await s3Client.send(command);
 
     const S3link =
-      'https://eu2.contabostorage.com/b491275ac598406eae4d8ebad612c09c:instaplay-test/';
+      'https://eu2.contabostorage.com/acbe0d06f51f4ec78dc6143eaae4642f:instaplay-bucket/';
 
     return { image_url: S3link + fileName };
   }
