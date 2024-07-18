@@ -75,6 +75,7 @@ export class GlobalService {
 
     if (extension == 'octet-stream') {
       extension = 'jpeg';
+      let mimetype = 'image/jpeg';
     }
 
     const fileName = `${randomFilename()}.${extension}`;
