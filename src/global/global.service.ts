@@ -71,7 +71,7 @@ export class GlobalService {
     let extension = mimetype.split('/')[1];
 
     console.log('mimetype: ', mimetype);
-    console.log('mimetype: ', mimetype);
+    console.log('extension: ', extension);
 
     const fileName = `${randomFilename()}.${extension}`;
 
