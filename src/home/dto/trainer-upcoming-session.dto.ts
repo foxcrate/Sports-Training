@@ -11,6 +11,12 @@ export class TrainerUpcomingSessionDto {
   @ApiProperty()
   status: String;
 
+  @ApiProperty({
+    type: String,
+    isArray: true,
+  })
+  sportName: String;
+
   @ApiProperty()
   playerFirstName: String;
 
