@@ -438,6 +438,15 @@ export class HomeModel {
             'fieldId',Field.id,
             'fieldName',Field.name,
             'location',Region.name,
+            'sportName',(
+              select
+              JSON_ARRAYAGG(name)
+              from
+              Sport
+              LEFT JOIN TrainerProfileSports ON TrainerProfileSports.sportId = Sport.id
+              WHERE
+              TrainerProfileSports.trainerProfileId = TrainerBookedSession.trainerProfileId
+            ),
             'startTime',Slot.FromTime,
             'endTime',Slot.ToTime
           )
@@ -447,8 +456,6 @@ export class HomeModel {
       TrainerBookedSession
       LEFT JOIN TrainerProfile ON TrainerBookedSession.trainerProfileId = TrainerProfile.id
       LEFT JOIN User ON TrainerProfile.userId = User.id
-      LEFT JOIN TrainerProfileSports ON TrainerProfileSports.trainerProfileId = TrainerProfile.id
-      LEFT JOIN Sport ON TrainerProfileSports.sportId = Sport.id
       LEFT JOIN Slot ON TrainerBookedSession.slotId = Slot.id
       LEFT JOIN Field ON Slot.fieldId = Field.id
       LEFT JOIN Region ON Field.regionId = Region.id
@@ -476,6 +483,17 @@ export class HomeModel {
         .format('HH:mm');
     });
 
+    // let foundedSessionId = [];
+    // let uniquePlayerSessions = [];
+
+    // for (let index = 0; index < playerSessions.length; index++) {
+    //   // const element = lastSessionsTrainees[index];
+    //   if (!foundedSessionId.includes(playerSessions[index].id)) {
+    //     uniquePlayerSessions.push(playerSessions[index]);
+    //     foundedSessionId.push(uniquePlayerSessions[index].id);
+    //   }
+    // }
+
     return playerSessions;
   }
 
@@ -493,6 +511,15 @@ export class HomeModel {
             'coachLastName',User.lastName,
             'coachProfileImage',User.profileImage,
             'fieldId',Field.id,
+            'sportName',(
+              select
+              JSON_ARRAYAGG(name)
+              from
+              Sport
+              LEFT JOIN TrainerProfileSports ON TrainerProfileSports.sportId = Sport.id
+              WHERE
+              TrainerProfileSports.trainerProfileId = TrainerBookedSession.trainerProfileId
+            ),
             'fieldName',Field.name,
             'location',Region.name,
             'startTime',Slot.FromTime,
@@ -504,8 +531,6 @@ export class HomeModel {
       TrainerBookedSession
       LEFT JOIN TrainerProfile ON TrainerBookedSession.trainerProfileId = TrainerProfile.id
       LEFT JOIN User ON TrainerProfile.userId = User.id
-      LEFT JOIN TrainerProfileSports ON TrainerProfileSports.trainerProfileId = TrainerProfile.id
-      LEFT JOIN Sport ON TrainerProfileSports.sportId = Sport.id
       LEFT JOIN Slot ON TrainerBookedSession.slotId = Slot.id
       LEFT JOIN Field ON Slot.fieldId = Field.id
       LEFT JOIN Region ON Field.regionId = Region.id
@@ -565,6 +590,15 @@ export class HomeModel {
             'status', TrainerBookedSession.status,
             'playerFirstName',User.firstName,
             'playerLastName',User.lastName,
+            'sportName',(
+              select
+              JSON_ARRAYAGG(name)
+              from
+              Sport
+              LEFT JOIN TrainerProfileSports ON TrainerProfileSports.sportId = Sport.id
+              WHERE
+              TrainerProfileSports.trainerProfileId = TrainerBookedSession.trainerProfileId
+            ),
             'playerProfileImage',User.profileImage,
             'fieldId',Field.id,
             'fieldName',Field.name,
@@ -579,8 +613,6 @@ export class HomeModel {
       LEFT JOIN TrainerProfile ON TrainerBookedSession.trainerProfileId = TrainerProfile.id
       LEFT JOIN User ON TrainerBookedSession.userId = User.id
       LEFT JOIN TrainerProfileSports ON TrainerProfileSports.trainerProfileId = TrainerProfile.id
-      LEFT JOIN Sport ON TrainerProfileSports.sportId = Sport.id
-      LEFT JOIN Slot ON TrainerBookedSession.slotId = Slot.id
       LEFT JOIN Field ON Slot.fieldId = Field.id
       LEFT JOIN Region ON Field.regionId = Region.id
       WHERE
@@ -625,6 +657,15 @@ export class HomeModel {
             'status', TrainerBookedSession.status,
             'playerLastName',User.lastName,
             'playerProfileImage',User.profileImage,
+            'sportName',(
+              select
+              JSON_ARRAYAGG(name)
+              from
+              Sport
+              LEFT JOIN TrainerProfileSports ON TrainerProfileSports.sportId = Sport.id
+              WHERE
+              TrainerProfileSports.trainerProfileId = TrainerBookedSession.trainerProfileId
+            ),
             'fieldId',Field.id,
             'fieldName',Field.name,
             'location',Region.name,

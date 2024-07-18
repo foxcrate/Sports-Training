@@ -17,6 +17,12 @@ export class PlayerUpcomingSessionDto {
   @ApiProperty()
   coachLastName: String;
 
+  @ApiProperty({
+    type: String,
+    isArray: true,
+  })
+  sportName: String;
+
   @ApiProperty()
   coachProfileImage: String;
 
