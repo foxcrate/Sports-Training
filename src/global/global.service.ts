@@ -75,7 +75,7 @@ export class GlobalService {
 
     if (extension == 'octet-stream') {
       extension = 'jpeg';
-      let mimetype = 'image/jpeg';
+      mimetype = 'image/jpeg';
     }
 
     const fileName = `${randomFilename()}.${extension}`;
@@ -94,7 +94,7 @@ export class GlobalService {
     const result = await s3Client.send(command);
 
     const S3link =
-      'https://eu2.contabostorage.com/acbe0d06f51f4ec78dc6143eaae4642f:instaplay-bucket/';
+      'https://eu2.contabostorage.com/b491275ac598406eae4d8ebad612c09c:instaplay-test';
 
     console.log('final file name: ', S3link + fileName);
 
