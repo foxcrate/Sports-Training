@@ -83,7 +83,7 @@ export class GlobalService {
     console.log('randomFilename(): ', randomFilename());
 
     const params: any = {
-      Bucket: 'instaplay-bucket',
+      Bucket: 'instaplay-test',
       Key: fileName,
       Body: file.buffer,
       ContentType: mimetype,
