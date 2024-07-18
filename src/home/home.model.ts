@@ -463,7 +463,7 @@ export class HomeModel {
       TrainerBookedSession.userId = ${userId}
       AND TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
       AND
-      TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 8 DAY)
+      TrainerBookedSession.date > CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 8 DAY)
     `;
 
     console.log('playerSessions:', playerSessions[0].sessions);
@@ -620,7 +620,7 @@ export class HomeModel {
       AND
       TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
       AND
-      TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+      TrainerBookedSession.date > CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
     `;
 
     console.log('trainerSessions:', trainerSessions);
