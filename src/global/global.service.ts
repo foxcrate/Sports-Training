@@ -73,6 +73,10 @@ export class GlobalService {
     console.log('mimetype: ', mimetype);
     console.log('extension: ', extension);
 
+    if (extension == 'octet-stream') {
+      extension = 'jpeg';
+    }
+
     const fileName = `${randomFilename()}.${extension}`;
 
     console.log('randomFilename(): ', randomFilename());
