@@ -14,6 +14,7 @@ import { GlobalRepository } from './global.repository';
 import { GlobalReturnDTO } from './dtos/global-return.dto';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import crypto from 'crypto';
+import { Multer } from 'multer';
 
 @Injectable()
 export class GlobalService {
@@ -52,35 +53,22 @@ export class GlobalService {
   //   );
   // }
 
-  async uploadFile(file) {
+  async uploadFile(file: Express.Multer.File) {
     const randomFilename = (bytes = 32) => crypto.randomBytes(bytes).toString('hex');
-
     const s3Client = new S3Client({
       endpoint: 'https://eu2.contabostorage.com', // Replace with your Contabo endpoint if different
       region: 'EU',
       credentials: {
-        accessKeyId: 'd1c8c113cea80b7172d90c12d883e935 ', // Replace with your Contabo Access Key ID
+        accessKeyId: 'd1c8c113cea80b7172d90c12d883e935', // Replace with your Contabo Access Key ID
         secretAccessKey: '19175090c7a22e49ef1e153766442a09', // Replace with your Contabo Secret Access Key
       },
       forcePathStyle: true,
     });
 
-    ////////////////////////////////////////////////
-
     let mimetype = file?.mimetype;
     let extension = mimetype.split('/')[1];
 
-    console.log('mimetype: ', mimetype);
-    console.log('extension: ', extension);
-
-    if (extension == 'octet-stream') {
-      extension = 'jpeg';
-      mimetype = 'image/jpeg';
-    }
-
     const fileName = `${randomFilename()}.${extension}`;
-
-    console.log('randomFilename(): ', randomFilename());
 
     const params: any = {
       Bucket: 'instaplay-test',
@@ -89,14 +77,12 @@ export class GlobalService {
       ContentType: mimetype,
       ACL: 'public-read-write',
     };
-    const command = new PutObjectCommand(params);
 
+    const command = new PutObjectCommand(params);
     const result = await s3Client.send(command);
 
     const S3link =
-      'https://eu2.contabostorage.com/b491275ac598406eae4d8ebad612c09c:instaplay-test';
-
-    console.log('final file name: ', S3link + fileName);
+      'https://eu2.contabostorage.com/b491275ac598406eae4d8ebad612c09c:instaplay-test/';
 
     return { image_url: S3link + fileName };
   }
