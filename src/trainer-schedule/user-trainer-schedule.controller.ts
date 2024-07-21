@@ -184,7 +184,7 @@ export class UserTrainerScheduleController {
   @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   async bookTrainerSessionForChild(
-    @Body(new JoiValidation(BookTrainerSessionValidation)) reqBody,
+    @Body(new JoiValidation(BookTrainerSessionForChildValidation)) reqBody,
     @UserId() userId: number,
   ) {
     return await this.scheduleService.bookTrainerSessionForChild(
