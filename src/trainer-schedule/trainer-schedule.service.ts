@@ -22,6 +22,7 @@ import {
 import { NotificationRepository } from 'src/notification/notification.repository';
 import { FieldRepository } from 'src/field/field.repository';
 import { PackageReturnDto } from 'src/package/dtos/package-return.dto';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class TrainerScheduleService {
@@ -31,6 +32,7 @@ export class TrainerScheduleService {
     private readonly i18n: I18nService,
     private trainerProfileRepository: TrainerProfileRepository,
     private sessionRepository: SessionRepository,
+    private userService: UserService,
     private fieldRepository: FieldRepository,
     private notificationRepository: NotificationRepository,
   ) {}
@@ -207,6 +209,54 @@ export class TrainerScheduleService {
 
     let trainerBookedSession = await this.sessionRepository.createTrainerBookedSession(
       userId,
+      dayDate,
+      trainerProfileId,
+      slotId,
+    );
+
+    let theTrainerProfile = await this.trainerProfileRepository.getByID(trainerProfileId);
+
+    await this.sessionRepository.createNewTrainerSessionRequest(trainerBookedSession.id);
+
+    // create notification
+    await this.notificationRepository.createOne(
+      theTrainerProfile.userId,
+      trainerBookedSession.id,
+      NOTIFICATION_SENT_TO.TRAINER_PROFILE,
+      NOTIFICATION_ABOUT.TRAINER_SESSION,
+      NOTIFICATION_TYPE.REQUEST,
+      NOTIFICATION_CONTENT.USER_REQUESTED_SESSION,
+    );
+
+    let trainerBookedSessionCard =
+      await this.sessionRepository.getTrainerBookedSessionCard(trainerBookedSession.id);
+
+    let formatedDayDate = moment(trainerBookedSessionCard.date).format('YYYY-MM-DD');
+
+    trainerBookedSessionCard.fromTime = moment(
+      `${formatedDayDate}T${trainerBookedSessionCard.fromTime}`,
+    ).format('hh:mm A');
+    trainerBookedSessionCard.toTime = moment(
+      `${formatedDayDate}T${trainerBookedSessionCard.toTime}`,
+    ).format('hh:mm A');
+
+    return trainerBookedSessionCard;
+  }
+
+  async bookTrainerSessionForChild(
+    userId,
+    childId,
+    trainerProfileId: number,
+    dayDate: string,
+    slotId: number,
+  ): Promise<SessionCardDTO> {
+    //validate parent child relationship
+    await this.userService.validateParentChildRelation(userId, childId);
+
+    await this.validateBookingTrainerSession(childId, trainerProfileId, dayDate, slotId);
+
+    let trainerBookedSession = await this.sessionRepository.createTrainerBookedSession(
+      childId,
       dayDate,
       trainerProfileId,
       slotId,

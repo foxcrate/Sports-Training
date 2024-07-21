@@ -276,6 +276,8 @@ export class GlobalService {
     let sessionDateTime = moment(`${sessionDate}T${sessionTime}`);
 
     if (sessionDateTime <= moment()) {
+      console.log('sessionDateTime:', sessionDateTime);
+
       throw new BadRequestException(
         this.i18n.t(`errors.PASSED_DATE`, {
           lang: I18nContext.current().lang,

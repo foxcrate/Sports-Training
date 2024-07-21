@@ -8,6 +8,7 @@ import { TrainerScheduleRepository } from './trainer-schedule.repository';
 import { SessionModule } from 'src/session/session.module';
 import { NotificationModule } from 'src/notification/notification.module';
 import { FieldModule } from 'src/field/field.module';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { FieldModule } from 'src/field/field.module';
     forwardRef(() => SessionModule),
     NotificationModule,
     FieldModule,
+    UserModule,
   ],
   controllers: [
     TrainerScheduleController,
