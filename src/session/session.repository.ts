@@ -436,16 +436,19 @@ export class SessionRepository {
         ).format('hh:mm A');
       }
 
-      console.log({ session });
+      // console.log({ session });
 
+      // if (moment(`${session.date} ${session.slot.fromTime}`) > moment()) {
+      //   return session;
+      // }
+
+      return session;
+    });
+
+    newPending = newPending.filter((session) => {
       if (moment(`${session.date} ${session.slot.fromTime}`) > moment()) {
         return session;
       }
-
-      // console.log('sessionDateTime:', moment(`${session.date} ${session.slot.fromTime}`));
-      // console.log('now:', moment());
-
-      // return session;
     });
 
     return newPending;
