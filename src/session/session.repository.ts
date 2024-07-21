@@ -420,20 +420,27 @@ export class SessionRepository {
     `;
     let newPending = pendingSessions.map((session) => {
       session.date = moment(session.date).format('YYYY-MM-DD');
-      session.slot.fromTime = moment(`1970-01-01T${session.slot.fromTime}`).format(
+      session.slot.fromTime = moment(`${session.date}T${session.slot.fromTime}`).format(
         'hh:mm A',
       );
-      session.slot.toTime = moment(`1970-01-01T${session.slot.toTime}`).format('hh:mm A');
+      session.slot.toTime = moment(`${session.date}T${session.slot.toTime}`).format(
+        'hh:mm A',
+      );
       if (session.type === 'change') {
         session.newSessionDate = moment(session.newSessionDate).format('YYYY-MM-DD');
         session.newSlot.fromTime = moment(
-          `1970-01-01T${session.newSlot.fromTime}`,
+          `${session.newSessionDate}T${session.newSlot.fromTime}`,
         ).format('hh:mm A');
-        session.newSlot.toTime = moment(`1970-01-01T${session.newSlot.toTime}`).format(
-          'hh:mm A',
-        );
+        session.newSlot.toTime = moment(
+          `${session.newSessionDate}T${session.newSlot.toTime}`,
+        ).format('hh:mm A');
       }
-      return session;
+
+      if (moment(`${session.date}T${session.slot.fromTime}`) > moment()) {
+        return session;
+      }
+
+      // return session;
     });
 
     return newPending;
