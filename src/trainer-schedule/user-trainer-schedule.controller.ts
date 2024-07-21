@@ -31,6 +31,7 @@ import { SwaggerErrorResponse } from 'src/global/classes/swagger-error-response'
 import { SimplifiedFieldReturn } from 'src/field/dtos/field-simplified-return.dto';
 import { UserSlotState } from './dtos/user-slot-state.dto';
 import { SessionCardDTO } from 'src/session/dtos/session-card.dto';
+import { BookTrainerSessionForChildValidation } from './validations/book-trainer-session-for-child.validation.dto';
 
 @Controller('user/trainer-schedule')
 export class UserTrainerScheduleController {
