@@ -1,11 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { GlobalReturnDTO } from 'src/global/dtos/global-return.dto';
 import { TrainerUpcomingSessionDto } from './trainer-upcoming-session.dto';
-import { PackageDto } from './package.dto';
 import { SportFieldDto } from './sport-field.dto';
 import { LastSessionTraineeDto } from './last-session-trainee.dto';
+import { UserInfoDto } from './user-info.dto';
 
 export class TrainerHomeDto {
+  @ApiProperty({
+    type: UserInfoDto,
+  })
+  userInfo: UserInfoDto;
+
   @ApiProperty({
     type: SportFieldDto,
     isArray: true,
