@@ -420,32 +420,32 @@ export class SessionRepository {
     `;
     let newPending = pendingSessions.map((session) => {
       session.date = moment(session.date).format('YYYY-MM-DD');
-      session.slot.fromTime = moment(`${session.date}T${session.slot.fromTime}`).format(
+      session.slot.fromTime = moment(`${session.date} ${session.slot.fromTime}`).format(
         'hh:mm A',
       );
-      session.slot.toTime = moment(`${session.date}T${session.slot.toTime}`).format(
+      session.slot.toTime = moment(`${session.date} ${session.slot.toTime}`).format(
         'hh:mm A',
       );
       if (session.type === 'change') {
         session.newSessionDate = moment(session.newSessionDate).format('YYYY-MM-DD');
         session.newSlot.fromTime = moment(
-          `${session.newSessionDate}T${session.newSlot.fromTime}`,
+          `${session.newSessionDate} ${session.newSlot.fromTime}`,
         ).format('hh:mm A');
         session.newSlot.toTime = moment(
-          `${session.newSessionDate}T${session.newSlot.toTime}`,
+          `${session.newSessionDate} ${session.newSlot.toTime}`,
         ).format('hh:mm A');
       }
 
       console.log({ session });
 
-      // if (moment(`${session.date}T${session.slot.fromTime}`) > moment()) {
-      //   return session;
-      // }
+      if (moment(`${session.date} ${session.slot.fromTime}`) > moment()) {
+        return session;
+      }
 
-      console.log('sessionDateTime:', moment(`${session.date} ${session.slot.fromTime}`));
-      console.log('now:', moment());
+      // console.log('sessionDateTime:', moment(`${session.date} ${session.slot.fromTime}`));
+      // console.log('now:', moment());
 
-      return session;
+      // return session;
     });
 
     return newPending;
