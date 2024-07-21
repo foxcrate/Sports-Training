@@ -4,14 +4,14 @@ import { SearchFiltersDto } from './dto/search-filters.dto';
 import { HOME_SEARCH_TYPES_ENUM } from 'src/global/enums';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { SearchResultsDto } from './dto/search-result.dto';
-import { ReturnSportDto } from 'src/sport/dtos/return.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Prisma } from '@prisma/client';
 import { PlayerHomeDto } from './dto/player-home.dto';
 import { TrainerHomeDto } from './dto/trainer-home.dto';
 import { ChildHomeDto } from './dto/child-home.dto';
 import { PlayerProfileRepository } from 'src/player-profile/player-profile.repository';
 import { TrainerProfileRepository } from 'src/trainer-profile/trainer-profile.repository';
+import { UserRepository } from 'src/user/user.repository';
+import { UserInfoDto } from './dto/user-info.dto';
 
 @Injectable()
 export class HomeService {
@@ -21,6 +21,7 @@ export class HomeService {
     private prisma: PrismaService,
     private playerProfileRepository: PlayerProfileRepository,
     private tainerProfileRepository: TrainerProfileRepository,
+    private userRepository: UserRepository,
   ) {}
 
   async getSearchResults(filters: SearchFiltersDto): Promise<SearchResultsDto> {
@@ -64,7 +65,17 @@ export class HomeService {
     // get trainer packages for child
     let packages: any[] = await this.homeModel.getPackages(userId);
 
+    let theUser = await this.userRepository.getById(userId);
+    let theUserInfo: UserInfoDto = {
+      id: theUser.id,
+      firstName: theUser.firstName,
+      lastName: theUser.lastName,
+      profileImage: theUser.profileImage,
+      mobileNumber: theUser.mobileNumber,
+    };
+
     return {
+      userInfo: theUserInfo,
       sports: sports,
       upcomingSession: upcomingSession,
       ongoingSessions: ongoingSessions,
@@ -88,7 +99,17 @@ export class HomeService {
     let lastSessionsTrainees: any[] =
       await this.homeModel.getLastSessionsTrainees(userId);
 
+    let theUser = await this.userRepository.getById(userId);
+    let theUserInfo: UserInfoDto = {
+      id: theUser.id,
+      firstName: theUser.firstName,
+      lastName: theUser.lastName,
+      profileImage: theUser.profileImage,
+      mobileNumber: theUser.mobileNumber,
+    };
+
     return {
+      userInfo: theUserInfo,
       sportsFields: sportsFields,
       upcomingSession: upcomingSession,
       pendingSession: pendingSession,
@@ -105,6 +126,15 @@ export class HomeService {
         }),
       );
     }
+
+    let theUser = await this.userRepository.getById(userId);
+    let theUserInfo: UserInfoDto = {
+      id: theUser.id,
+      firstName: theUser.firstName,
+      lastName: theUser.lastName,
+      profileImage: theUser.profileImage,
+      mobileNumber: theUser.mobileNumber,
+    };
     // get player sessions
     let upcomingSessions: any[] = await this.homeModel.getPlayerSessions(userId);
 
@@ -112,6 +142,7 @@ export class HomeService {
     let feedbacks: any[] = await this.homeModel.getPlayerFeedbacks(userId);
 
     return {
+      userInfo: theUserInfo,
       upcomingSessions: upcomingSessions,
       feedbacks: feedbacks,
     };
