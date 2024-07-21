@@ -436,11 +436,11 @@ export class SessionRepository {
         ).format('hh:mm A');
       }
 
-      if (moment(`${session.date}T${session.slot.fromTime}`) > moment()) {
-        return session;
-      }
+      // if (moment(`${session.date}T${session.slot.fromTime}`) > moment()) {
+      //   return session;
+      // }
 
-      // return session;
+      return session;
     });
 
     return newPending;
