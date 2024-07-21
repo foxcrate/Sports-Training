@@ -440,6 +440,9 @@ export class SessionRepository {
       //   return session;
       // }
 
+      console.log('sessionDateTime:', moment(`${session.date}T${session.slot.fromTime}`));
+      console.log('now:', moment());
+
       return session;
     });
 
