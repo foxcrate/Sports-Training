@@ -46,7 +46,7 @@ export class TrainerScheduleController {
     type: ScheduleSlotsDetailsDTO,
     isArray: true,
   })
-  @ApiTags('Trainer-Schedule: Get All')
+  @ApiTags('Trainer-Schedule: Trainer: Get All')
   @ApiBearerAuth()
   //
   @Get()
@@ -64,7 +64,7 @@ export class TrainerScheduleController {
     type: ScheduleSlotsDetailsDTO,
   })
   @ApiBadRequestResponse(new SwaggerErrorResponse('TRAINER_ALREADY_HAS_SCHEDULE').init())
-  @ApiTags('Trainer-Schedule: Create')
+  @ApiTags('Trainer-Schedule: Trainer: Create')
   @ApiBearerAuth()
   //
   @Post()
@@ -88,7 +88,7 @@ export class TrainerScheduleController {
     type: ScheduleSlotsDetailsDTO,
   })
   @ApiForbiddenResponse(new SwaggerErrorResponse('NOT_ALLOWED').init())
-  @ApiTags('Trainer-Schedule: Update')
+  @ApiTags('Trainer-Schedule: Trainer: Update')
   @ApiBearerAuth()
   //
   @Put('/:id')
@@ -129,7 +129,7 @@ export class TrainerScheduleController {
     type: ScheduleSlotsDetailsDTO,
   })
   @ApiForbiddenResponse(new SwaggerErrorResponse('NOT_ALLOWED').init())
-  @ApiTags('Trainer-Schedule: Delete')
+  @ApiTags('Trainer-Schedule: Trainer: Delete')
   @ApiBearerAuth()
   //
   @Delete('/:id')
@@ -159,7 +159,7 @@ export class TrainerScheduleController {
     type: ScheduleSlotsDetailsDTO,
   })
   @ApiForbiddenResponse(new SwaggerErrorResponse('NOT_ALLOWED').init())
-  @ApiTags('Trainer-Schedule: Get One')
+  @ApiTags('Trainer-Schedule: Trainer: Get One')
   @ApiBearerAuth()
   //
   @Get('/:id')

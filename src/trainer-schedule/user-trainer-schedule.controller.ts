@@ -138,7 +138,7 @@ export class UserTrainerScheduleController {
   //
   @Post('/book-session')
   @Version('1')
-  @Roles('user', 'child')
+  @Roles('user')
   @UseGuards(AuthGuard, RoleGuard)
   async bookTrainerSession(
     @Body(new JoiValidation(BookTrainerSessionValidation)) reqBody,
@@ -146,6 +146,50 @@ export class UserTrainerScheduleController {
   ) {
     return await this.scheduleService.bookTrainerSession(
       userId,
+      reqBody.trainerProfileId,
+      reqBody.dayDate,
+      reqBody.slotId,
+    );
+  }
+
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        trainerProfileId: {
+          type: 'number',
+        },
+        childId: {
+          type: 'number',
+        },
+        slotId: {
+          type: 'number',
+        },
+        dayDate: {
+          type: 'string',
+          // format: 'date-time',
+        },
+      },
+    },
+  })
+  @ApiCreatedResponse({
+    type: SessionCardDTO,
+  })
+  @ApiBadRequestResponse(new SwaggerErrorResponse('PASSED_DATE').init())
+  @ApiTags('Trainer-Schedule: User: Book Session For Child')
+  @ApiBearerAuth()
+  //
+  @Post('/book-session-child')
+  @Version('1')
+  @Roles('user')
+  @UseGuards(AuthGuard, RoleGuard)
+  async bookTrainerSessionForChild(
+    @Body(new JoiValidation(BookTrainerSessionValidation)) reqBody,
+    @UserId() userId: number,
+  ) {
+    return await this.scheduleService.bookTrainerSessionForChild(
+      userId,
+      reqBody.childId,
       reqBody.trainerProfileId,
       reqBody.dayDate,
       reqBody.slotId,
