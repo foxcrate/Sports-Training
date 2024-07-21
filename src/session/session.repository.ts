@@ -436,6 +436,8 @@ export class SessionRepository {
         ).format('hh:mm A');
       }
 
+      console.log({ session });
+
       // if (moment(`${session.date}T${session.slot.fromTime}`) > moment()) {
       //   return session;
       // }
