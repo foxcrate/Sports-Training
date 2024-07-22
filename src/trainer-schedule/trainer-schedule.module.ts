@@ -9,6 +9,7 @@ import { SessionModule } from 'src/session/session.module';
 import { NotificationModule } from 'src/notification/notification.module';
 import { FieldModule } from 'src/field/field.module';
 import { UserModule } from 'src/user/user.module';
+import { PlayerProfileModule } from 'src/player-profile/player-profile.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UserModule } from 'src/user/user.module';
     NotificationModule,
     FieldModule,
     UserModule,
+    PlayerProfileModule,
   ],
   controllers: [
     TrainerScheduleController,
