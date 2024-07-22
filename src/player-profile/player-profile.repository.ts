@@ -67,7 +67,7 @@ export class PlayerProfileRepository {
   }
 
   async getOneByUserId(userId): Promise<ReturnPlayerProfileDto> {
-    console.log('userId', userId);
+    // console.log('userId', userId);
 
     let playerProfile = await this.prisma.$queryRaw`
       SELECT *
@@ -76,7 +76,7 @@ export class PlayerProfileRepository {
       LIMIT 1
     `;
 
-    console.log('in repo', playerProfile);
+    // console.log('in repo', playerProfile);
 
     return playerProfile[0];
   }

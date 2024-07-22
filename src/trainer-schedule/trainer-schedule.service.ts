@@ -23,6 +23,7 @@ import { NotificationRepository } from 'src/notification/notification.repository
 import { FieldRepository } from 'src/field/field.repository';
 import { PackageReturnDto } from 'src/package/dtos/package-return.dto';
 import { UserService } from 'src/user/user.service';
+import { PlayerProfileRepository } from 'src/player-profile/player-profile.repository';
 
 @Injectable()
 export class TrainerScheduleService {
@@ -33,6 +34,7 @@ export class TrainerScheduleService {
     private trainerProfileRepository: TrainerProfileRepository,
     private sessionRepository: SessionRepository,
     private userService: UserService,
+    private playerProfileRepository: PlayerProfileRepository,
     private fieldRepository: FieldRepository,
     private notificationRepository: NotificationRepository,
   ) {}
@@ -253,6 +255,17 @@ export class TrainerScheduleService {
     //validate parent child relationship
     await this.userService.validateParentChildRelation(userId, childId);
 
+    //validate child has a profile
+    let childProfile = await this.playerProfileRepository.getOneByUserId(childId);
+
+    if (!childProfile) {
+      throw new BadRequestException(
+        this.i18n.t(`errors.CHILD_PROFILE_NOT_FOUND`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
     await this.validateBookingTrainerSession(childId, trainerProfileId, dayDate, slotId);
 
     let trainerBookedSession = await this.sessionRepository.createTrainerBookedSession(
@@ -279,7 +292,11 @@ export class TrainerScheduleService {
     let trainerBookedSessionCard =
       await this.sessionRepository.getTrainerBookedSessionCard(trainerBookedSession.id);
 
-    let formatedDayDate = moment(trainerBookedSessionCard.date).format('YYYY-MM-DD');
+    trainerBookedSessionCard.date = moment(trainerBookedSessionCard.date).format(
+      'YYYY-MM-DD',
+    );
+
+    let formatedDayDate = trainerBookedSessionCard.date;
 
     trainerBookedSessionCard.fromTime = moment(
       `${formatedDayDate}T${trainerBookedSessionCard.fromTime}`,

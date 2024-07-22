@@ -246,6 +246,7 @@ export class UserRepository {
       WHERE mobileNumber = ${mobileNumber}
       LIMIT 1
     `;
+
     return theUser[0];
   }
 
