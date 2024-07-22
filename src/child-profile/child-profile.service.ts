@@ -26,6 +26,12 @@ export class ChildProfileService {
   ): Promise<ReturnPlayerProfileDto> {
     let child = await this.userRepository.getById(childId);
 
+    if (!child) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+      );
+    }
+
     if (!(await this.userRepository.isMyChild(userId, child.id))) {
       throw new ForbiddenException(
         this.i18n.t(`errors.NOT_ALLOWED`, { lang: I18nContext.current().lang }),
