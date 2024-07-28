@@ -753,7 +753,7 @@ export class HomeModel {
             'lastName',User.lastName,
             'profileImage',User.profileImage,
             'date', TrainerBookedSession.date,
-            'fromTime',Slot.fromTime,
+            'sessionFromTime',Slot.fromTime,
             'sessionId', TrainerBookedSession.id
           )
         )
