@@ -753,6 +753,7 @@ export class HomeModel {
             'lastName',User.lastName,
             'profileImage',User.profileImage,
             'date', TrainerBookedSession.date,
+            'fromTime',Slot.fromTime,
             'sessionId', TrainerBookedSession.id
           )
         )
@@ -760,6 +761,7 @@ export class HomeModel {
       FROM
       TrainerBookedSession
       LEFT JOIN User ON TrainerBookedSession.userId = User.id
+      LEFT JOIN Slot ON TrainerBookedSession.slotId = Slot.id
       LEFT JOIN Rate
       ON
       TrainerBookedSession.id = Rate.trainerBookedSessionId AND Rate.rateableType = ${RATEABLE_TYPES_ENUM.PLAYER}
@@ -768,7 +770,7 @@ export class HomeModel {
       AND
       TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
       AND
-      TrainerBookedSession.date <= CURDATE() AND TrainerBookedSession.date > DATE_ADD(CURDATE(), INTERVAL -7 DAY)
+      TrainerBookedSession.date <= CURDATE() AND TrainerBookedSession.date > DATE_ADD(CURDATE(), INTERVAL -30 DAY)
       AND 
       Rate.id IS NULL
       `;
@@ -780,20 +782,28 @@ export class HomeModel {
       return [];
     }
 
-    let foundedUserId = [];
-    let uniqueLastSessionsTrainees = [];
+    // let foundedUserId = [];
+    // let uniqueLastSessionsTrainees = [];
 
-    for (let index = 0; index < lastSessionsTrainees.length; index++) {
-      // const element = lastSessionsTrainees[index];
-      if (!foundedUserId.includes(lastSessionsTrainees[index].userId)) {
-        uniqueLastSessionsTrainees.push(lastSessionsTrainees[index]);
-        foundedUserId.push(lastSessionsTrainees[index].userId);
-      }
-    }
+    // for (let index = 0; index < lastSessionsTrainees.length; index++) {
+    //   // const element = lastSessionsTrainees[index];
+    //   if (!foundedUserId.includes(lastSessionsTrainees[index].userId)) {
+    //     uniqueLastSessionsTrainees.push(lastSessionsTrainees[index]);
+    //     foundedUserId.push(lastSessionsTrainees[index].userId);
+    //   }
+    // }
 
-    console.log('uniqueLastSessionsTrainees:', uniqueLastSessionsTrainees);
+    // format time
 
-    return uniqueLastSessionsTrainees;
+    lastSessionsTrainees.forEach((trainee) => {
+      trainee.fromTime = moment(`${trainee.date} ${trainee.fromTime}`)
+        .tz(this.configService.getOrThrow('TZ'))
+        .format('HH:mm');
+    });
+
+    console.log('lastSessionsTrainees:', lastSessionsTrainees);
+
+    return lastSessionsTrainees;
   }
 
   async getPlayerFeedbacks(userId: number) {
