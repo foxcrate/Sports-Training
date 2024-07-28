@@ -67,6 +67,7 @@ export class SessionService {
       theSession.trainerProfileId,
       reqBody.ratingNumber,
       reqBody.feedback,
+      reqBody.sessionId,
     );
     return true;
   }
@@ -104,6 +105,7 @@ export class SessionService {
       thePlayerProfile.id,
       reqBody.ratingNumber,
       reqBody.feedback,
+      reqBody.sessionId,
     );
     return true;
   }

@@ -106,6 +106,7 @@ export class SessionRepository {
     trainerProfileId: number,
     ratingNumber: number,
     feedback: string,
+    trainerBookedSessionId: number,
   ) {
     await this.prisma.$queryRaw`
     INSERT INTO Rate
@@ -115,7 +116,8 @@ export class SessionRepository {
       rateableType,
       ratingNumber,
       feedback,
-      profileType
+      profileType,
+      trainerBookedSessionId
     )
     VALUES
   (
@@ -124,7 +126,8 @@ export class SessionRepository {
     ${RATEABLE_TYPES_ENUM.TRAINER},
     ${ratingNumber},
     ${feedback},
-    ${PROFILE_TYPES_ENUM.PLAYER}
+    ${PROFILE_TYPES_ENUM.PLAYER},
+    ${trainerBookedSessionId}
   )`;
   }
 
@@ -133,6 +136,7 @@ export class SessionRepository {
     playerProfileId: number,
     ratingNumber: number,
     feedback: string,
+    trainerBookedSessionId: number,
   ) {
     await this.prisma.$queryRaw`
     INSERT INTO Rate
@@ -142,7 +146,8 @@ export class SessionRepository {
       rateableType,
       ratingNumber,
       feedback,
-      profileType
+      profileType,
+      trainerBookedSessionId
     )
     VALUES
   (
@@ -151,7 +156,8 @@ export class SessionRepository {
     ${RATEABLE_TYPES_ENUM.PLAYER},
     ${ratingNumber},
     ${feedback},
-    ${PROFILE_TYPES_ENUM.TRAINER}
+    ${PROFILE_TYPES_ENUM.TRAINER},
+    ${trainerBookedSessionId}
   )`;
   }
 
