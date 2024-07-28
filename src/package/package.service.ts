@@ -347,20 +347,18 @@ export class PackageService {
         trainerSchedule.trainerProfileId,
       );
 
-    console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
-    console.log(trainerExistingPackagesDatesTimes);
+    if (
+      !trainerExistingPackagesDatesTimes ||
+      trainerExistingPackagesDatesTimes.length === 0
+    ) {
+      return true;
+    }
+    trainerExistingPackagesDatesTimes = trainerExistingPackagesDatesTimes.flat();
 
-    console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
-
-    console.log(
-      `this.configService.getOrThrow('TZ'):`,
-      this.configService.getOrThrow('TZ'),
-    );
+    console.log('trainerExistingPackagesDatesTimes:', trainerExistingPackagesDatesTimes);
 
     sessionsDateTime.forEach((newPackageSession) => {
       let newPackageSessionDate = moment(newPackageSession.date).format('YYYY-MM-DD');
-
-      // console.log('newPackageSessionDate:', newPackageSessionDate);
 
       // compare it with same date sessions
       trainerExistingPackagesDatesTimes.forEach((existingPackageSession) => {
@@ -371,33 +369,46 @@ export class PackageService {
         // console.log('existingPackageSessionDate:', existingPackageSessionDate);
 
         if (existingPackageSessionDate === newPackageSessionDate) {
-          // compare their times
-          console.log('sameDate');
-
-          let newPackageSessionStartDate = moment(newPackageSession.date).format(
-            'YYYY-MM-DD',
-          );
-
           let newPackageSessionStartDateTime = moment(
-            `${newPackageSessionStartDate} ${newPackageSession.fromTime}`,
-          );
-
-          let newPackageSessionEndDate = moment(newPackageSession.date).format(
-            'YYYY-MM-DD',
-          );
-
-          let newPackageSessionEndDateTime = moment(
-            `${newPackageSessionEndDate} ${newPackageSession.toTime}`,
-          );
+            `${newPackageSession.date} ${newPackageSession.fromTime}`,
+          ).tz(this.configService.getOrThrow('TZ'));
 
           console.log('newPackageSessionStartDateTime:', newPackageSessionStartDateTime);
-          console.log('newPackageSessionEndDateTime:', newPackageSessionEndDateTime);
+
+          let newPackageSessionEndDateTime = moment(
+            `${newPackageSession.date} ${newPackageSession.toTime}`,
+          ).tz(this.configService.getOrThrow('TZ'));
+
+          newPackageSessionStartDateTime = moment(
+            newPackageSessionStartDateTime,
+            'HH:mm',
+          );
+
+          newPackageSessionEndDateTime = moment(newPackageSessionEndDateTime, 'HH:mm');
 
           let existingPackageFromTime = moment(existingPackageSession.fromTime);
-          console.log('existingPackageFromTime:', existingPackageFromTime);
+
+          existingPackageFromTime = moment(existingPackageFromTime, 'HH:mm');
 
           let existingPackageToTime = moment(existingPackageSession.toTime);
-          console.log('existingPackageToTime:', existingPackageToTime);
+
+          existingPackageToTime = moment(existingPackageToTime, 'HH:mm');
+
+          let intersects =
+            (existingPackageFromTime >= newPackageSessionStartDateTime &&
+              existingPackageFromTime < newPackageSessionEndDateTime) ||
+            (newPackageSessionStartDateTime >= existingPackageFromTime &&
+              newPackageSessionStartDateTime < existingPackageToTime);
+
+          if (intersects) {
+            console.log('-- package intersects with trainer past packages error --');
+
+            throw new BadRequestException(
+              this.i18n.t(`errors.INVALID_PACKAGE_SCHEDULE_TRAINER_PACKAGES`, {
+                lang: I18nContext.current().lang,
+              }),
+            );
+          }
         }
       });
     });

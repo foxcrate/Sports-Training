@@ -20,6 +20,7 @@
   "CHILD_PROFILE_NOT_FOUND": "Child Profile not found",
   "TRAINER_PROFILE_NOT_FOUND": "Trainer Profile not found",
   "INVALID_PACKAGE_SCHEDULE": "Invalid package dates: Package dates intersects with trainer schedule",
+  "INVALID_PACKAGE_SCHEDULE_TRAINER_PACKAGES": "Invalid package dates: Package dates intersects with trainer past packages",
   "INVALID_PACKAGE_SESSIONS": "Invalid package Sessions numbers",
   "FLEXIBLE_PACKAGE_SCHEDULE": "Flexible Package can't have a schedule",
   "SCHEDULE_PACKAGE_SCHEDULE": "Schedule Package should have a schedule",

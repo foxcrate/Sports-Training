@@ -188,7 +188,7 @@ export class PackageRepository {
     WHERE trainerProfileId = ${trainerProfileId}
     `;
 
-    return thePackages[0].packages[0];
+    return thePackages[0].packages;
   }
 
   async deletePackage(pacakgeId: number) {
