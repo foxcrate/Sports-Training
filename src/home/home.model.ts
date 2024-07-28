@@ -753,8 +753,7 @@ export class HomeModel {
             'lastName',User.lastName,
             'profileImage',User.profileImage,
             'date', TrainerBookedSession.date,
-            'sessionId', TrainerBookedSession.id,
-            'rateId',Rate.id
+            'sessionId', TrainerBookedSession.id
           )
         )
       END AS trainees
