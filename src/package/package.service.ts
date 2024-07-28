@@ -99,6 +99,7 @@ export class PackageService {
         };
       });
     }
+    // return true;
 
     return await this.packageRepository.create(reqBody, trainerProfile.id);
   }
@@ -348,12 +349,58 @@ export class PackageService {
 
     console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
     console.log(trainerExistingPackagesDatesTimes);
+
     console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
 
     console.log(
       `this.configService.getOrThrow('TZ'):`,
       this.configService.getOrThrow('TZ'),
     );
+
+    sessionsDateTime.forEach((newPackageSession) => {
+      let newPackageSessionDate = moment(newPackageSession.date).format('YYYY-MM-DD');
+
+      // console.log('newPackageSessionDate:', newPackageSessionDate);
+
+      // compare it with same date sessions
+      trainerExistingPackagesDatesTimes.forEach((existingPackageSession) => {
+        let existingPackageSessionDate = moment(existingPackageSession.date).format(
+          'YYYY-MM-DD',
+        );
+
+        // console.log('existingPackageSessionDate:', existingPackageSessionDate);
+
+        if (existingPackageSessionDate === newPackageSessionDate) {
+          // compare their times
+          console.log('sameDate');
+
+          let newPackageSessionStartDate = moment(newPackageSession.date).format(
+            'YYYY-MM-DD',
+          );
+
+          let newPackageSessionStartDateTime = moment(
+            `${newPackageSessionStartDate} ${newPackageSession.fromTime}`,
+          );
+
+          let newPackageSessionEndDate = moment(newPackageSession.date).format(
+            'YYYY-MM-DD',
+          );
+
+          let newPackageSessionEndDateTime = moment(
+            `${newPackageSessionEndDate} ${newPackageSession.toTime}`,
+          );
+
+          console.log('newPackageSessionStartDateTime:', newPackageSessionStartDateTime);
+          console.log('newPackageSessionEndDateTime:', newPackageSessionEndDateTime);
+
+          let existingPackageFromTime = moment(existingPackageSession.fromTime);
+          console.log('existingPackageFromTime:', existingPackageFromTime);
+
+          let existingPackageToTime = moment(existingPackageSession.toTime);
+          console.log('existingPackageToTime:', existingPackageToTime);
+        }
+      });
+    });
 
     console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
     // --------------------------------------------
