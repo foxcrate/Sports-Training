@@ -16,6 +16,7 @@
   "SENDING_NOTIFICATION_ERROR": "Error in sending notification",
   "RECORD_NOT_FOUND": "Record not found",
   "USER_NOT_FOUND": "User not found",
+  "FIELD_NOT_FOUND": "Field not found",
   "PLAYER_PROFILE_NOT_FOUND": "Player Profile not found",
   "CHILD_PROFILE_NOT_FOUND": "Child Profile not found",
   "TRAINER_PROFILE_NOT_FOUND": "Trainer Profile not found",

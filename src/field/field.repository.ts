@@ -325,7 +325,7 @@ export class FieldRepository {
 
     if (!theField[0]) {
       throw new NotFoundException(
-        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
+        this.i18n.t(`errors.FIELD_NOT_FOUND`, { lang: I18nContext.current().lang }),
       );
     }
 

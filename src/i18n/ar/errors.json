@@ -16,6 +16,7 @@
   "SENDING_NOTIFICATION_ERROR": "خطأ في إرسال الإشعار",
   "RECORD_NOT_FOUND": "هذا المستند غير متوفر",
   "USER_NOT_FOUND": "الحساب غير موجود",
+  "FIELD_NOT_FOUND": "الملعب غير موجود",
   "PLAYER_PROFILE_NOT_FOUND": "حساب اللاعب غير موجود",
   "CHILD_PROFILE_NOT_FOUND": "حساب الطفل غير موجود",
   "TRAINER_PROFILE_NOT_FOUND": "الصفحة الشخصية للمدرد غير متوفر",
