@@ -177,6 +177,20 @@ export class PackageRepository {
     }
   }
 
+  async getTrainerPackagesDatesTimes(trainerProfileId: number): Promise<any> {
+    let thePackages = await this.prisma.$queryRaw`
+    SELECT
+    JSON_ARRAYAGG(
+        JSON_EXTRACT(Package.sessionsDateTime,'$[*]')
+    )
+    AS packages
+    FROM Package
+    WHERE trainerProfileId = ${trainerProfileId}
+    `;
+
+    return thePackages[0].packages[0];
+  }
+
   async deletePackage(pacakgeId: number) {
     //delete package relation
     await this.prisma.$queryRaw`

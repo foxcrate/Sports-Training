@@ -334,12 +334,40 @@ export class PackageService {
     }
   }
 
+  private async validateTrainerPastPackages(
+    trainerSchedule: ScheduleSlotsDetailsDTO,
+    sessionsDateTime: SessionDateTimeDto[],
+  ) {
+    // ............................................
+    console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
+
+    let trainerExistingPackagesDatesTimes =
+      await this.packageRepository.getTrainerPackagesDatesTimes(
+        trainerSchedule.trainerProfileId,
+      );
+
+    console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
+    console.log(trainerExistingPackagesDatesTimes);
+    console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
+
+    console.log(
+      `this.configService.getOrThrow('TZ'):`,
+      this.configService.getOrThrow('TZ'),
+    );
+
+    console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$');
+    // --------------------------------------------
+
+    return true;
+  }
+
   private async validateCreatePackage(
     trainerSchedule: ScheduleSlotsDetailsDTO,
     sessionsDateTime: SessionDateTimeDto[],
   ) {
-    // get all dates months from reqBody
+    await this.validateTrainerPastPackages(trainerSchedule, sessionsDateTime);
 
+    // get all dates months from reqBody
     let packageMonths = sessionsDateTime.map((item) => {
       return moment(item.date).month() + 1;
     });
@@ -405,11 +433,15 @@ export class PackageService {
               .tz(this.configService.getOrThrow('TZ'))
               .format('HH:mm');
 
+            console.log('packageSlotFromTimeObject:', packageSlotFromTimeObject);
+
             let packageSlotToTimeObject = moment(
               `${packageSlot.date} ${packageSlot.toTime}`,
             )
               .tz(this.configService.getOrThrow('TZ'))
               .format('HH:mm');
+
+            console.log('packageSlotToTimeObject:', packageSlotToTimeObject);
 
             console.log('------------times-------------');
 
