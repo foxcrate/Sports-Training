@@ -110,7 +110,7 @@ export class HomeModel {
         dc.cost AS cost,
         NULL AS sport,
         NULL AS sports,
-        ROUND( IFNULL( SUM( R.ratingNumber ) / COUNT( R.id ), 5 ), 1 ) AS ActualAverageRating,
+        ROUND( IFNULL( SUM( R.ratingNumber ) / COUNT( R.id ), 5 ), 1 ) AS actualAverageRating,
         IFNULL( CEIL( SUM( R.ratingNumber ) / COUNT( R.id )), 5 ) AS RoundedAverageRating,
         dc.createdAt AS createdAt 
     `;
@@ -167,7 +167,7 @@ export class HomeModel {
         f.cost AS cost,
         s.name AS sport,
         NULL AS sports,
-        ROUND( IFNULL( SUM( R.ratingNumber ) / COUNT( R.id ), 5 ), 1 ) AS ActualAverageRating,
+        ROUND( IFNULL( SUM( R.ratingNumber ) / COUNT( R.id ), 5 ), 1 ) AS actualAverageRating,
         IFNULL( CEIL( SUM( R.ratingNumber ) / COUNT( R.id )), 5 ) AS RoundedAverageRating,
         f.createdAt AS createdAt 
     `;
