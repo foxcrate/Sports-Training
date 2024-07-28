@@ -18,6 +18,7 @@ import { ScheduleSlotsDetailsDTO } from 'src/trainer-schedule/dtos/schedule-slot
 import { PlayerProfileRepository } from 'src/player-profile/player-profile.repository';
 import { ReturnPlayerProfileDto } from 'src/player-profile/dtos/return.dto';
 import { PACKAGE_STATUS } from 'src/global/enums';
+import { FieldRepository } from 'src/field/field.repository';
 
 @Injectable()
 export class PackageService {
@@ -28,6 +29,7 @@ export class PackageService {
     private trainerScheduleService: TrainerScheduleService,
     private trainerScheduleRepository: TrainerScheduleRepository,
     private playerProfileRepository: PlayerProfileRepository,
+    private fieldRepository: FieldRepository,
     private configService: ConfigService,
   ) {}
 
@@ -77,6 +79,14 @@ export class PackageService {
       userId,
       scheduleId,
     );
+
+    //validate fields existance if schedule
+    if (reqBody.type === 'schedule') {
+      // validate first field
+      await this.fieldRepository.getByID(reqBody.fieldId);
+
+      await this.fieldRepository.getByID(reqBody.secondaryFieldId);
+    }
 
     if (reqBody.sessionsDateTime) {
       //validate number of sessions = length of sessionsDateTime[]
