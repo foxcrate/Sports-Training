@@ -17,5 +17,8 @@ export class LastSessionTraineeDto {
   date: String;
 
   @ApiProperty()
+  sessionFromTime: String;
+
+  @ApiProperty()
   sessionId: Number;
 }
