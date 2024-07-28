@@ -753,26 +753,31 @@ export class HomeModel {
             'lastName',User.lastName,
             'profileImage',User.profileImage,
             'date', TrainerBookedSession.date,
-            'sessionId', TrainerBookedSession.id
+            'sessionId', TrainerBookedSession.id,
+            'rateId',Rate.id
           )
         )
       END AS trainees
       FROM
       TrainerBookedSession
       LEFT JOIN User ON TrainerBookedSession.userId = User.id
+      LEFT JOIN Rate
+      ON
+      TrainerBookedSession.id = Rate.trainerBookedSessionId AND Rate.rateableType = ${RATEABLE_TYPES_ENUM.PLAYER}
       WHERE
       TrainerBookedSession.trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
       AND
       TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
       AND
       TrainerBookedSession.date <= CURDATE() AND TrainerBookedSession.date > DATE_ADD(CURDATE(), INTERVAL -7 DAY)
+      AND 
+      Rate.id IS NULL
       `;
 
     lastSessionsTrainees = lastSessionsTrainees[0].trainees;
 
-    console.log('lastSessionsTrainees:', lastSessionsTrainees);
-
     if (lastSessionsTrainees == null) {
+      console.log('lastSessionsTrainees:', lastSessionsTrainees);
       return [];
     }
 
@@ -786,6 +791,8 @@ export class HomeModel {
         foundedUserId.push(lastSessionsTrainees[index].userId);
       }
     }
+
+    console.log('uniqueLastSessionsTrainees:', uniqueLastSessionsTrainees);
 
     return uniqueLastSessionsTrainees;
   }
