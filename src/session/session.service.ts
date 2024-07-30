@@ -120,6 +120,8 @@ export class SessionService {
         const coachSession =
           await this.sessionRepository.getCoachTrainingSession(sessionId);
         const validCoachSession = this.validateSessionExistence(coachSession);
+        console.log('validCoachSession:', validCoachSession);
+
         this.validateSessionViewUserRights(userId, validCoachSession.userId);
         return this.formatCoachTrainingSession(validCoachSession);
       case HOME_SEARCH_TYPES_ENUM.DOCTORS:
