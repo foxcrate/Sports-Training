@@ -103,7 +103,6 @@ export class CalendarRepository {
       case CALENDAR_TYPES_ENUM.PLAYERS:
         sql = `
           SELECT
-            tbs.userId AS userId,
             tbs.id AS id,
             tbs.date AS bookedHour,
             tbs.gmt AS gmt,
