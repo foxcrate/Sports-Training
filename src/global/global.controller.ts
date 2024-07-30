@@ -58,6 +58,7 @@ export class GlobalController {
   @UseInterceptors(
     FileInterceptor('imageFile', {
       fileFilter: function (req, file, callback) {
+        console.log({ file, req });
         if (!file.mimetype.startsWith('image/')) {
           return callback(new BadRequestException('File is not an image'), false);
         }
