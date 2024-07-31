@@ -64,12 +64,19 @@ export class UserService {
     return user;
   }
 
+  async createDefaultPlayerProfile(userId: number) {
+    await this.playerProfileRepository.createIfNotExist(userId);
+  }
+
   async createChild(reqBody, userId) {
     await this.findRepeated(reqBody.email, reqBody.mobileNumber);
 
     await this.userRepository.createChild(reqBody, userId);
 
     let newChild = await this.userRepository.getByMobileNumber(reqBody.mobileNumber);
+
+    // create default player profile
+    await this.createDefaultPlayerProfile(newChild.id);
 
     return newChild;
   }

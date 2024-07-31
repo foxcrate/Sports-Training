@@ -6,7 +6,6 @@ import {
   Request,
   UsePipes,
   Body,
-  Put,
   Delete,
   Get,
 } from '@nestjs/common';
@@ -62,8 +61,6 @@ export class PlayerProfileController {
   @UseGuards(AuthGuard, RoleGuard)
   @UsePipes(new JoiValidation(AddPlayerProfileValidation))
   async set1(@Body() reqBody, @Request() req: ExpressRequest) {
-    // console.log({ req });
-
     return await this.playerProfileService.set(reqBody, req['id']);
   }
 

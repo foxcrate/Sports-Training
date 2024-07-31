@@ -50,16 +50,4 @@ export class PlayerProfileService {
 
     return deletedPlayerProfile;
   }
-
-  private async findRepeated(userId): Promise<boolean> {
-    //Chick existed email or phone number
-    let repeatedPlayerProfile = await this.playerProfileRepository.getOneByUserId(userId);
-
-    if (repeatedPlayerProfile) {
-      throw new BadRequestException(
-        this.i18n.t(`errors.PROFILE_EXISTED`, { lang: I18nContext.current().lang }),
-      );
-    }
-    return false;
-  }
 }
