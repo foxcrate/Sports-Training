@@ -10,12 +10,14 @@ import { I18nContext, I18nService } from 'nestjs-i18n';
 import { ReturnPlayerProfileWithUserAndSportsDto } from '../player-profile/dtos/return-with-user-and-sports.dto';
 import { PlayerProfileRepository } from '../player-profile/player-profile.repository';
 import { UserRepository } from 'src/user/user.repository';
+import { PlayerProfileService } from 'src/player-profile/player-profile.service';
 
 @Injectable()
 export class ChildProfileService {
   constructor(
     private userRepository: UserRepository,
     private playerProfileRepository: PlayerProfileRepository,
+    private playerProfileService: PlayerProfileService,
     private readonly i18n: I18nService,
   ) {}
 
@@ -40,7 +42,7 @@ export class ChildProfileService {
 
     await this.findRepeated(childId);
 
-    await this.playerProfileRepository.create(createData, childId);
+    await this.playerProfileService.set(createData, childId);
 
     return await this.playerProfileRepository.getOneDetailedByUserId(childId);
   }
