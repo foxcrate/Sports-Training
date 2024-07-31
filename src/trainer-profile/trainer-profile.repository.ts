@@ -77,6 +77,7 @@ export class TrainerProfileRepository {
   }
 
   async getOneDetailed(userId: number): Promise<ReturnTrainerProfileDetailsDto> {
+    let trainerProfile = await this.getByUserId(userId);
     let trainerProfileDetails: ReturnTrainerProfileDetailsDto = await this.prisma
       .$queryRaw`
     WITH userDetails AS (
