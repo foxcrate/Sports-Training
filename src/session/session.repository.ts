@@ -485,6 +485,7 @@ export class SessionRepository {
         END AS sports,
         Slot.fromTime AS fromTime,
         Slot.toTime AS toTime,
+        Slot.id AS slotId,
         tp.cost AS cost 
       FROM
         TrainerBookedSession tbs
@@ -534,6 +535,7 @@ export class SessionRepository {
         END AS sports,
         Slot.fromTime AS fromTime,
         Slot.toTime AS toTime,
+        Slot.id AS slotId,
         tp.cost AS cost 
       FROM
         TrainerBookedSession tbs
