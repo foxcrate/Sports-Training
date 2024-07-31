@@ -39,6 +39,9 @@ class TrainingSessionResult implements TrainingSessionResultDto {
   sessionId: number;
 
   @ApiProperty()
+  slotId: number;
+
+  @ApiProperty()
   sessionDate: string;
 
   @ApiProperty()
