@@ -178,7 +178,8 @@ export class SessionService {
       reqBody.newSlotId,
       reqBody.newDate,
     );
-    await this.sessionRepository.createChangeSessionSlotRequest(
+    // return true;
+    return await this.sessionRepository.createChangeSessionSlotRequest(
       sessionId,
       reqBody.newDate,
       reqBody.newSlotId,
@@ -191,8 +192,13 @@ export class SessionService {
     newSlotId: number,
     newDate: string,
   ) {
+    console.log('userId:', userId);
+
     let bookedSession =
       await this.sessionRepository.getBookedSessionBySessionId(sessionId);
+
+    console.log('bookedSession:', bookedSession);
+
     if (bookedSession.userId !== userId) {
       throw new BadRequestException(
         this.i18n.t(`errors.NOT_ALLOWED_USER_SESSION`, {

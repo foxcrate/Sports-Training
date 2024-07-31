@@ -235,23 +235,6 @@ export class SessionRepository {
     newSessionDate: string,
     newSlotId: number,
   ) {
-    //   await this.prisma.$queryRaw`
-    //   INSERT INTO SessionRequest
-    //   (
-    //     trainerBookedSessionId,
-    //     status,
-    //     type,
-    //     newSessionDate,
-    //     newSlotId
-    //   )
-    //   VALUES
-    // (
-    //   ${trainerBookedSessionId},
-    //   ${SESSION_REQUEST_STATUSES_ENUM.PENDING},
-    //   'change',
-    //   ${newSessionDate},
-    //   ${newSlotId},
-    // )`;
     await this.prisma.$queryRaw`
     UPDATE SessionRequest
     SET
@@ -261,6 +244,7 @@ export class SessionRepository {
     newSlotId = ${newSlotId}
     WHERE trainerBookedSessionId = ${trainerBookedSessionId};
     `;
+    return true;
   }
 
   async createTrainerBookedSession(
