@@ -1,5 +1,4 @@
 import { Controller, Get, Query, UseGuards, Version } from '@nestjs/common';
-import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 import { Roles } from 'src/decorators/roles.decorator';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { RoleGuard } from 'src/guards/role.guard';
@@ -15,9 +14,7 @@ import { DateSessionsResultDto } from './dto/date-sessions-result.dto';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
-  ApiBody,
   ApiCreatedResponse,
-  ApiParam,
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
@@ -59,25 +56,25 @@ export class CalendarController {
     return this.calenderService.getDatesCount(userId, filters?.startDate);
   }
 
-  @ApiParam({
+  @ApiQuery({
     name: 'type',
     enum: CALENDAR_TYPES_ENUM,
     required: false,
   })
-  @ApiParam({
+  @ApiQuery({
     name: 'date',
     required: false,
   })
-  @ApiParam({
+  @ApiQuery({
     name: 'status',
     enum: SESSIONS_STATUSES_ENUM,
     required: false,
   })
-  @ApiParam({
+  @ApiQuery({
     name: 'pageSize',
     required: false,
   })
-  @ApiParam({
+  @ApiQuery({
     name: 'fieldId',
     type: Number,
     required: false,
