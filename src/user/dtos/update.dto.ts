@@ -7,8 +7,8 @@ export class updateDto {
   @ApiProperty()
   lastName: string;
 
-  //   @ApiProperty()
-  //   email: string;
+  @ApiProperty()
+  email: string;
 
   @ApiProperty()
   profileImage: string;
