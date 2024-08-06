@@ -776,7 +776,7 @@ export class SessionRepository {
         f.name AS name,
         f.profileImage AS profileImage,
         MAX(RegionTranslation.name) AS region,
-        SportTranslation.name AS sport,
+        MAX(SportTranslation.name) AS sport,
         f.slotDuration AS slotDuration,
         f.description AS description,
         f.cost AS cost 
