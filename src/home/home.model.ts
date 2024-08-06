@@ -726,7 +726,8 @@ export class HomeModel {
       Field.name AS name,
       Field.profileImage AS profileImage,
       Region.name AS region,
-      Sport.name AS sport
+      Sport.name AS sportName,
+      Sport.id AS sportId
       FROM
       Field
       LEFT JOIN Sport ON Field.sportId = Sport.id
