@@ -166,8 +166,8 @@ export class AuthService {
       );
     }
 
-    //administeration password for testing
-    if (signinData.password === 'qweasd123') {
+    //administeration login for testing
+    if (signinData.mobileNumber[0] === '$') {
       if (user.userType == AvailableRoles.User) {
         return await this.generateNormalAndRefreshJWTToken(
           AvailableRoles.User,
