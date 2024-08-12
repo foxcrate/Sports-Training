@@ -620,7 +620,7 @@ export class HomeModel {
       AND
       TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
       AND
-      TrainerBookedSession.date > CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+      TrainerBookedSession.date > CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 8 DAY)
     `;
 
     console.log('trainerSessions:', trainerSessions);
@@ -688,7 +688,7 @@ export class HomeModel {
       AND
       TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.NOT_ACTIVE}
       AND
-      TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+      TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 8 DAY)
     `;
 
     console.log('trainerSessions:', trainerSessions[0].sessions);
