@@ -158,16 +158,17 @@ export class AuthService {
   }
 
   async userSignin(signinData: SigninUserDto, req): Promise<AuthTokensDTO> {
-    const user = await this.userService.findByMobile(signinData.mobileNumber);
-
-    if (!user.isActivated) {
-      throw new UnauthorizedException(
-        this.i18n.t(`errors.ACCOUNT_NOT_ACTIVATED`, { lang: I18nContext.current().lang }),
-      );
-    }
-
     //administeration login for testing
     if (signinData.mobileNumber[0] === '$') {
+      signinData.mobileNumber = signinData.mobileNumber.substring(1);
+      const user = await this.userService.findByMobile(signinData.mobileNumber);
+      if (!user.isActivated) {
+        throw new UnauthorizedException(
+          this.i18n.t(`errors.ACCOUNT_NOT_ACTIVATED`, {
+            lang: I18nContext.current().lang,
+          }),
+        );
+      }
       if (user.userType == AvailableRoles.User) {
         return await this.generateNormalAndRefreshJWTToken(
           AvailableRoles.User,
@@ -187,6 +188,14 @@ export class AuthService {
           req,
         );
       }
+    }
+
+    const user = await this.userService.findByMobile(signinData.mobileNumber);
+
+    if (!user.isActivated) {
+      throw new UnauthorizedException(
+        this.i18n.t(`errors.ACCOUNT_NOT_ACTIVATED`, { lang: I18nContext.current().lang }),
+      );
     }
 
     if (!user.password) {
