@@ -436,7 +436,7 @@ export class SessionRepository {
     });
 
     newPending = newPending.filter((session) => {
-      if (moment(`${session.date} ${session.slot.fromTime}`) > moment()) {
+      if (moment(`${session.date} ${session.slot.fromTime}`) >= moment()) {
         return session;
       }
     });

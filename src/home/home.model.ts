@@ -5,6 +5,7 @@ import { GlobalService } from 'src/global/global.service';
 import {
   ACCEPTANCE_STATUSES_ENUM,
   RATEABLE_TYPES_ENUM,
+  SESSION_REQUEST_STATUSES_ENUM,
   SESSIONS_STATUSES_ENUM,
 } from 'src/global/enums';
 import moment from 'moment-timezone';
@@ -677,6 +678,7 @@ export class HomeModel {
       FROM
       TrainerBookedSession
       LEFT JOIN TrainerProfile ON TrainerBookedSession.trainerProfileId = TrainerProfile.id
+      LEFT JOIN SessionRequest ON TrainerBookedSession.id = SessionRequest.trainerBookedSessionId
       LEFT JOIN User ON TrainerBookedSession.userId = User.id
       LEFT JOIN TrainerProfileSports ON TrainerProfileSports.trainerProfileId = TrainerProfile.id
       LEFT JOIN Sport ON TrainerProfileSports.sportId = Sport.id
@@ -687,6 +689,8 @@ export class HomeModel {
       TrainerBookedSession.trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
       AND
       TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.NOT_ACTIVE}
+      AND
+      SessionRequest.status = ${SESSION_REQUEST_STATUSES_ENUM.PENDING}
       AND
       TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 8 DAY)
     `;
