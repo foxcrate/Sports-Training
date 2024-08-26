@@ -232,6 +232,13 @@ export class SessionService {
   ): Promise<TrainingSessionResultDto> {
     let sessionRequest =
       await this.sessionRepository.getSessionRequestByid(sessionRequestId);
+    if (!sessionRequest) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.SESSION_REQUEST_NOT_FOUND`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
     if (sessionRequest.type === SESSION_REQUEST_TYPE.NEW) {
       return await this.coachApproveNewSession(
         userId,
