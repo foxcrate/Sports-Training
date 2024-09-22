@@ -59,8 +59,8 @@ export class GlobalService {
       endpoint: 'https://eu2.contabostorage.com', // Replace with your Contabo endpoint if different
       region: 'EU',
       credentials: {
-        accessKeyId: '9fc67155963dc77c69605f2961c7a4b3', // Replace with your Contabo Access Key ID
-        secretAccessKey: '22ac689859e807eb7f21b66cc4a9c976', // Replace with your Contabo Secret Access Key
+        accessKeyId: 'bff4cef759e07b1f841594515ecbceed', // Replace with your Contabo Access Key ID
+        secretAccessKey: '6f78190cbabd5a29053bbbd8e0270d03', // Replace with your Contabo Secret Access Key
       },
       forcePathStyle: true,
     });
