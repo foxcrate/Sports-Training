@@ -11,15 +11,13 @@ import {
 import moment from 'moment-timezone';
 import { SearchResultDto, SearchResultsDto } from './dto/search-result.dto';
 import { ReturnSportDto } from 'src/sport/dtos/return.dto';
-import { I18nContext, I18nService } from 'nestjs-i18n';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class HomeModel {
+export class HomeRepository {
   constructor(
     private prisma: PrismaService,
     private globalService: GlobalService,
-    private readonly i18n: I18nService,
     private configService: ConfigService,
   ) {}
 
@@ -848,14 +846,3 @@ export class HomeModel {
     return playerFeedbacks[0].feedbacks;
   }
 }
-
-// ,
-//     trainerPackages AS (
-//       SELECT
-//       id
-//       Package
-//       WHERE
-//       trainerProfileId in (SELECT trainerProfileId FROM sportsTrainers)
-//     )
-// ,
-// (SELECT * FROM trainerPackages) AS trainerPackages

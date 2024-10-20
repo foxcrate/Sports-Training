@@ -1,10 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { HomeModel } from './home.model';
+import { HomeRepository } from './home.repository';
 import { SearchFiltersDto } from './dto/search-filters.dto';
 import { HOME_SEARCH_TYPES_ENUM } from 'src/global/enums';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { SearchResultsDto } from './dto/search-result.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
 import { PlayerHomeDto } from './dto/player-home.dto';
 import { TrainerHomeDto } from './dto/trainer-home.dto';
 import { ChildHomeDto } from './dto/child-home.dto';
@@ -16,9 +15,8 @@ import { UserInfoDto } from './dto/user-info.dto';
 @Injectable()
 export class HomeService {
   constructor(
-    private homeModel: HomeModel,
+    private homeRepository: HomeRepository,
     private readonly i18n: I18nService,
-    private prisma: PrismaService,
     private playerProfileRepository: PlayerProfileRepository,
     private tainerProfileRepository: TrainerProfileRepository,
     private userRepository: UserRepository,
@@ -27,13 +25,13 @@ export class HomeService {
   async getSearchResults(filters: SearchFiltersDto): Promise<SearchResultsDto> {
     switch (filters.type) {
       case HOME_SEARCH_TYPES_ENUM.COACHES:
-        return this.homeModel.getCoaches(filters);
+        return this.homeRepository.getCoaches(filters);
       case HOME_SEARCH_TYPES_ENUM.DOCTORS:
-        return this.homeModel.getDoctors(filters);
+        return this.homeRepository.getDoctors(filters);
       case HOME_SEARCH_TYPES_ENUM.FIELDS:
-        return this.homeModel.getFields(filters);
+        return this.homeRepository.getFields(filters);
       case HOME_SEARCH_TYPES_ENUM.ALL:
-        return this.homeModel.getAll(filters);
+        return this.homeRepository.getAll(filters);
       default:
         throw new BadRequestException(
           this.i18n.t(`errors.WRONG_FILTER_TYPE`, { lang: I18nContext.current().lang }),
@@ -51,19 +49,20 @@ export class HomeService {
       );
     }
     // get sports
-    let sports: any[] = await this.homeModel.getSports(userId);
+    let sports: any[] = await this.homeRepository.getSports(userId);
 
     //get children names
-    let childrenNames: any[] = await this.homeModel.getChildrenNames(userId);
+    let childrenNames: any[] = await this.homeRepository.getChildrenNames(userId);
 
     // get player sessions
-    let upcomingSession: any[] = await this.homeModel.getPlayerSessions(userId);
+    let upcomingSession: any[] = await this.homeRepository.getPlayerSessions(userId);
 
     // get player ongoing session
-    let ongoingSessions: any[] = await this.homeModel.getPlayerOngoingSessions(userId);
+    let ongoingSessions: any[] =
+      await this.homeRepository.getPlayerOngoingSessions(userId);
 
     // get trainer packages for child
-    let packages: any[] = await this.homeModel.getPackages(userId);
+    let packages: any[] = await this.homeRepository.getPackages(userId);
 
     let theUser = await this.userRepository.getById(userId);
     let theUserInfo: UserInfoDto = {
@@ -87,17 +86,18 @@ export class HomeService {
   async getTrainerHome(userId: number): Promise<TrainerHomeDto> {
     let trainerProfile = await this.tainerProfileRepository.getByUserId(userId);
     // get sports fields
-    let sportsFields: any[] = await this.homeModel.getSportsFields(userId);
+    let sportsFields: any[] = await this.homeRepository.getSportsFields(userId);
 
     // get trainer sessions
-    let upcomingSession: any[] = await this.homeModel.getTrainerSessions(userId);
+    let upcomingSession: any[] = await this.homeRepository.getTrainerSessions(userId);
 
     // get trainer pending sessions
-    let pendingSession: any[] = await this.homeModel.getTrainerPendingSessions(userId);
+    let pendingSession: any[] =
+      await this.homeRepository.getTrainerPendingSessions(userId);
 
     //get lst sessions trainees
     let lastSessionsTrainees: any[] =
-      await this.homeModel.getLastSessionsTrainees(userId);
+      await this.homeRepository.getLastSessionsTrainees(userId);
 
     let theUser = await this.userRepository.getById(userId);
     let theUserInfo: UserInfoDto = {
@@ -136,10 +136,10 @@ export class HomeService {
       mobileNumber: theUser.mobileNumber,
     };
     // get player sessions
-    let upcomingSessions: any[] = await this.homeModel.getPlayerSessions(userId);
+    let upcomingSessions: any[] = await this.homeRepository.getPlayerSessions(userId);
 
     // get player feedbacks
-    let feedbacks: any[] = await this.homeModel.getPlayerFeedbacks(userId);
+    let feedbacks: any[] = await this.homeRepository.getPlayerFeedbacks(userId);
 
     return {
       userInfo: theUserInfo,
