@@ -9,6 +9,7 @@ import { DoctorClinicReturnDto } from './dtos/return.dto';
 import { DoctorClinicUpdateDto } from './dtos/update.dto';
 import moment from 'moment-timezone';
 import { CardFormatDto } from './dtos/card-format.dto';
+import { FIND_BY } from './doctor-clinic-enums';
 
 @Injectable()
 export class DoctorClinicService {
@@ -23,7 +24,7 @@ export class DoctorClinicService {
   }
 
   async getOne(id: number): Promise<DoctorClinicBookingDetailsDTO> {
-    return await this.doctorClinicRepository.getByID(id);
+    return await this.doctorClinicRepository.findBy(FIND_BY.ID, id);
   }
 
   async create(
@@ -31,7 +32,10 @@ export class DoctorClinicService {
     reqBody: DoctorClinicCreateDto,
   ): Promise<DoctorClinicReturnDto> {
     // check for repeated name;
-    let repeatedDoctorClinc = await this.doctorClinicRepository.getByName(reqBody.name);
+    let repeatedDoctorClinc = await this.doctorClinicRepository.findBy(
+      FIND_BY.NAME,
+      reqBody.name,
+    );
 
     if (repeatedDoctorClinc) {
       throw new BadRequestException(
@@ -53,7 +57,11 @@ export class DoctorClinicService {
     reqBody: DoctorClinicUpdateDto,
   ): Promise<DoctorClinicReturnDto> {
     // check for repeated name;
-    let repeatedDoctorClinic = await this.doctorClinicRepository.getByName(reqBody.name);
+
+    let repeatedDoctorClinic = await this.doctorClinicRepository.findBy(
+      FIND_BY.NAME,
+      reqBody.name,
+    );
 
     if (repeatedDoctorClinic && repeatedDoctorClinic.id != id) {
       throw new BadRequestException(
@@ -68,7 +76,7 @@ export class DoctorClinicService {
   }
 
   async delete(id: number): Promise<DoctorClinicBookingDetailsDTO> {
-    let deletedClinic = await this.doctorClinicRepository.getByID(id);
+    let deletedClinic = await this.doctorClinicRepository.findBy(FIND_BY.ID, id);
 
     Promise.all([
       await this.doctorClinicRepository.deleteNotAvailableDays(id),
@@ -80,7 +88,7 @@ export class DoctorClinicService {
   }
 
   async availableUpcomingWeek(id: number) {
-    let theDoctorClinic = await this.doctorClinicRepository.getByID(id);
+    let theDoctorClinic = await this.doctorClinicRepository.findBy(FIND_BY.ID, id);
     let availableDays = [];
 
     let endDate = moment().endOf('week');
@@ -118,7 +126,7 @@ export class DoctorClinicService {
     doctorClinicId: number,
     day: string,
   ): Promise<FreeSlots[]> {
-    await this.doctorClinicRepository.getByID(doctorClinicId);
+    await this.doctorClinicRepository.findBy(FIND_BY.ID, doctorClinicId);
     let dayDate = moment(day);
 
     let dateString = this.globalSerice.getDate(dayDate);
@@ -181,7 +189,7 @@ export class DoctorClinicService {
     userId: number,
     reqBody,
   ): Promise<CardFormatDto> {
-    await this.doctorClinicRepository.getByID(doctorClinicId);
+    await this.doctorClinicRepository.findBy(FIND_BY.ID, doctorClinicId);
     let dayDate = moment(reqBody.dayDate);
     let dateOnly = this.globalSerice.getDate(dayDate);
     let dayTimesArray = reqBody.dayTimes;

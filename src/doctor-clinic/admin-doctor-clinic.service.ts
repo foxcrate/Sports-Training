@@ -6,6 +6,7 @@ import { DoctorClinicCreateDto } from './dtos/create.dto';
 import { DoctorClinicReturnDto } from './dtos/return.dto';
 import { DoctorClinicUpdateDto } from './dtos/update.dto';
 import { DoctorClinicAcceptanceStatusDto } from './dtos/doctor-clinic-acceptance-status.dto';
+import { FIND_BY } from './doctor-clinic-enums';
 
 @Injectable()
 export class AdminDoctorClinicService {
@@ -19,12 +20,15 @@ export class AdminDoctorClinicService {
   }
 
   async getOne(id: number): Promise<DoctorClinicBookingDetailsDTO> {
-    return await this.doctorClinicRepository.getByID(id);
+    return await this.doctorClinicRepository.findBy(FIND_BY.ID, id);
   }
 
   async create(reqBody: DoctorClinicCreateDto): Promise<DoctorClinicReturnDto> {
     // check for repeated name;
-    let repeatedField = await this.doctorClinicRepository.getByName(reqBody.name);
+    let repeatedField = await this.doctorClinicRepository.findBy(
+      FIND_BY.NAME,
+      reqBody.name,
+    );
 
     if (repeatedField) {
       throw new BadRequestException(
@@ -44,7 +48,10 @@ export class AdminDoctorClinicService {
     reqBody: DoctorClinicUpdateDto,
   ): Promise<DoctorClinicReturnDto> {
     // check for repeated name;
-    let repeatedDoctorClinic = await this.doctorClinicRepository.getByName(reqBody.name);
+    let repeatedDoctorClinic = await this.doctorClinicRepository.findBy(
+      FIND_BY.NAME,
+      reqBody.name,
+    );
 
     if (repeatedDoctorClinic && repeatedDoctorClinic.id != id) {
       throw new BadRequestException(
@@ -61,7 +68,7 @@ export class AdminDoctorClinicService {
   async delete(id: number): Promise<DoctorClinicBookingDetailsDTO> {
     console.log('alo');
 
-    let deletedDoctorClinic = await this.doctorClinicRepository.getByID(id);
+    let deletedDoctorClinic = await this.doctorClinicRepository.findBy(FIND_BY.ID, id);
     Promise.all([
       await this.doctorClinicRepository.deleteNotAvailableDays(id),
       await this.doctorClinicRepository.deleteRates(id),
@@ -81,7 +88,10 @@ export class AdminDoctorClinicService {
     doctorClinicId: number,
     newStatus: DoctorClinicAcceptanceStatusDto,
   ): Promise<boolean> {
-    let theDoctorClinic = await this.doctorClinicRepository.getByID(doctorClinicId);
+    let theDoctorClinic = await this.doctorClinicRepository.findBy(
+      FIND_BY.ID,
+      doctorClinicId,
+    );
     if (theDoctorClinic.acceptanceStatus != DoctorClinicAcceptanceStatusDto.Pending) {
       throw new BadRequestException(
         this.i18n.t(`errors.DOCTOR_CLINIC_NOT_PENDING`, {
@@ -96,7 +106,6 @@ export class AdminDoctorClinicService {
   }
 
   async addNotAvailableDays(doctorClinicId: number, datesArray: string[]) {
-    let theDoctorClinic = await this.doctorClinicRepository.getByID(doctorClinicId);
     return await this.doctorClinicRepository.insertNotAvailableDays(
       doctorClinicId,
       datesArray,

@@ -11,7 +11,6 @@ import { DoctorClinicAcceptanceStatusDto } from './dtos/doctor-clinic-acceptance
 import { DoctorClinicUpdateDto } from './dtos/update.dto';
 import moment from 'moment-timezone';
 import { CardFormatDto } from './dtos/card-format.dto';
-
 import { FIND_BY } from './doctor-clinic-enums';
 
 @Injectable()
@@ -117,13 +116,13 @@ export class DoctorClinicRepository {
     return allDoctorFields;
   }
 
-  async getByID(id: number): Promise<DoctorClinicBookingDetailsDTO> {
-    let DoctorClinic = await this.prisma.$queryRaw`
-    WITH 
+  async findBy(column: FIND_BY, value: any): Promise<DoctorClinicBookingDetailsDTO> {
+    let query = `
+       WITH 
     GetDoctorClinicIdCTE AS (
       SELECT id AS DoctorClinicId
       FROM DoctorClinic
-      WHERE id = ${id}
+      WHERE ${column} = ?
       LIMIT 1
     ),
     RatingAvgTable AS (
@@ -262,7 +261,7 @@ export class DoctorClinicRepository {
       ON nad.doctorClinicId = cwbhafaaag.id
       LEFT JOIN Region AS r ON cwbhafaaag.regionId = r.id
       LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = r.id
-      AND RegionTranslation.language = ${I18nContext.current().lang}
+      AND RegionTranslation.language = ?
       LEFT JOIN
       DoctorClinicSpecialization AS dcs
       ON
@@ -270,283 +269,11 @@ export class DoctorClinicRepository {
       GROUP BY cwbhafaaag.id, nad.doctorClinicId,cwbhafaaag.gallery
     `;
 
-    return DoctorClinic[0];
-  }
-
-  async findBy(type: FIND_BY, value: any): Promise<DoctorClinicBookingDetailsDTO> {
-    let DoctorClinic = await this.prisma.$queryRaw`
-    WITH 
-    GetDoctorClinicIdCTE AS (
-      SELECT id AS DoctorClinicId
-      FROM DoctorClinic
-      WHERE ${type} = ${value}
-      LIMIT 1
-    ),
-    RatingAvgTable AS (
-      SELECT doctorClinicId,r.ratingNumber AS RatingNumber
-      FROM Rate as r
-      WHERE doctorClinicId = (SELECT DoctorClinicId FROM GetDoctorClinicIdCTE)
-    ),
-    PicturesTable AS (
-        SELECT doctorClinicId,
-        CASE WHEN COUNT(id) = 0 THEN null
-        ELSE
-        JSON_ARRAYAGG(JSON_OBJECT(
-          'id',p.id,
-          'imageLink', p.imageLink
-          ))
-        END AS gallery
-        FROM Picture as p
-        WHERE doctorClinicId = (SELECT DoctorClinicId FROM GetDoctorClinicIdCTE)
-        GROUP BY doctorClinicId
-      ),
-  Last5Feedbacks AS (
-      SELECT doctorClinicId,feedback
-      FROM Rate
-      WHERE doctorClinicId = (SELECT DoctorClinicId FROM GetDoctorClinicIdCTE)
-      LIMIT 5
-    ),
-    NotAvailableDays AS (
-      SELECT doctorClinicId,
-      CASE WHEN COUNT(nad.id ) = 0 THEN null
-      ELSE
-      JSON_ARRAYAGG(JSON_OBJECT(
-        'id',nad.id,
-        'dayDate', nad.dayDate
-        ))
-      END AS doctorClinicNotAvailableDays
-      FROM
-      DoctorClinicNotAvailableDays as nad
-      WHERE doctorClinicId = (SELECT DoctorClinicId FROM GetDoctorClinicIdCTE)
-      GROUP BY doctorClinicId
-    ),
-  ClinicWithBookedHours AS (
-    SELECT dc.id, dc.name, dc.acceptanceStatus,
-      dc.cost,
-      dc.doctorClinicSpecializationId,dc.profileImage,dc.description,dc.qualifications,
-      dc.regionId,
-      dc.availableWeekDays AS availableWeekDays,
-      dc.availableDayHours AS availableDayHours,
-      CASE
-      WHEN COUNT(dcbh.id ) = 0 THEN null
-      ELSE
-      JSON_ARRAYAGG(JSON_OBJECT(
-        'id',dcbh.id,
-        'fromDateTime', dcbh.fromDateTime,
-        'userId',dcbh.userId
-        ))
-      END AS doctorClinicBookedHours
-    FROM DoctorClinic AS dc
-    LEFT JOIN DoctorClinicsBookedHours AS dcbh
-    ON dc.id = dcbh.doctorClinicId
-    WHERE dc.id = (SELECT DoctorClinicId FROM GetDoctorClinicIdCTE)
-    GROUP BY dc.id
-    ),
-    ClinicWithBookedHoursAndFeedbacks AS (
-    SELECT cwbh.id, cwbh.name, cwbh.regionId, cwbh.acceptanceStatus, cwbh.cost,
-          cwbh.doctorClinicSpecializationId,
-          cwbh.profileImage, cwbh.description, cwbh.qualifications,
-      CASE WHEN COUNT(l5f.doctorClinicId ) = 0 THEN null
-      ELSE
-      JSON_ARRAYAGG(l5f.feedback)
-      END AS Feedbacks,
-      cwbh.availableWeekDays AS availableWeekDays,
-      cwbh.availableDayHours AS availableDayHours,
-      cwbh.doctorClinicBookedHours AS doctorClinicBookedHours
-    FROM ClinicWithBookedHours as cwbh
-    LEFT JOIN Last5Feedbacks as l5f
-    ON l5f.doctorClinicId = cwbh.id
-    GROUP BY cwbh.id
-    ),
-    ClinicWithBookedHoursAndFeedbacksAndAvg AS(
-    SELECT cwbhaf.id, cwbhaf.name, cwbhaf.acceptanceStatus,cwbhaf.cost,
-      cwbhaf.doctorClinicSpecializationId,
-      cwbhaf.profileImage, cwbhaf.description, cwbhaf.qualifications,
-      AVG(rav.RatingNumber) AS RatingNumber,
-      cwbhaf.feedbacks,
-      cwbhaf.regionId,
-      cwbhaf.availableWeekDays AS availableWeekDays,
-      cwbhaf.availableDayHours AS availableDayHours,
-      cwbhaf.doctorClinicBookedHours AS doctorClinicBookedHours
-    FROM ClinicWithBookedHoursAndFeedbacks as cwbhaf
-    LEFT JOIN RatingAvgTable as rav
-    ON cwbhaf.id = rav.doctorClinicId
-    GROUP BY cwbhaf.id
-    ),
-    ClinicWithBookedHoursAndFeedbacksAndAvgAndGallery AS(
-        SELECT cwbhafaa.id, cwbhafaa.name, cwbhafaa.acceptanceStatus,cwbhafaa.cost,
-          cwbhafaa.profileImage, cwbhafaa.description, cwbhafaa.qualifications,
-        cwbhafaa.RatingNumber AS RatingNumber,
-        cwbhafaa.regionId,
-        cwbhafaa.feedbacks,
-        cwbhafaa.availableWeekDays AS availableWeekDays,
-        cwbhafaa.availableDayHours AS availableDayHours,
-        cwbhafaa.doctorClinicSpecializationId,
-        cwbhafaa.doctorClinicBookedHours AS doctorClinicBookedHours,
-        ps.gallery AS gallery
-      FROM ClinicWithBookedHoursAndFeedbacksAndAvg AS cwbhafaa
-      LEFT JOIN PicturesTable AS ps
-      ON cwbhafaa.id = ps.doctorClinicId
-      GROUP BY cwbhafaa.id,ps.gallery
-      )
-      SELECT cwbhafaaag.id, cwbhafaaag.name, cwbhafaaag.acceptanceStatus,cwbhafaaag.cost,
-          cwbhafaaag.profileImage, cwbhafaaag.description, cwbhafaaag.qualifications,
-        cwbhafaaag.RatingNumber AS RatingNumber,
-        cwbhafaaag.feedbacks,
-        CASE 
-        WHEN count(r.id) = 0 THEN null
-        ELSE
-        JSON_OBJECT(
-          'id',r.id,
-          'name', MAX(RegionTranslation.name))
-        END AS region,
-        CASE
-        WHEN COUNT(dcs.id ) = 0 THEN null
-        ELSE
-        JSON_OBJECT(
-          'id',dcs.id,
-          'name', dcs.name
-          )
-        END AS doctorClinicSpecialization,
-        cwbhafaaag.availableWeekDays AS availableWeekDays,
-        cwbhafaaag.availableDayHours AS availableDayHours,
-        nad.doctorClinicNotAvailableDays AS doctorClinicNotAvailableDays,
-        cwbhafaaag.doctorClinicBookedHours AS doctorClinicBookedHours,
-        cwbhafaaag.gallery AS gallery
-      FROM ClinicWithBookedHoursAndFeedbacksAndAvgAndGallery as cwbhafaaag
-      LEFT JOIN NotAvailableDays as nad
-      ON nad.doctorClinicId = cwbhafaaag.id
-      LEFT JOIN Region AS r ON cwbhafaaag.regionId = r.id
-      LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = r.id
-      AND RegionTranslation.language = ${I18nContext.current().lang}
-      LEFT JOIN
-      DoctorClinicSpecialization AS dcs
-      ON
-      cwbhafaaag.doctorClinicSpecializationId = dcs.id
-      GROUP BY cwbhafaaag.id, nad.doctorClinicId,cwbhafaaag.gallery
-    `;
-
-    return DoctorClinic[0];
-  }
-
-  async getByName(name: string): Promise<DoctorClinicBookingDetailsDTO> {
-    let DoctorClinic = await this.prisma.$queryRaw`
-    WITH 
-    GetDoctorClinicIdCTE AS (
-      SELECT id AS DoctorClinicId
-      FROM DoctorClinic
-      WHERE name = ${name}
-      LIMIT 1
-    ),
-    RatingAvgTable AS (
-      SELECT doctorClinicId,r.ratingNumber AS RatingNumber
-      FROM Rate as r
-      WHERE doctorClinicId = (SELECT DoctorClinicId FROM GetDoctorClinicIdCTE)
-    ),
-    PicturesTable AS (
-        SELECT doctorClinicId,
-        CASE WHEN COUNT(id) = 0 THEN null
-        ELSE
-        JSON_ARRAYAGG(JSON_OBJECT(
-          'id',p.id,
-          'imageLink', p.imageLink
-          ))
-        END AS gallery
-        FROM Picture as p
-        WHERE doctorClinicId = (SELECT DoctorClinicId FROM GetDoctorClinicIdCTE)
-        GROUP BY doctorClinicId
-      ),
-  Last5Feedbacks AS (
-      SELECT doctorClinicId,feedback
-      FROM Rate
-      WHERE doctorClinicId = (SELECT DoctorClinicId FROM GetDoctorClinicIdCTE)
-      LIMIT 5
-    ),
-    NotAvailableDays AS (
-      SELECT doctorClinicId,
-      CASE WHEN COUNT(nad.id ) = 0 THEN null
-      ELSE
-      JSON_ARRAYAGG(JSON_OBJECT(
-        'id',nad.id,
-        'dayDate', nad.dayDate
-        ))
-      END AS doctorClinicNotAvailableDays
-      FROM
-      DoctorClinicNotAvailableDays as nad
-      WHERE doctorClinicId = (SELECT DoctorClinicId FROM GetDoctorClinicIdCTE)
-      GROUP BY doctorClinicId
-    ),
-  ClinicWithBookedHours AS (
-    SELECT dc.id, dc.name, dc.acceptanceStatus,
-      dc.availableWeekDays AS availableWeekDays,
-      dc.availableDayHours AS availableDayHours,
-      CASE
-      WHEN COUNT(dcbh.id ) = 0 THEN null
-      ELSE
-      JSON_ARRAYAGG(JSON_OBJECT(
-        'id',dcbh.id,
-        'fromDateTime', dcbh.fromDateTime,
-        'userId',dcbh.userId
-        ))
-      END AS doctorClinicBookedHours
-    FROM DoctorClinic AS dc
-    LEFT JOIN DoctorClinicsBookedHours AS dcbh
-    ON dc.id = dcbh.doctorClinicId
-    WHERE dc.id = (SELECT DoctorClinicId FROM GetDoctorClinicIdCTE)
-    GROUP BY dc.id
-    ),
-    ClinicWithBookedHoursAndFeedbacks AS (
-    SELECT cwbh.id, cwbh.name, cwbh.acceptanceStatus,
-      CASE WHEN COUNT(l5f.doctorClinicId ) = 0 THEN null
-      ELSE
-      JSON_ARRAYAGG(l5f.feedback)
-      END AS Feedbacks,
-      cwbh.availableWeekDays AS availableWeekDays,
-      cwbh.availableDayHours AS availableDayHours,
-      cwbh.doctorClinicBookedHours AS doctorClinicBookedHours
-    FROM ClinicWithBookedHours as cwbh
-    LEFT JOIN Last5Feedbacks as l5f
-    ON l5f.doctorClinicId = cwbh.id
-    GROUP BY cwbh.id
-    ),
-    ClinicWithBookedHoursAndFeedbacksAndAvg AS(
-    SELECT cwbhaf.id, cwbhaf.name, cwbhaf.acceptanceStatus,
-      AVG(rav.RatingNumber) AS RatingNumber,
-      cwbhaf.feedbacks,
-      cwbhaf.availableWeekDays AS availableWeekDays,
-      cwbhaf.availableDayHours AS availableDayHours,
-      cwbhaf.doctorClinicBookedHours AS doctorClinicBookedHours
-    FROM ClinicWithBookedHoursAndFeedbacks as cwbhaf
-    LEFT JOIN RatingAvgTable as rav
-    ON cwbhaf.id = rav.doctorClinicId
-    GROUP BY cwbhaf.id
-    ),
-    ClinicWithBookedHoursAndFeedbacksAndAvgAndGallery AS(
-        SELECT cwbhafaa.id, cwbhafaa.name, cwbhafaa.acceptanceStatus,
-        cwbhafaa.RatingNumber AS RatingNumber,
-        cwbhafaa.feedbacks,
-        cwbhafaa.availableWeekDays AS availableWeekDays,
-        cwbhafaa.availableDayHours AS availableDayHours,
-        cwbhafaa.doctorClinicBookedHours AS doctorClinicBookedHours,
-        ps.gallery AS gallery
-      FROM ClinicWithBookedHoursAndFeedbacksAndAvg AS cwbhafaa
-      LEFT JOIN PicturesTable AS ps
-      ON cwbhafaa.id = ps.doctorClinicId
-      GROUP BY cwbhafaa.id,ps.gallery
-      )
-      SELECT cwbhafaaag.id, cwbhafaaag.name, cwbhafaaag.acceptanceStatus,
-        cwbhafaaag.RatingNumber AS RatingNumber,
-        cwbhafaaag.feedbacks,
-        cwbhafaaag.availableWeekDays AS availableWeekDays,
-        cwbhafaaag.availableDayHours AS availableDayHours,
-        nad.doctorClinicNotAvailableDays AS doctorClinicNotAvailableDays,
-        cwbhafaaag.doctorClinicBookedHours AS doctorClinicBookedHours,
-        cwbhafaaag.gallery AS gallery
-      FROM ClinicWithBookedHoursAndFeedbacksAndAvgAndGallery as cwbhafaaag
-      LEFT JOIN NotAvailableDays as nad
-      ON nad.doctorClinicId = cwbhafaaag.id
-      GROUP BY cwbhafaaag.id, nad.doctorClinicId,cwbhafaaag.gallery
-    `;
+    let DoctorClinic = await this.prisma.$queryRawUnsafe(
+      query,
+      value,
+      I18nContext.current().lang,
+    );
 
     return DoctorClinic[0];
   }
@@ -943,7 +670,7 @@ export class DoctorClinicRepository {
     }
     await this.deleteNotAvailableDays(doctorClinicId);
     if (datesArray.length == 0) {
-      return await this.getByID(doctorClinicId);
+      return await this.findBy(FIND_BY.ID, doctorClinicId);
     }
     let newDatesArray = [];
     for (let i = 0; i < datesArray.length; i++) {
@@ -957,12 +684,6 @@ export class DoctorClinicRepository {
       ${Prisma.join(newDatesArray.map((row) => Prisma.sql`(${Prisma.join(row)})`))}
       `;
 
-    return await this.getByID(doctorClinicId);
+    return await this.findBy(FIND_BY.ID, doctorClinicId);
   }
 }
-
-// CAST(
-//   CONCAT('[',
-//   substring_index(group_concat(r.feedback SEPARATOR ','), ',', 3)
-//   ,']')
-// AS feedbacks,
