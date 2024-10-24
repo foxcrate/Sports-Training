@@ -33,6 +33,7 @@ import {
 import { ScheduleSlotsDetailsDTO } from './dtos/schedule-slots-details';
 import { SwaggerErrorResponse } from 'src/global/classes/swagger-error-response';
 import { ScheduleWithSlotsCreateDto } from './dtos/schedule-with-slots-create.dto';
+import { FIND_BY } from 'src/trainer-profile/trainer-profile-enums';
 
 @Controller('trainer-schedule')
 export class TrainerScheduleController {
@@ -102,7 +103,10 @@ export class TrainerScheduleController {
   ) {
     ///////// Temproray, Trainer has one schedule /////////
     if (params.id == 0) {
-      let trainerProfile = await this.trainerProfileRepository.getByUserId(req['id']);
+      let trainerProfile = await this.trainerProfileRepository.findBy(
+        FIND_BY.USER_ID,
+        req['id'],
+      );
       params.id = await this.trainerScheduleRepository.getTrainerScheduleId(
         trainerProfile.id,
       );
@@ -142,7 +146,10 @@ export class TrainerScheduleController {
   ) {
     ///////// Temproray, Trainer has one schedule /////////
     if (params.id == 0) {
-      let trainerProfile = await this.trainerProfileRepository.getByUserId(req['id']);
+      let trainerProfile = await this.trainerProfileRepository.findBy(
+        FIND_BY.USER_ID,
+        req['id'],
+      );
       params.id = await this.trainerScheduleRepository.getTrainerScheduleId(
         trainerProfile.id,
       );
@@ -172,7 +179,10 @@ export class TrainerScheduleController {
   ) {
     ///////// Temproray, Trainer has one schedule /////////
     if (params.id == 0) {
-      let trainerProfile = await this.trainerProfileRepository.getByUserId(req['id']);
+      let trainerProfile = await this.trainerProfileRepository.findBy(
+        FIND_BY.USER_ID,
+        req['id'],
+      );
       params.id = await this.trainerScheduleRepository.getTrainerScheduleId(
         trainerProfile.id,
       );

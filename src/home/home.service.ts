@@ -11,6 +11,7 @@ import { PlayerProfileRepository } from 'src/player-profile/player-profile.repos
 import { TrainerProfileRepository } from 'src/trainer-profile/trainer-profile.repository';
 import { UserRepository } from 'src/user/user.repository';
 import { UserInfoDto } from './dto/user-info.dto';
+import { FIND_BY } from 'src/trainer-profile/trainer-profile-enums';
 
 @Injectable()
 export class HomeService {
@@ -84,7 +85,10 @@ export class HomeService {
   }
 
   async getTrainerHome(userId: number): Promise<TrainerHomeDto> {
-    let trainerProfile = await this.tainerProfileRepository.getByUserId(userId);
+    let trainerProfile = await this.tainerProfileRepository.findBy(
+      FIND_BY.USER_ID,
+      userId,
+    );
     // get sports fields
     let sportsFields: any[] = await this.homeRepository.getSportsFields(userId);
 

@@ -19,6 +19,7 @@ import { PlayerProfileRepository } from 'src/player-profile/player-profile.repos
 import { ReturnPlayerProfileDto } from 'src/player-profile/dtos/return.dto';
 import { PACKAGE_STATUS } from 'src/global/enums';
 import { FieldRepository } from 'src/field/field.repository';
+import { FIND_BY } from 'src/trainer-profile/trainer-profile-enums';
 
 @Injectable()
 export class PackageService {
@@ -68,7 +69,10 @@ export class PackageService {
       );
     }
 
-    let trainerProfile = await this.trainerProfileRepository.getByUserId(userId);
+    let trainerProfile = await this.trainerProfileRepository.findBy(
+      FIND_BY.USER_ID,
+      userId,
+    );
 
     let scheduleId = await this.trainerScheduleRepository.getTrainerScheduleId(
       trainerProfile.id,
@@ -169,7 +173,10 @@ export class PackageService {
   ) {
     // validate the package belong to the trainerProfile
     let thePackage = await this.packageRepository.getOneById(packageId);
-    let theTrainerProfile = await this.trainerProfileRepository.getByID(trainerProfileId);
+    let theTrainerProfile = await this.trainerProfileRepository.findBy(
+      FIND_BY.ID,
+      trainerProfileId,
+    );
     let thePlayerProfile =
       await this.playerProfileRepository.getOneDetailedByUserId(userId);
 
@@ -237,8 +244,10 @@ export class PackageService {
       );
     }
 
-    let currentUserTrainerProfile =
-      await this.trainerProfileRepository.getByUserId(userId);
+    let currentUserTrainerProfile = await this.trainerProfileRepository.findBy(
+      FIND_BY.USER_ID,
+      userId,
+    );
     if (thePackage.trainerProfileId != currentUserTrainerProfile.id) {
       throw new ForbiddenException(
         this.i18n.t(`errors.NOT_ALLOWED`, { lang: I18nContext.current().lang }),

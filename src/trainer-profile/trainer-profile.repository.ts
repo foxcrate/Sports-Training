@@ -11,6 +11,8 @@ import { SportService } from 'src/sport/sport.service';
 import { GlobalRepository } from 'src/global/global.repository';
 import { SimplifiedFieldReturn } from 'src/field/dtos/field-simplified-return.dto';
 import { PACKAGE_STATUS } from 'src/global/enums';
+import { TrainerProfileDetailedOptions } from './dtos/trainer-profile-detailed-options.dto';
+import { FIND_BY } from './trainer-profile-enums';
 
 @Injectable()
 export class TrainerProfileRepository {
@@ -22,272 +24,105 @@ export class TrainerProfileRepository {
     private globalRepository: GlobalRepository,
   ) {}
 
-  async getByID(id: number): Promise<ReturnTrainerProfileDto> {
-    let trainerProfile = await this.prisma.$queryRaw`
-    SELECT
-      id,
-      levelId,
-      ageGroupId,
-      cost,
-      sessionDescription,
-      hoursPriorToBooking,
-      userId,
-      createdAt
-    FROM TrainerProfile AS tp
-    WHERE tp.id = ${id}
-    LIMIT 1
-    ;`;
-
-    if (!trainerProfile[0]) {
-      throw new NotFoundException(
-        this.i18n.t(`errors.TRAINER_PROFILE_NOT_FOUND`, {
-          lang: I18nContext.current().lang,
-        }),
-      );
-    }
-
-    return trainerProfile[0];
-  }
-
-  async getByUserId(userId: number): Promise<ReturnTrainerProfileDto> {
-    let trainerProfile = await this.prisma.$queryRaw`
-    SELECT
-      id,
-      levelId,
-      ageGroupId,
-      cost,
-      sessionDescription,
-      hoursPriorToBooking,
-      userId,
-      createdAt
-    FROM TrainerProfile AS tp
-    WHERE tp.userId = ${userId}
-    LIMIT 1
-    ;`;
-
-    if (!trainerProfile[0]) {
-      throw new NotFoundException(
-        this.i18n.t(`errors.TRAINER_PROFILE_NOT_FOUND`, {
-          lang: I18nContext.current().lang,
-        }),
-      );
-    }
-
-    return trainerProfile[0];
-  }
-
-  async getOneDetailed(userId: number): Promise<ReturnTrainerProfileDetailsDto> {
-    let trainerProfile = await this.getByUserId(userId);
-    let trainerProfileDetails: ReturnTrainerProfileDetailsDto = await this.prisma
-      .$queryRaw`
-    WITH userDetails AS (
+  async findBy(column: FIND_BY, value: any): Promise<ReturnTrainerProfileDto> {
+    let query = `
       SELECT
-      User.id,
-      firstName,
-      lastName,
-      email,
-      profileImage,
-      mobileNumber,
-      GenderTranslation.name AS gender,
-      birthday
-      FROM User
-      LEFT JOIN Gender ON User.genderId = Gender.id
-      LEFT JOIN GenderTranslation
-      ON GenderTranslation.genderId = Gender.id
-      AND GenderTranslation.language = ${I18nContext.current().lang}
-      WHERE User.id = ${userId}
-    ),
-      TrainerPictures AS(
-        SELECT fivePictures.trainerProfileId,
-        CASE WHEN COUNT(fivePictures.id) = 0 THEN null
-        ELSE
-        JSON_ARRAYAGG(JSON_OBJECT(
-          'id',fivePictures.id,
-          'imageLink', fivePictures.imageLink
-          ))
-        END AS pictures
-        From (
-          SELECT
-          Picture.id AS id,
-          Picture.trainerProfileId AS trainerProfileId,
-          Picture.imageLink AS imageLink
-          FROM Picture
-          WHERE trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
-          LIMIT 5
-        ) AS fivePictures
-        GROUP BY fivePictures.trainerProfileId
-      ),
-      TrainerCertificates AS(
-        SELECT fiveCertificates.trainerProfileId,
-        CASE WHEN COUNT(fiveCertificates.id) = 0 THEN null
-        ELSE
-        JSON_ARRAYAGG(JSON_OBJECT(
-          'id',fiveCertificates.id,
-          'name',fiveCertificates.name,
-          'imageLink', fiveCertificates.imageLink
-          ))
-        END AS certificates
-        From (
-          SELECT
-          Certificate.id AS id,
-          Certificate.trainerProfileId AS trainerProfileId,
-          Certificate.name AS name,
-          Certificate.imageLink AS imageLink
-          FROM Certificate
-          WHERE trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
-          LIMIT 5
-        ) AS fiveCertificates
-        GROUP BY fiveCertificates.trainerProfileId
-      ),
-      RatingAvgTable AS (
-        SELECT r.trainerProfileId AS trainerProfileId,
-        CASE WHEN AVG(r.ratingNumber) IS NULL THEN 5
-        ELSE
-        ROUND(AVG(r.ratingNumber),1)
-        END AS ratingNumber
-        FROM Rate AS r
-        WHERE r.trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
-        GROUP BY r.trainerProfileId
-      ),
-      Last5Feedbacks AS (
-        SELECT
-        feedback
-        FROM Rate
-        WHERE trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
-        && feedback IS NOT NULL
-        LIMIT 5
-      ),
-      TrainerPackages AS(
-        SELECT trainerProfileId,
-        CASE WHEN COUNT(Package.id) = 0 THEN null
-        ELSE
-        JSON_ARRAYAGG(JSON_OBJECT(
-          'id',Package.id,
-          'name', Package.name,
-          'description', Package.description,
-          'type', Package.type,
-          'price', Package.price,
-          'status', Package.status,
-          'numberOfSessions', Package.numberOfSessions,
-          'ExpirationDate', Package.ExpirationDate,
-          'currentAttendeesNumber', Package.currentAttendeesNumber,
-          'maxAttendees', Package.maxAttendees,
-          'minAttendees', Package.minAttendees,
-          'location', Region.name
-          ))
-          END AS Packages
-          FROM
-          Package
-          LEFT JOIN Field ON Package.fieldId = Field.id
-          LEFT JOIN Region ON Field.regionId = Region.id
-          WHERE trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
-          AND ( Package.status = ${PACKAGE_STATUS.ACTIVE} OR Package.status = ${
-            PACKAGE_STATUS.PENDING
-          })
-          GROUP BY Package.trainerProfileId
-      ),
-    trainerProfileFields AS (
-      SELECT
-      tp.id AS trainerProfileId,
-      CASE 
-      WHEN COUNT(f.id ) = 0 THEN null
-      ELSE
-      JSON_ARRAYAGG(JSON_OBJECT(
-        'id',f.id,
-        'name', f.name)) 
-      END AS fields
+        id,
+        levelId,
+        ageGroupId,
+        cost,
+        sessionDescription,
+        hoursPriorToBooking,
+        userId,
+        createdAt
       FROM TrainerProfile AS tp
-      LEFT JOIN TrainerProfileFields AS tpf ON tp.id = tpf.trainerProfileId
-      LEFT JOIN Field AS f ON tpf.fieldId = f.id
-      WHERE userId = ${userId} 
-      GROUP BY tp.id
-    ),
-    trainerProfileWithSports AS (
-    SELECT
-    tp.id AS trainerProfileId,
-    MAX(LevelTranslation.name) AS level,
-    CASE 
-    WHEN COUNT(ag.id ) = 0 THEN null
-    ELSE
-    JSON_OBJECT(
-      'id',ag.id,
-      'name', MAX(AgeGroupTranslation.name)
-      )
-    END AS ageGroup,
-    tp.cost AS cost,
-    tp.hoursPriorToBooking AS hoursPriorToBooking,
-    tp.sessionDescription AS sessionDescription,
-    tp.regionId AS regionId,
-    tp.userId AS userId,
-    CASE 
-    WHEN COUNT(s.id ) = 0 THEN null
-    ELSE
-    JSON_ARRAYAGG(JSON_OBJECT(
-      'id',s.id,
-      'name', SportTranslation.name)) 
-    END AS sports
-    FROM TrainerProfile AS tp
-    LEFT JOIN Level ON tp.levelId = Level.id
-    LEFT JOIN LevelTranslation ON LevelTranslation.levelId = Level.id
-    AND LevelTranslation.language = ${I18nContext.current().lang}
-    LEFT JOIN TrainerProfileSports AS tps ON tp.id = tps.trainerProfileId
-    LEFT JOIN Sport AS s ON tps.sportId = s.id
-    LEFT JOIN SportTranslation AS SportTranslation ON SportTranslation.sportId = s.id
-        AND SportTranslation.language = ${I18nContext.current().lang}
-    LEFT JOIN AgeGroup AS ag ON tp.ageGroupId = ag.id
-    LEFT JOIN AgeGroupTranslation
-      ON AgeGroupTranslation.ageGroupId = ag.id
-      AND AgeGroupTranslation.language = ${I18nContext.current().lang}
-    WHERE tp.userId = ${userId}
-    GROUP BY tp.id
-    LIMIT 1
-    )
-    SELECT
-    tpws.trainerProfileId AS id,
-    tpws.level AS level,
-    tpws.cost AS cost,
-    tpws.hoursPriorToBooking AS hoursPriorToBooking,
-    tpws.ageGroup AS ageGroup,
-    tpws.sessionDescription AS sessionDescription,
-    CASE 
-      WHEN count(r.id) = 0 THEN null
-      ELSE
-      JSON_OBJECT(
-        'id',r.id,
-        'name', MAX(RegionTranslation.name)
-        )
-    END AS region,
-    JSON_OBJECT(
-      'id',ud.id,
-      'firstName',ud.firstName,
-      'lastName', ud.lastName,
-      'email',ud.email,
-      'profileImage', ud.profileImage,
-      'mobileNudmber',ud.mobileNumber,
-      'gender', MAX(ud.gender),
-      'birthday',ud.birthday
-      ) AS user,
-    (SELECT pictures FROM TrainerPictures ) AS gallery,
-    (SELECT certificates FROM TrainerCertificates ) AS certificates,
-    (SELECT ratingNumber FROM RatingAvgTable) AS ratingNumber,
-    (SELECT JSON_ARRAYAGG(feedback) FROM Last5Feedbacks) AS feedbacks,
-    (SELECT packages FROM TrainerPackages) AS packages,
-    tpws.sports AS sports,
-    tpf.fields AS fields
-    FROM
-    trainerProfileWithSports AS tpws
-    LEFT JOIN userDetails AS ud ON tpws.userId = ud.id
-    LEFT JOIN trainerProfileFields AS tpf ON tpws.trainerProfileId = tpf.trainerProfileId
-    LEFT JOIN Region AS r ON tpws.regionId = r.id
-    LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = r.id
-    AND RegionTranslation.language = ${I18nContext.current().lang}
-    GROUP BY tpws.trainerProfileId
-    ;`;
+      WHERE ${column} = ?
+      LIMIT 1
+    `;
+
+    let trainerProfile = await this.prisma.$queryRawUnsafe(query, value);
+
+    if (!trainerProfile[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.TRAINER_PROFILE_NOT_FOUND`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
+    return trainerProfile[0];
+  }
+
+  async getOneDetailed(
+    userId: number,
+    options?: TrainerProfileDetailedOptions,
+  ): Promise<ReturnTrainerProfileDetailsDto> {
+    if (!options) {
+      options = {
+        includeLevel: true,
+        includeUser: true,
+        includeAgeGroup: true,
+        includeRegion: true,
+        includeGallery: true,
+        includeCertificates: true,
+        includePackages: true,
+        includeFields: true,
+        includeSports: true,
+        includeFeedbacks: true,
+        includeRatingNumber: true,
+      };
+    }
+
+    const joins = this.buildJoins(options);
+
+    const query = `
+      SELECT 
+        TrainerProfile.id, 
+        TrainerProfile.cost,
+        ${options.includeLevel ? this.buildLevelJson() : 'NULL AS level'},
+        TrainerProfile.hoursPriorToBooking,
+        TrainerProfile.sessionDescription,
+        ${options.includeUser ? this.buildUserJson() : 'NULL AS user'},
+        ${options.includeAgeGroup ? this.buildAgeGroupJson() : 'NULL AS ageGroup'},
+        ${options.includeRegion ? this.buildRegionJson() : 'NULL AS region'},
+        ${options.includeGallery ? this.buildGalleryJson() : 'NULL AS gallery'},
+        ${
+          options.includeCertificates
+            ? this.buildCertificatesJson()
+            : 'NULL AS certificates'
+        },
+        ${options.includePackages ? this.buildPackagesJson() : 'NULL AS packages'},
+        ${options.includeFields ? this.buildFieldsJson() : 'NULL AS fields'},
+        ${options.includeSports ? this.buildSportsJson() : 'NULL AS sports'},
+        ${
+          options.includeFeedbacks
+            ? this.buildFeedbacksArray(userId)
+            : 'NULL AS feedbacks'
+        },
+         ${
+           options.includeRatingNumber
+             ? this.buildRatingNumber(userId)
+             : 'NULL AS ratingNumber'
+         }
+      FROM TrainerProfile
+      ${joins}
+      WHERE TrainerProfile.userId = ${userId}
+      GROUP BY TrainerProfile.id;
+    `;
+
+    let trainerProfileDetails = await this.prisma.$queryRawUnsafe(query);
+    if (!trainerProfileDetails[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.TRAINER_PROFILE_NOT_FOUND`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
     return trainerProfileDetails[0];
   }
 
   async getSchedulesIds(userId: number): Promise<number[]> {
-    let trainerProfile = await this.getByUserId(userId);
+    let trainerProfile = await this.findBy(FIND_BY.USER_ID, userId);
 
     let schedulesIds = await this.prisma.$queryRaw`
     SELECT
@@ -302,7 +137,7 @@ export class TrainerProfileRepository {
   }
 
   async getTrainerFields(trainerProfileId: number): Promise<SimplifiedFieldReturn[]> {
-    await this.getByID(trainerProfileId);
+    await this.findBy(FIND_BY.ID, trainerProfileId);
     let trainerProfileFields = await this.prisma.$queryRaw`
       SELECT 
       CASE 
@@ -352,7 +187,7 @@ export class TrainerProfileRepository {
     )
     `;
 
-    let newTrainerProfile = await this.getByUserId(userId);
+    let newTrainerProfile = await this.findBy(FIND_BY.USER_ID, userId);
 
     if (createData.sports && createData.sports.length > 0) {
       await this.createProfileSports(createData.sports, newTrainerProfile.id);
@@ -379,7 +214,7 @@ export class TrainerProfileRepository {
     createData: TrainerProfileCreateDto,
     userId,
   ): Promise<ReturnTrainerProfileDetailsDto> {
-    let theTrainerProfile = await this.getByUserId(userId);
+    let theTrainerProfile = await this.findBy(FIND_BY.USER_ID, userId);
     // validate age group existance
     if (createData.ageGroupId) {
       await this.globalRepository.getOneAgeGroup(createData.ageGroupId);
@@ -443,7 +278,7 @@ export class TrainerProfileRepository {
 
     await this.deleteNotAvailableDays(trainerProfileId);
     if (datesArray.length == 0) {
-      return await this.getByID(trainerProfileId);
+      return await this.findBy(FIND_BY.ID, trainerProfileId);
     }
     let newDatesArray = [];
     for (let i = 0; i < datesArray.length; i++) {
@@ -457,7 +292,7 @@ export class TrainerProfileRepository {
     ${Prisma.join(newDatesArray.map((row) => Prisma.sql`(${Prisma.join(row)})`))}
     `;
 
-    return await this.getByID(trainerProfileId);
+    return await this.findBy(FIND_BY.ID, trainerProfileId);
   }
 
   async deleteNotAvailableDays(trainerProfileId: number) {
@@ -524,10 +359,6 @@ export class TrainerProfileRepository {
     WHERE trainerProfileId = ${trainerProfileId}
   `;
   }
-
-  // async deletePastBookedSession(trainerProfileId: number) {
-
-  // }
 
   async deletePastBookedSessions(trainerProfileId: number) {
     // delete booked sessions requests
@@ -644,5 +475,255 @@ export class TrainerProfileRepository {
       );
     }
     return true;
+  }
+
+  ////////////////////////////////////
+
+  private buildLevelJson() {
+    return `
+      MAX(LevelTranslation.name) AS level
+    `;
+  }
+
+  private buildUserJson() {
+    return `
+    CASE 
+      WHEN TrainerProfile.userId IS NULL THEN null 
+      ELSE JSON_OBJECT(
+        'id', TrainerProfile.userId,
+        'firstName', User.firstName,
+        'lastName', User.lastName,
+        'email', User.email,
+        'gender', MAX(GenderTranslation.name),
+        'birthday', User.birthday,
+        'profileImage', User.profileImage,
+        'mobileNumber', User.mobileNumber
+      ) 
+    END AS user
+  `;
+  }
+
+  private buildAgeGroupJson() {
+    return `
+    CASE 
+      WHEN TrainerProfile.ageGroupId IS NULL THEN null 
+      ELSE JSON_OBJECT(
+        'id', TrainerProfile.ageGroupId,
+        'name', AgeGroup.name
+      ) 
+    END AS ageGroup
+  `;
+  }
+
+  private buildRegionJson() {
+    return `
+    CASE 
+      WHEN TrainerProfile.regionId IS NULL THEN null 
+      ELSE JSON_OBJECT(
+        'id', TrainerProfile.regionId,
+        'name', Region.name
+      ) 
+    END AS region
+  `;
+  }
+
+  private buildGalleryJson() {
+    return `
+    CASE 
+      WHEN COUNT(DISTINCT Picture.id) = 0 THEN null 
+      ELSE CAST(
+        CONCAT('[', 
+          GROUP_CONCAT(
+            DISTINCT JSON_OBJECT(
+              'id', Picture.id,
+              'imageLink', Picture.imageLink
+            )
+          ), 
+        ']') AS JSON
+      )
+    END AS gallery
+  `;
+  }
+
+  private buildCertificatesJson() {
+    return `
+    CASE 
+      WHEN COUNT(DISTINCT Certificate.id) = 0 THEN null 
+      ELSE CAST(
+        CONCAT('[', 
+          GROUP_CONCAT(
+            DISTINCT JSON_OBJECT(
+              'id', Certificate.id,
+              'name', Certificate.name,
+              'imageLink', Certificate.imageLink
+            )
+          ), 
+        ']') AS JSON
+      )
+    END AS certificates
+  `;
+  }
+
+  private buildPackagesJson() {
+    return `
+    CASE 
+      WHEN COUNT(DISTINCT Package.id) = 0 THEN null 
+      ELSE CAST(
+        CONCAT('[', 
+          GROUP_CONCAT(
+            DISTINCT JSON_OBJECT(
+              'id', Package.id,
+              'name', Package.name,
+              'description', Package.description,
+              'type', Package.type,
+              'price', Package.price,
+              'status', Package.status,
+              'numberOfSessions', Package.numberOfSessions,
+              'ExpirationDate', Package.ExpirationDate,
+              'currentAttendeesNumber', Package.currentAttendeesNumber,
+              'maxAttendees', Package.maxAttendees,
+              'minAttendees', Package.minAttendees,
+              'location', packageFieldRegion.name
+            )
+          ), 
+        ']') AS JSON
+      )
+    END AS packages
+  `;
+  }
+
+  private buildFieldsJson() {
+    return `
+    CASE 
+      WHEN COUNT(DISTINCT Field.id) = 0 THEN null 
+      ELSE CAST(
+        CONCAT('[', 
+          GROUP_CONCAT(
+            DISTINCT JSON_OBJECT(
+              'id', Field.id,
+              'name', Field.name
+            )
+          ), 
+        ']') AS JSON
+      )
+    END AS fields
+  `;
+  }
+
+  private buildSportsJson() {
+    return `
+    CASE 
+      WHEN COUNT(DISTINCT Sport.id) = 0 THEN null 
+      ELSE CAST(
+        CONCAT('[', 
+          GROUP_CONCAT(
+            DISTINCT JSON_OBJECT(
+              'id', Sport.id,
+              'name', SportTranslation.name
+            )
+          ), 
+        ']') AS JSON
+      )
+    END AS sports
+  `;
+  }
+
+  private buildFeedbacksArray(userId: number) {
+    return `
+    (
+      SELECT JSON_ARRAYAGG(feedback)
+      FROM Rate
+      WHERE trainerProfileId = (SELECT id FROM TrainerProfile WHERE userId = ${userId})
+        AND feedback IS NOT NULL
+      LIMIT 5
+    ) AS feedbacks
+  `;
+  }
+
+  private buildRatingNumber(userId: number) {
+    return `
+      CASE WHEN AVG(Rate.ratingNumber) IS NULL THEN 5
+          ELSE ROUND(AVG(Rate.ratingNumber),1)
+        END AS ratingNumber
+  `;
+  }
+
+  private buildJoins(options: TrainerProfileDetailedOptions): string {
+    const joins: string[] = [];
+
+    if (options.includeLevel) {
+      joins.push(`
+        LEFT JOIN Level ON TrainerProfile.levelId = Level.id
+        LEFT JOIN LevelTranslation ON LevelTranslation.levelId = Level.id
+          AND LevelTranslation.language = '${I18nContext.current().lang}'
+      `);
+    }
+
+    if (options.includeUser) {
+      joins.push(`
+        LEFT JOIN User ON TrainerProfile.userId = User.id
+        LEFT JOIN Gender ON User.genderId = Gender.id
+        LEFT JOIN GenderTranslation 
+          ON GenderTranslation.genderId = Gender.id
+          AND GenderTranslation.language = '${I18nContext.current().lang}'
+      `);
+    }
+
+    if (options.includeAgeGroup) {
+      joins.push(`
+        LEFT JOIN AgeGroup ON TrainerProfile.ageGroupId = AgeGroup.id
+      `);
+    }
+
+    if (options.includeRegion) {
+      joins.push(`
+        LEFT JOIN Region ON TrainerProfile.regionId = Region.id
+      `);
+    }
+
+    if (options.includeGallery) {
+      joins.push(`
+        LEFT JOIN Picture ON Picture.trainerProfileId = TrainerProfile.id
+      `);
+    }
+
+    if (options.includeCertificates) {
+      joins.push(`
+        LEFT JOIN Certificate ON Certificate.trainerProfileId = TrainerProfile.id
+      `);
+    }
+
+    if (options.includePackages) {
+      joins.push(`
+        LEFT JOIN Package ON Package.trainerProfileId = TrainerProfile.id
+          AND (Package.status = '${PACKAGE_STATUS.ACTIVE}' OR Package.status = '${PACKAGE_STATUS.PENDING}')
+        LEFT JOIN Field AS packageField ON Package.fieldId = packageField.id
+        LEFT JOIN Region AS packageFieldRegion ON packageField.regionId = packageFieldRegion.id
+      `);
+    }
+
+    if (options.includeFields) {
+      joins.push(`
+        LEFT JOIN TrainerProfileFields ON TrainerProfile.id = TrainerProfileFields.trainerProfileId
+        LEFT JOIN Field ON TrainerProfileFields.fieldId = Field.id
+      `);
+    }
+
+    if (options.includeSports) {
+      joins.push(`
+        LEFT JOIN TrainerProfileSports ON TrainerProfileSports.trainerProfileId = TrainerProfile.id
+        LEFT JOIN Sport ON TrainerProfileSports.sportId = Sport.id
+        LEFT JOIN SportTranslation ON SportTranslation.sportId = Sport.id
+          AND SportTranslation.language = '${I18nContext.current().lang}'
+      `);
+    }
+
+    if (options.includeFeedbacks) {
+      joins.push(`
+        LEFT JOIN Rate ON Rate.trainerProfileId = TrainerProfile.id
+      `);
+    }
+
+    return joins.join('\n');
   }
 }

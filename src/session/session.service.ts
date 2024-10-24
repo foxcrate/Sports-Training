@@ -31,6 +31,7 @@ import { NotificationRepository } from 'src/notification/notification.repository
 import { RequestSlotChangeDto } from './dtos/request-slot-change.dto';
 import { TrainerScheduleRepository } from 'src/trainer-schedule/trainer-schedule.repository';
 import { PendingSessionDTO } from './dtos/pending-session.dto';
+import { FIND_BY } from 'src/trainer-profile/trainer-profile-enums';
 
 @Injectable()
 export class SessionService {
@@ -74,7 +75,10 @@ export class SessionService {
 
   async trainerRatePlayer(userId: number, reqBody: RateTrainerDto): Promise<boolean> {
     // throw an error if playerProfile don't exist
-    let theTrainerProfile = await this.trainerProfileRepository.getByUserId(userId);
+    let theTrainerProfile = await this.trainerProfileRepository.findBy(
+      FIND_BY.USER_ID,
+      userId,
+    );
     if (!theTrainerProfile) {
       throw new NotFoundException(
         this.i18n.t(`errors.TRAINER_PROFILE_NOT_FOUND`, {
@@ -162,7 +166,10 @@ export class SessionService {
 
   async getPendingSessions(userId: number): Promise<PendingSessionDTO[]> {
     // return await this.globalModel.getOneAgeGroup(1);
-    let trainerProfile = await this.trainerProfileRepository.getByUserId(userId);
+    let trainerProfile = await this.trainerProfileRepository.findBy(
+      FIND_BY.USER_ID,
+      userId,
+    );
     return await this.sessionRepository.getPendingSessions(trainerProfile.id);
   }
 
