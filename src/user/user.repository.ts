@@ -4,9 +4,9 @@ import { ReturnUserDto } from './dtos/return.dto';
 import { SignupUserDto } from './dtos/signup.dto';
 import { I18nContext } from 'nestjs-i18n';
 import { CompleteSignupUserDto } from './dtos/complete-signup.dto';
-import { NativeUserDto } from './dtos/native.dto';
 import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 import { UserMetaData } from './dtos/user-meta-data.dto';
+import { FIND_BY } from './user-enums';
 
 @Injectable()
 export class UserRepository {
@@ -37,52 +37,32 @@ export class UserRepository {
     return userChilds;
   }
 
-  async create(signupData: SignupUserDto) {
-    await this.prisma.$queryRaw`
-    INSERT INTO User
-    (
-      firstName,
-      lastName,
-      profileImage,
-      password,
-      userType,
-      email,
-      mobileNumber,
-      genderId,
-      birthday
-    )
-    VALUES
-    (
-      ${signupData.firstName},
-      ${signupData.lastName},
-      ${signupData.profileImage},
-      ${signupData.password},
-      ${AvailableRoles.User},
-      ${signupData.email},
-      ${signupData.mobileNumber},
-      ${signupData.genderId},
-      ${new Date(signupData.birthday)}
-    )`;
+  async create(data: Partial<SignupUserDto>): Promise<void> {
+    const { columns, values } = this.buildInsertQueryColumns(data);
+
+    const query = `
+    INSERT INTO User (${columns.join(', ')})
+    VALUES (${values.map(() => '?').join(', ')});
+  `;
+
+    await this.prisma.$queryRawUnsafe(query, ...values);
   }
 
-  async createByMobile(mobileNumber: string) {
-    await this.prisma.$queryRaw`
-    INSERT INTO User
-    (
-      mobileNumber,
-      userType
-    )
-    VALUES
-    (
-      ${mobileNumber},
-      ${AvailableRoles.User}
-    )`;
-  }
-
-  async getAll(): Promise<NativeUserDto[]> {
+  async getAll(): Promise<ReturnUserDto[]> {
     return await this.prisma.$queryRaw`
     SELECT
-    *
+      id,
+      firstName,
+      lastName,
+      isActivated,
+      password,
+      email,
+      mobileNumber,
+      userType,
+      genderId,
+      birthday,
+      createdAt,
+      isPhoneVerified
     FROM
     User
     `;
@@ -95,6 +75,8 @@ export class UserRepository {
         SET
         firstName = IFNULL(${data.firstName},firstName),
         lastName = IFNULL(${data.lastName},lastName),
+        password = IFNULL(${data.password},password),
+        mobileNumber = IFNULL(${data.mobileNumber},mobileNumber),
         email = IFNULL(${data.email},email),
         profileImage = IFNULL(${data.profileImage},profileImage),
         birthday = IFNULL(${data.birthday},birthday)
@@ -118,28 +100,6 @@ export class UserRepository {
         WHERE
         id = ${userId};
       `;
-  }
-
-  async updatePassword(userId: number, hashedPassword: string) {
-    //update//
-    await this.prisma.$queryRaw`
-       UPDATE User
-       SET
-       password = ${hashedPassword}
-       WHERE
-       id = ${userId};
-     `;
-  }
-
-  async updateMobile(userId: number, mobileNumber: string) {
-    //update
-    await this.prisma.$queryRaw`
-       UPDATE User
-       SET
-       mobileNumber = ${mobileNumber}
-       WHERE
-       id = ${userId};
-     `;
   }
 
   async activateAccount(userId: number) {
@@ -168,47 +128,46 @@ export class UserRepository {
     return true;
   }
 
-  async getById(userId): Promise<ReturnUserDto> {
-    let theUser = await this.prisma.$queryRaw`
-      SELECT
-        User.id,
-        firstName,
-        lastName,
-        profileImage,
-        email,
-        mobileNumber,
-        GenderTranslation.name AS gender,
-        birthday
-      FROM User
-      LEFT JOIN Gender ON User.genderId = Gender.id
-      LEFT JOIN GenderTranslation
-      ON GenderTranslation.genderId = Gender.id
-      AND GenderTranslation.language = ${I18nContext.current().lang}
-      WHERE User.id = ${userId}
-      LIMIT 1
-    `;
-    return theUser[0];
-  }
+  async findBy(
+    whereColumn: FIND_BY,
+    whereColumnValue: any,
+    additionalSelect?: string[],
+  ): Promise<ReturnUserDto> {
+    let additionalColumns = null;
+    if (additionalSelect) {
+      additionalColumns = ',' + additionalSelect.join(', ');
+    }
 
-  async getByMobileNumber(mobileNumber): Promise<ReturnUserDto> {
-    let theUser = await this.prisma.$queryRaw`
-      SELECT
+    let query = `
+       SELECT
         User.id,
         firstName,
         lastName,
         profileImage,
         email,
         mobileNumber,
+        User.genderId,
+        User.createdAt,
         GenderTranslation.name AS gender,
         birthday
+        ${additionalColumns ? additionalColumns : ''}
       FROM User
       LEFT JOIN Gender ON User.genderId = Gender.id
       LEFT JOIN GenderTranslation
       ON GenderTranslation.genderId = Gender.id
-      AND GenderTranslation.language = ${I18nContext.current().lang}
-      WHERE User.mobileNumber = ${mobileNumber}
+      AND GenderTranslation.language = ?
+      WHERE ${whereColumn} = ?
       LIMIT 1
     `;
+
+    console.log(query);
+
+    let theUser = await this.prisma.$queryRawUnsafe(
+      query,
+      I18nContext.current().lang,
+      whereColumnValue,
+    );
+
     return theUser[0];
   }
 
@@ -239,40 +198,6 @@ export class UserRepository {
     return userMetaData[0];
   }
 
-  async getNativeByMobileNumber(mobileNumber): Promise<NativeUserDto> {
-    let theUser = await this.prisma.$queryRaw`
-      SELECT
-      *
-      FROM User
-      WHERE mobileNumber = ${mobileNumber}
-      LIMIT 1
-    `;
-
-    return theUser[0];
-  }
-
-  async getByEmail(email): Promise<ReturnUserDto> {
-    let theUser = await this.prisma.$queryRaw`
-      SELECT
-        User.id,
-        firstName,
-        lastName,
-        profileImage,
-        email,
-        mobileNumber,
-        GenderTranslation.name AS gender,
-        birthday
-      FROM User
-      LEFT JOIN Gender ON User.genderId = Gender.id
-      LEFT JOIN GenderTranslation
-      ON GenderTranslation.genderId = Gender.id
-      AND GenderTranslation.language = ${I18nContext.current().lang}
-      WHERE User.email = ${email}
-      LIMIT 1
-    `;
-    return theUser[0];
-  }
-
   async getChildsIds(userId: number): Promise<number[]> {
     let idsObject: any[] = await this.prisma.$queryRaw`
       SELECT childId
@@ -289,27 +214,10 @@ export class UserRepository {
   }
 
   async createChild(reqBody, userId) {
-    await this.prisma.$queryRaw`
-    INSERT INTO User
-      (firstName,
-      lastName,
-      userType,
-      profileImage,
-      email,
-      mobileNumber,
-      genderId,
-      birthday)
-      VALUES
-    (${reqBody.firstName},
-    ${reqBody.lastName},
-    ${AvailableRoles.Child},
-    ${reqBody.profileImage},
-    ${reqBody.email},
-    ${reqBody.mobileNumber},
-    ${reqBody.genderId},
-    ${reqBody.birthday})`;
+    await this.create({ ...reqBody, userType: AvailableRoles.Child });
 
-    let theChild = await this.getByMobileNumber(reqBody.mobileNumber);
+    // let theChild = await this.getByMobileNumber(reqBody.mobileNumber);
+    let theChild = await this.findBy(FIND_BY.MOBILE_NUMBER, reqBody.mobileNumber);
 
     await this.prisma.$queryRaw`
     INSERT INTO ParentsChilds
@@ -334,5 +242,56 @@ export class UserRepository {
     ParentsChilds
     WHERE
     childId = ${childId};`;
+  }
+
+  private buildInsertQueryColumns(data: Partial<SignupUserDto>): {
+    columns: string[];
+    values: any[];
+  } {
+    const columns: string[] = [];
+    const values: any[] = [];
+
+    if (data.firstName) {
+      columns.push('firstName');
+      values.push(data.firstName);
+    }
+    if (data.lastName) {
+      columns.push('lastName');
+      values.push(data.lastName);
+    }
+    if (data.profileImage) {
+      columns.push('profileImage');
+      values.push(data.profileImage);
+    }
+    if (data.password) {
+      columns.push('password');
+      values.push(data.password);
+    }
+    if (data.email) {
+      columns.push('email');
+      values.push(data.email);
+    }
+    if (data.mobileNumber) {
+      columns.push('mobileNumber');
+      values.push(data.mobileNumber);
+    }
+    if (data.genderId) {
+      columns.push('genderId');
+      values.push(data.genderId);
+    }
+    if (data.birthday) {
+      columns.push('birthday');
+      values.push(new Date(data.birthday));
+    }
+
+    if (data.userType) {
+      columns.push('userType');
+      values.push(AvailableRoles.User);
+    } else {
+      columns.push('userType');
+      values.push(AvailableRoles.User);
+    }
+
+    return { columns, values };
   }
 }

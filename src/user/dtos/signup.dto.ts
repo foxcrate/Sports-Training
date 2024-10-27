@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { AvailableRoles } from 'src/auth/dtos/available-roles.dto';
 
 export class SignupUserDto {
   @ApiProperty()
@@ -17,4 +18,6 @@ export class SignupUserDto {
   genderId: number;
   @ApiProperty()
   birthday: Date;
+
+  userType: AvailableRoles;
 }

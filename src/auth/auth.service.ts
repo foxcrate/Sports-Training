@@ -27,6 +27,7 @@ import { ReturnUserDto } from 'src/user/dtos/return.dto';
 import * as admin from 'firebase-admin';
 import moment from 'moment';
 import { DecodedIdToken, UserRecord } from 'firebase-admin/auth';
+import { FIND_BY } from 'src/user/user-enums';
 
 @Injectable()
 export class AuthService {
@@ -70,22 +71,22 @@ export class AuthService {
 
   async createPassword(userId: number, password: string) {
     let hashedPassword = await this.globalService.hashPassword(password);
-    let theUser = await this.userRepository.getById(userId);
+    let theUser = await this.userRepository.findBy(FIND_BY.ID, userId);
 
-    await this.userRepository.updatePassword(userId, hashedPassword);
+    await this.userRepository.updateById(userId, { password: hashedPassword });
 
-    let updatedUser = await this.userRepository.getById(theUser.id);
+    let updatedUser = await this.userRepository.findBy(FIND_BY.ID, theUser.id);
 
     return updatedUser;
   }
 
   async changePassword(userId: number, password: string) {
     let hashedPassword = await this.globalService.hashPassword(password);
-    let theUser = await this.userRepository.getById(userId);
+    let theUser = await this.userRepository.findBy(FIND_BY.ID, userId);
 
-    await this.userRepository.updatePassword(userId, hashedPassword);
+    await this.userRepository.updateById(userId, { password: hashedPassword });
 
-    let updatedUser = await this.userRepository.getById(theUser.id);
+    let updatedUser = await this.userRepository.findBy(FIND_BY.ID, theUser.id);
 
     return updatedUser;
   }
@@ -109,7 +110,9 @@ export class AuthService {
     let userMobileNumber = await this.checkFirebaseOTP(data.token);
 
     //return token to user
-    return await this.userRepository.updateMobile(userId, userMobileNumber);
+    return await this.userRepository.updateById(userId, {
+      mobileNumber: userMobileNumber,
+    });
   }
 
   async verifyChildMobileOtp(data: VerifyOtpDto, req): Promise<AuthTokensDTO> {
@@ -117,7 +120,10 @@ export class AuthService {
     // await this.checkSavedOTP(data.mobileNumber, data.otp);
     let userMobileNumber = await this.checkFirebaseOTP(data.token);
 
-    let theUser = await this.userRepository.getByMobileNumber(userMobileNumber);
+    let theUser = await this.userRepository.findBy(
+      FIND_BY.MOBILE_NUMBER,
+      userMobileNumber,
+    );
 
     if (!theUser) {
       throw new NotFoundException(
@@ -145,7 +151,7 @@ export class AuthService {
     console.log('userMobileNumber:', userMobileNumber);
 
     //return token to user
-    let user = await this.userRepository.getByMobileNumber(userMobileNumber);
+    let user = await this.userRepository.findBy(FIND_BY.MOBILE_NUMBER, userMobileNumber);
 
     console.log('user:', user);
     if (!user) {

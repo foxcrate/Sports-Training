@@ -11,6 +11,7 @@ import { ReturnPlayerProfileWithUserAndSportsDto } from '../player-profile/dtos/
 import { PlayerProfileRepository } from '../player-profile/player-profile.repository';
 import { UserRepository } from 'src/user/user.repository';
 import { PlayerProfileService } from 'src/player-profile/player-profile.service';
+import { FIND_BY } from 'src/user/user-enums';
 
 @Injectable()
 export class ChildProfileService {
@@ -26,7 +27,7 @@ export class ChildProfileService {
     childId,
     userId,
   ): Promise<ReturnPlayerProfileDto> {
-    let child = await this.userRepository.getById(childId);
+    let child = await this.userRepository.findBy(FIND_BY.ID, childId);
 
     if (!child) {
       throw new NotFoundException(

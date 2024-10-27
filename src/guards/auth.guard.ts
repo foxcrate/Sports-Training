@@ -11,6 +11,7 @@ import { I18nContext, I18nService } from 'nestjs-i18n';
 import { IAuthToken } from 'src/auth/interfaces/auth-token.interface';
 import { UserRepository } from 'src/user/user.repository';
 import { USER_TYPES_ENUM } from 'src/global/enums';
+import { FIND_BY } from 'src/user/user-enums';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -49,7 +50,7 @@ export class AuthGuard implements CanActivate {
     request['authType'] = payload.authType;
 
     //Check if user exists
-    let user = await this.userRepository.getById(request['id']);
+    let user = await this.userRepository.findBy(FIND_BY.ID, request['id']);
     if (!user) {
       throw new UnauthorizedException(
         this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
@@ -111,7 +112,7 @@ export class AuthGuard implements CanActivate {
   }
 
   private async userAvailable(userId) {
-    let theUser = await this.userRepository.getById(userId);
+    let theUser = await this.userRepository.findBy(FIND_BY.ID, userId);
     if (!theUser) {
       return false;
     }

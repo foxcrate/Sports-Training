@@ -11,7 +11,8 @@ import { PlayerProfileRepository } from 'src/player-profile/player-profile.repos
 import { TrainerProfileRepository } from 'src/trainer-profile/trainer-profile.repository';
 import { UserRepository } from 'src/user/user.repository';
 import { UserInfoDto } from './dto/user-info.dto';
-import { FIND_BY } from 'src/trainer-profile/trainer-profile-enums';
+import { FIND_BY as trainerProfileFindBy } from 'src/trainer-profile/trainer-profile-enums';
+import { FIND_BY as userFindBy } from 'src/user/user-enums';
 
 @Injectable()
 export class HomeService {
@@ -65,7 +66,7 @@ export class HomeService {
     // get trainer packages for child
     let packages: any[] = await this.homeRepository.getPackages(userId);
 
-    let theUser = await this.userRepository.getById(userId);
+    let theUser = await this.userRepository.findBy(userFindBy.ID, userId);
     let theUserInfo: UserInfoDto = {
       id: theUser.id,
       firstName: theUser.firstName,
@@ -86,7 +87,7 @@ export class HomeService {
 
   async getTrainerHome(userId: number): Promise<TrainerHomeDto> {
     let trainerProfile = await this.tainerProfileRepository.findBy(
-      FIND_BY.USER_ID,
+      trainerProfileFindBy.USER_ID,
       userId,
     );
     // get sports fields
@@ -103,7 +104,7 @@ export class HomeService {
     let lastSessionsTrainees: any[] =
       await this.homeRepository.getLastSessionsTrainees(userId);
 
-    let theUser = await this.userRepository.getById(userId);
+    let theUser = await this.userRepository.findBy(userFindBy.ID, userId);
     let theUserInfo: UserInfoDto = {
       id: theUser.id,
       firstName: theUser.firstName,
@@ -131,7 +132,7 @@ export class HomeService {
       );
     }
 
-    let theUser = await this.userRepository.getById(userId);
+    let theUser = await this.userRepository.findBy(userFindBy.ID, userId);
     let theUserInfo: UserInfoDto = {
       id: theUser.id,
       firstName: theUser.firstName,
