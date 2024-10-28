@@ -160,7 +160,7 @@ export class UserRepository {
       LIMIT 1
     `;
 
-    console.log(query);
+    // console.log(query);
 
     let theUser = await this.prisma.$queryRawUnsafe(
       query,
@@ -286,7 +286,7 @@ export class UserRepository {
 
     if (data.userType) {
       columns.push('userType');
-      values.push(AvailableRoles.User);
+      values.push(data.userType);
     } else {
       columns.push('userType');
       values.push(AvailableRoles.User);

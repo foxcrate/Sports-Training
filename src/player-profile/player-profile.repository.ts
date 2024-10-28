@@ -76,14 +76,29 @@ export class PlayerProfileRepository {
       LIMIT 1
     `;
 
-    // console.log('in repo', playerProfile);
-
     if (!playerProfile[0]) {
       throw new NotFoundException(
         this.i18n.t(`errors.PLAYER_PROFILE_NOT_FOUND`, {
           lang: I18nContext.current().lang,
         }),
       );
+    }
+
+    return playerProfile[0];
+  }
+
+  async checkExistence(userId): Promise<ReturnPlayerProfileDto> {
+    // console.log('userId', userId);
+
+    let playerProfile = await this.prisma.$queryRaw`
+      SELECT *
+      FROM PlayerProfile
+      WHERE userId = ${userId}
+      LIMIT 1
+    `;
+
+    if (!playerProfile[0]) {
+      return null;
     }
 
     return playerProfile[0];
@@ -267,7 +282,8 @@ export class PlayerProfileRepository {
   }
 
   async createIfNotExist(userId): Promise<ReturnPlayerProfileDto> {
-    let foundedPlayerProfile = await this.getOneByUserId(userId);
+    // check existence
+    let foundedPlayerProfile = await this.checkExistence(userId);
 
     if (foundedPlayerProfile) {
       return foundedPlayerProfile;
