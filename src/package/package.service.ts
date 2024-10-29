@@ -20,6 +20,7 @@ import { ReturnPlayerProfileDto } from 'src/player-profile/dtos/return.dto';
 import { PACKAGE_STATUS } from 'src/global/enums';
 import { FieldRepository } from 'src/field/field.repository';
 import { FIND_BY } from 'src/trainer-profile/trainer-profile-enums';
+import { FIND_BY as playerProfileFindBy } from '../player-profile/player-profile-enums';
 
 @Injectable()
 export class PackageService {
@@ -177,8 +178,12 @@ export class PackageService {
       FIND_BY.ID,
       trainerProfileId,
     );
-    let thePlayerProfile =
-      await this.playerProfileRepository.getOneDetailedByUserId(userId);
+
+    let thePlayerProfile = await this.playerProfileRepository.getOneDetailedBy(
+      playerProfileFindBy.USER_ID,
+      userId,
+      { level: true, sports: true, user: true, region: true, packages: true },
+    );
 
     console.log('thePackage', thePackage);
     console.log('theTrainerProfile', theTrainerProfile);
@@ -257,8 +262,11 @@ export class PackageService {
   }
 
   private async validateBookPackage(userId: number, thePackage: PackageReturnDto) {
-    let thePlayerProfile =
-      await this.playerProfileRepository.getOneDetailedByUserId(userId);
+    let thePlayerProfile = await this.playerProfileRepository.getOneDetailedBy(
+      playerProfileFindBy.USER_ID,
+      userId,
+      { level: true, sports: true, user: true, region: true, packages: true },
+    );
 
     //check package current attendees < maxAttendees
     if (thePackage.currentAttendeesNumber >= thePackage.maxAttendees) {

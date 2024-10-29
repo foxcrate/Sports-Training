@@ -156,7 +156,7 @@ export class UserRepository {
       LEFT JOIN GenderTranslation
       ON GenderTranslation.genderId = Gender.id
       AND GenderTranslation.language = ?
-      WHERE ${whereColumn} = ?
+      WHERE User.${whereColumn} = ?
       LIMIT 1
     `;
 

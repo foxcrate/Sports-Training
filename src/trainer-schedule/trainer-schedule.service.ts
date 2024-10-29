@@ -25,6 +25,7 @@ import { PackageReturnDto } from 'src/package/dtos/package-return.dto';
 import { UserService } from 'src/user/user.service';
 import { PlayerProfileRepository } from 'src/player-profile/player-profile.repository';
 import { FIND_BY } from 'src/trainer-profile/trainer-profile-enums';
+import { FIND_BY as playerProfileFindBy } from '../player-profile/player-profile-enums';
 
 @Injectable()
 export class TrainerScheduleService {
@@ -266,7 +267,10 @@ export class TrainerScheduleService {
     await this.userService.validateParentChildRelation(userId, childId);
 
     //validate child has a profile
-    let childProfile = await this.playerProfileRepository.getOneByUserId(childId);
+    let childProfile = await this.playerProfileRepository.getOneBy(
+      playerProfileFindBy.USER_ID,
+      childId,
+    );
 
     if (!childProfile) {
       throw new BadRequestException(

@@ -8,6 +8,8 @@ import { ReturnPlayerProfileWithUserAndSportsDto } from './dtos/return-with-user
 import { RegionService } from 'src/region/region.service';
 import { PACKAGE_STATUS } from 'src/global/enums';
 import { I18nContext, I18nService } from 'nestjs-i18n';
+import { FIND_BY } from './player-profile-enums';
+import { PlayerProfileDetailedOptions } from './dtos/player-profile-detailed-options.dto';
 
 @Injectable()
 export class PlayerProfileRepository {
@@ -18,17 +20,33 @@ export class PlayerProfileRepository {
     private readonly i18n: I18nService,
   ) {}
 
-  async getOneById(playerProfileId): Promise<ReturnPlayerProfileDto> {
-    let playerProfile = await this.prisma.$queryRaw`
-      SELECT *
+  async getOneBy(column: FIND_BY, value: any): Promise<ReturnPlayerProfileDto> {
+    let query = `
+      SELECT
+      id,
+      levelId,
+      regionId,
+      userId,
+      createdAt
       FROM PlayerProfile
-      WHERE id = ${playerProfileId}
+      WHERE ${column} = ?
       LIMIT 1
     `;
+
+    let playerProfile = await this.prisma.$queryRawUnsafe(query, value);
+
+    if (!playerProfile[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.PLAYER_PROFILE_NOT_FOUND`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
     return playerProfile[0];
   }
 
-  async getOneDetailedById(
+  async getOneChildDetailedById(
     userId: number,
   ): Promise<ReturnPlayerProfileWithUserAndSportsDto> {
     let playerProfileWithSports = await this.prisma.$queryRaw`
@@ -66,27 +84,6 @@ export class PlayerProfileRepository {
     return playerProfileWithSports[0];
   }
 
-  async getOneByUserId(userId): Promise<ReturnPlayerProfileDto> {
-    // console.log('userId', userId);
-
-    let playerProfile = await this.prisma.$queryRaw`
-      SELECT *
-      FROM PlayerProfile
-      WHERE userId = ${userId}
-      LIMIT 1
-    `;
-
-    if (!playerProfile[0]) {
-      throw new NotFoundException(
-        this.i18n.t(`errors.PLAYER_PROFILE_NOT_FOUND`, {
-          lang: I18nContext.current().lang,
-        }),
-      );
-    }
-
-    return playerProfile[0];
-  }
-
   async checkExistence(userId): Promise<ReturnPlayerProfileDto> {
     // console.log('userId', userId);
 
@@ -104,129 +101,36 @@ export class PlayerProfileRepository {
     return playerProfile[0];
   }
 
-  async getOneDetailedByUserId(userId): Promise<ReturnPlayerProfileDto> {
-    let playerProfile = await this.getOneByUserId(userId);
+  async getOneDetailedBy(
+    column: FIND_BY,
+    value: any,
+    selectedColumns: PlayerProfileDetailedOptions,
+  ): Promise<ReturnPlayerProfileDto> {
+    if (selectedColumns == null) {
+      selectedColumns = {};
+    }
 
-    let playerProfileWithSports = await this.prisma.$queryRaw`
-    WITH UserDetails AS (
-      SELECT
-      User.id,
-      firstName,
-      lastName,
-      email,
-      profileImage,
-      mobileNumber,
-      birthday,
-      GenderTranslation.name AS gender
-      FROM User
-      LEFT JOIN Gender ON User.genderId = Gender.id
-      LEFT JOIN GenderTranslation
-      ON GenderTranslation.genderId = Gender.id
-      AND GenderTranslation.language = ${I18nContext.current().lang}
-      WHERE User.id = ${userId}
-    ),
-    UserPackages AS (
-      SELECT
-      CASE
-      WHEN COUNT(Package.id) = 0 THEN null
-      ELSE
-      JSON_ARRAYAGG(
-        JSON_OBJECT(
-          'id',Package.id,
-          'name', Package.name,
-          'description', Package.description,
-          'type', Package.type,
-          'price', Package.price,
-          'status', Package.status,
-          'numberOfSessions', Package.numberOfSessions,
-          'ExpirationDate', Package.ExpirationDate,
-          'currentAttendeesNumber', Package.currentAttendeesNumber,
-          'maxAttendees', Package.maxAttendees,
-          'minAttendees', Package.minAttendees,
-          'location', Region.name,
-          'sessionTaken', PlayerProfilePackages.sessionsTaken,
-          'trainerProfileId', Package.trainerProfileId,
-          'coachFirstName', User.firstName,
-          'coachLastName', User.lastName,
-          'profileImage', User.profileImage
-          )
-        )
-      END AS packages
-      FROM
-      PlayerProfilePackages
-      LEFT JOIN Package ON PlayerProfilePackages.packageId = Package.id
-      LEFT JOIN TrainerProfile ON Package.trainerProfileId = TrainerProfile.id
-      LEFT JOIN User ON TrainerProfile.userId = User.id
-      LEFT JOIN Field ON Package.fieldId = Field.id
-      LEFT JOIN Region ON Field.regionId = Region.id
-      WHERE playerProfileId = ${playerProfile.id}
-       AND ( Package.status = ${PACKAGE_STATUS.ACTIVE} OR Package.status = ${
-         PACKAGE_STATUS.PENDING
-       })
-    ),
-    playerProfileWithSports AS (
-      SELECT
-      pp.id AS id,
-      MAX(LevelTranslation.name) AS level,
-      CASE 
-      WHEN count(r.id) = 0 THEN null
-      ELSE
-      JSON_OBJECT(
-        'id',r.id,
-        'name', MAX(RegionTranslation.name)
-        )
-      END AS region,
-      pp.userId AS userId,
-      CASE 
-      WHEN COUNT(s.id ) = 0 THEN null
-      ELSE
-      JSON_ARRAYAGG(JSON_OBJECT(
-        'id',s.id,
-        'name', SportTranslation.name
-        )
-        ) 
-      END AS sports
-      FROM PlayerProfile AS pp
-      LEFT JOIN Level ON pp.levelId = Level.id
-      LEFT JOIN LevelTranslation ON LevelTranslation.levelId = Level.id
-      AND LevelTranslation.language = ${I18nContext.current().lang}
-      LEFT JOIN Region AS r ON pp.regionId = r.id
-      LEFT JOIN RegionTranslation AS RegionTranslation ON RegionTranslation.regionId = r.id
-      AND RegionTranslation.language = ${I18nContext.current().lang}
-      LEFT JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
-      LEFT JOIN Sport AS s ON pps.sportId = s.id
-      LEFT JOIN SportTranslation AS SportTranslation ON SportTranslation.sportId = s.id
-      AND SportTranslation.language = ${I18nContext.current().lang}
-      WHERE pp.userId = ${userId}
-      GROUP BY pp.id
-      LIMIT 1
-    )
-    SELECT
-      pps.id,
-      pps.level,
-      pps.region AS region,
-      pps.sports AS sports,
-      (SELECT * FROM UserPackages) AS packages,
-      JSON_ARRAYAGG(JSON_OBJECT(
-      'id',ud.id,
-      'firstName',ud.firstName,
-      'lastName', ud.lastName,
-      'email',ud.email,
-      'profileImage', ud.profileImage,
-      'mobileNudmber',ud.mobileNumber,
-      'gender', ud.gender,
-      'birthday',ud.birthday
-      )
-    ) AS user
-     FROM playerProfileWithSports AS pps
-    LEFT JOIN UserDetails AS ud
-    ON pps.userId = ud.id
-    GROUP BY pps.id
-    `;
-    return playerProfileWithSports[0];
+    const query = this.buildGetDetailedQuery(column, selectedColumns);
+
+    // console.log(query);
+
+    let playerProfile: any[];
+
+    if (selectedColumns.packages) {
+      playerProfile = await this.prisma.$queryRawUnsafe(
+        query,
+        selectedColumns.packages ? PACKAGE_STATUS.ACTIVE : '',
+        selectedColumns.packages ? PACKAGE_STATUS.PENDING : '',
+        value,
+      );
+    } else {
+      playerProfile = await this.prisma.$queryRawUnsafe(query, value);
+    }
+
+    return playerProfile[0];
   }
 
-  async getManyByUserIds(
+  async getManyChildrenByUserIds(
     usersIds: number[],
   ): Promise<ReturnPlayerProfileWithUserAndSportsDto[]> {
     let childProfileWithSports: ReturnPlayerProfileWithUserAndSportsDto[] = await this
@@ -272,13 +176,19 @@ export class PlayerProfileRepository {
     ${createData.regionId},
     ${userId})`;
 
-    let newPlayerProfile = await this.getOneByUserId(userId);
+    let newPlayerProfile = await this.getOneBy(FIND_BY.USER_ID, userId);
 
     if (createData.sports && createData.sports.length > 0) {
       await this.createProfileSports(createData.sports, newPlayerProfile.id);
     }
 
-    await this.getOneDetailedByUserId(newPlayerProfile.userId);
+    await this.getOneDetailedBy(FIND_BY.USER_ID, newPlayerProfile.userId, {
+      level: true,
+      sports: true,
+      user: true,
+      region: true,
+      packages: true,
+    });
   }
 
   async createIfNotExist(userId): Promise<ReturnPlayerProfileDto> {
@@ -295,10 +205,13 @@ export class PlayerProfileRepository {
       (${userId})
     `;
 
-    return await this.getOneByUserId(userId);
+    return await this.getOneBy(FIND_BY.USER_ID, userId);
   }
 
-  async setById(setData: PlayerProfileCreateDto, playerProfileId: number) {
+  async setById(
+    setData: Partial<PlayerProfileCreateDto>,
+    playerProfileId: number,
+  ): Promise<void> {
     if (setData.sports && setData.sports.length > 0) {
       await this.createProfileSports(setData.sports, playerProfileId);
     } else if (setData.sports && setData.sports.length == 0) {
@@ -306,41 +219,16 @@ export class PlayerProfileRepository {
     }
     delete setData.sports;
 
-    //check region existance
-    if (setData.regionId) {
-      await this.regionService.checkExistance(setData.regionId);
-    }
+    const { setClause, values } = this.buildUpdateQuery(setData);
 
-    if (Object.keys(setData).length >= 1) {
-      await this.prisma.$queryRaw`
-      UPDATE PlayerProfile
-      SET
-      ${setData.levelId ? Prisma.sql`levelId = ${setData.levelId}` : Prisma.empty}
-      ${setData.levelId && setData.regionId ? Prisma.sql`,` : Prisma.empty}
-      ${setData.regionId ? Prisma.sql`regionId = ${setData.regionId}` : Prisma.empty}
-      WHERE
-      id = ${playerProfileId};
-      `;
-    }
-  }
-
-  async updateById(createData: PlayerProfileCreateDto, playerProfileId: number) {
-    await this.prisma.$queryRaw`
+    if (setClause) {
+      const query = `
         UPDATE PlayerProfile
-        SET
-        levelId = ${createData.levelId},
-        regionId = ${createData.regionId}
-        WHERE
-        id = ${playerProfileId};
-      `;
+        SET ${setClause}
+        WHERE id = ?;
+    `;
 
-    //if sportsIds array is provided, insert them in PlayerProfileSports
-    //else do nothing
-
-    if (createData.sports && createData.sports.length > 0) {
-      await this.createProfileSports(createData.sports, playerProfileId);
-    } else if (createData.sports && createData.sports.length == 0) {
-      await this.deletePlayerSports(playerProfileId);
+      await this.prisma.$queryRawUnsafe(query, ...values, playerProfileId);
     }
   }
 
@@ -371,25 +259,161 @@ export class PlayerProfileRepository {
     await this.prisma.playerProfileSports.createMany({ data: profilesAndSports });
   }
 
-  async deleteByUserId(userId: number) {
-    await this.prisma.$queryRaw`
-    DELETE FROM
-    PlayerProfile
-    WHERE
-    userId = ${userId};
-  `;
+  async deleteBy(column: FIND_BY, value: any) {
+    let query = `
+      DELETE
+      FROM
+      PlayerProfile
+      WHERE ${column} = ?
+    `;
+
+    await this.prisma.$queryRawUnsafe(query, value);
   }
 
-  async deleteById(playerProfileId: number) {
-    //delete childProfileSports
-    await this.deletePlayerSports(playerProfileId);
+  private buildUpdateQuery(data: Partial<PlayerProfileCreateDto>): {
+    setClause: string;
+    values: any[];
+  } {
+    const setParts: string[] = [];
+    const values: any[] = [];
 
-    //delete
-    await this.prisma.$queryRaw`
-      DELETE FROM
-      PlayerProfile
-      WHERE
-      id = ${playerProfileId};
-  `;
+    if (data.levelId !== undefined) {
+      setParts.push('levelId = ?');
+      values.push(data.levelId);
+    }
+    if (data.regionId !== undefined) {
+      setParts.push('regionId = ?');
+      values.push(data.regionId);
+    }
+
+    return { setClause: setParts.join(', '), values };
+  }
+
+  private buildGetDetailedQuery(
+    column: string,
+    selectedColumns: PlayerProfileDetailedOptions,
+  ): string {
+    const selectColumns: string[] = ['pp.id AS id'];
+
+    if (selectedColumns.level) {
+      selectColumns.push('MAX(LevelTranslation.name) AS level');
+    }
+    if (selectedColumns.region) {
+      selectColumns.push(`
+        CASE WHEN COUNT(r.id) = 0 THEN null ELSE JSON_OBJECT(
+          'id', r.id, 
+          'name', MAX(RegionTranslation.name)
+        ) END AS region
+      `);
+    }
+    if (selectedColumns.sports) {
+      selectColumns.push(`
+        CASE WHEN COUNT(s.id) = 0 THEN null ELSE JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'id', s.id, 
+            'name', SportTranslation.name
+          )
+        ) END AS sports
+      `);
+    }
+    if (selectedColumns.packages) {
+      selectColumns.push(`
+        CASE WHEN COUNT(Package.id) = 0 THEN null ELSE JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'id', Package.id,
+            'name', Package.name,
+            'description', Package.description,
+            'type', Package.type,
+            'price', Package.price,
+            'status', Package.status,
+            'numberOfSessions', Package.numberOfSessions,
+            'ExpirationDate', Package.ExpirationDate,
+            'currentAttendeesNumber', Package.currentAttendeesNumber,
+            'maxAttendees', Package.maxAttendees,
+            'minAttendees', Package.minAttendees,
+            'location', coachRegion.name,
+            'sessionsTaken', PlayerProfilePackages.sessionsTaken,
+            'trainerProfileId', Package.trainerProfileId,
+            'coachFirstName', coachUser.firstName,
+            'coachLastName', coachUser.lastName,
+            'profileImage', coachUser.profileImage
+          )
+        ) END AS packages
+      `);
+    }
+    if (selectedColumns.user) {
+      selectColumns.push(`
+        JSON_OBJECT(
+          'id', u.id,
+          'firstName', u.firstName,
+          'lastName', u.lastName,
+          'email', u.email,
+          'profileImage', u.profileImage,
+          'mobileNumber', u.mobileNumber,
+          'gender', MAX(GenderTranslation.name),
+          'birthday', u.birthday
+        ) AS user
+      `);
+    }
+
+    const joins: string[] = [];
+
+    if (selectedColumns.level) {
+      joins.push(`
+        LEFT JOIN Level ON pp.levelId = Level.id
+        LEFT JOIN LevelTranslation 
+          ON LevelTranslation.levelId = Level.id 
+          AND LevelTranslation.language = '${I18nContext.current().lang}'
+      `);
+    }
+
+    if (selectedColumns.region) {
+      joins.push(`
+        LEFT JOIN Region AS r ON pp.regionId = r.id
+        LEFT JOIN RegionTranslation 
+          ON RegionTranslation.regionId = r.id 
+          AND RegionTranslation.language = '${I18nContext.current().lang}'
+      `);
+    }
+
+    if (selectedColumns.sports) {
+      joins.push(`
+        LEFT JOIN PlayerProfileSports AS pps ON pp.id = pps.playerProfileId
+        LEFT JOIN Sport AS s ON pps.sportId = s.id
+        LEFT JOIN SportTranslation 
+          ON SportTranslation.sportId = s.id 
+          AND SportTranslation.language = '${I18nContext.current().lang}'
+      `);
+    }
+
+    if (selectedColumns.packages) {
+      joins.push(`
+        LEFT JOIN PlayerProfilePackages ON pp.id = PlayerProfilePackages.playerProfileId
+        LEFT JOIN Package ON PlayerProfilePackages.packageId = Package.id 
+          AND Package.status IN (?, ?)
+        LEFT JOIN TrainerProfile ON Package.trainerProfileId = TrainerProfile.id
+        LEFT JOIN User AS coachUser ON TrainerProfile.userId = coachUser.id
+        LEFT JOIN Field AS coachField ON Package.fieldId = coachField.id
+        LEFT JOIN Region AS coachRegion ON coachField.regionId = coachRegion.id
+      `);
+    }
+
+    if (selectedColumns.user) {
+      joins.push(`
+        LEFT JOIN User AS u ON pp.userId = u.id
+        LEFT JOIN Gender ON u.genderId = Gender.id
+        LEFT JOIN GenderTranslation 
+          ON GenderTranslation.genderId = Gender.id 
+          AND GenderTranslation.language = '${I18nContext.current().lang}'
+      `);
+    }
+
+    return `
+      SELECT ${selectColumns.join(', ')}
+      FROM PlayerProfile AS pp
+      ${joins.join(' ')}
+      WHERE pp.${column} = ?
+      GROUP BY pp.id;
+    `;
   }
 }

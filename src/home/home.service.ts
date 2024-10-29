@@ -13,6 +13,7 @@ import { UserRepository } from 'src/user/user.repository';
 import { UserInfoDto } from './dto/user-info.dto';
 import { FIND_BY as trainerProfileFindBy } from 'src/trainer-profile/trainer-profile-enums';
 import { FIND_BY as userFindBy } from 'src/user/user-enums';
+import { FIND_BY as playerProfileFindBy } from 'src/player-profile/player-profile-enums';
 
 @Injectable()
 export class HomeService {
@@ -42,7 +43,10 @@ export class HomeService {
   }
 
   async getPlayerHome(userId: number): Promise<PlayerHomeDto> {
-    let playerProfile = await this.playerProfileRepository.getOneByUserId(userId);
+    let playerProfile = await this.playerProfileRepository.getOneBy(
+      playerProfileFindBy.USER_ID,
+      userId,
+    );
     if (!playerProfile) {
       throw new BadRequestException(
         this.i18n.t(`errors.PLAYER_PROFILE_NOT_FOUND`, {
@@ -123,7 +127,10 @@ export class HomeService {
   }
 
   async getChildHome(userId: number): Promise<ChildHomeDto> {
-    let childProfile = await this.playerProfileRepository.getOneByUserId(userId);
+    let childProfile = await this.playerProfileRepository.getOneBy(
+      playerProfileFindBy.USER_ID,
+      userId,
+    );
     if (!childProfile) {
       throw new BadRequestException(
         this.i18n.t(`errors.PLAYER_PROFILE_NOT_FOUND`, {

@@ -32,6 +32,7 @@ import { RequestSlotChangeDto } from './dtos/request-slot-change.dto';
 import { TrainerScheduleRepository } from 'src/trainer-schedule/trainer-schedule.repository';
 import { PendingSessionDTO } from './dtos/pending-session.dto';
 import { FIND_BY } from 'src/trainer-profile/trainer-profile-enums';
+import { FIND_BY as playerProfileFindBy } from '../player-profile/player-profile-enums';
 
 @Injectable()
 export class SessionService {
@@ -48,7 +49,10 @@ export class SessionService {
 
   async playerRateTrainer(userId: number, reqBody: RateTrainerDto): Promise<boolean> {
     // throw an error if playerProfile don't exist
-    let thePlayerProfile = await this.playerProfileRepository.getOneByUserId(userId);
+    let thePlayerProfile = await this.playerProfileRepository.getOneBy(
+      playerProfileFindBy.USER_ID,
+      userId,
+    );
     if (!thePlayerProfile) {
       throw new NotFoundException(
         this.i18n.t(`errors.PLAYER_PROFILE_NOT_FOUND`, {
@@ -92,7 +96,8 @@ export class SessionService {
       reqBody.sessionId,
     );
 
-    let thePlayerProfile = await this.playerProfileRepository.getOneByUserId(
+    let thePlayerProfile = await this.playerProfileRepository.getOneBy(
+      playerProfileFindBy.USER_ID,
       theSession.userId,
     );
     if (!thePlayerProfile) {
@@ -178,7 +183,7 @@ export class SessionService {
     sessionId: number,
     reqBody: RequestSlotChangeDto,
   ) {
-    await this.playerProfileRepository.getOneByUserId(userId);
+    await this.playerProfileRepository.getOneBy(playerProfileFindBy.USER_ID, userId);
     await this.validateRequestChangeSlot(
       userId,
       sessionId,
