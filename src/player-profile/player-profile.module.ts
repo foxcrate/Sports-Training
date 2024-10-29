@@ -9,6 +9,6 @@ import { RegionModule } from 'src/region/region.module';
   controllers: [PlayerProfileController],
   providers: [PlayerProfileService, PlayerProfileRepository],
   imports: [SportModule, RegionModule],
-  exports: [PlayerProfileRepository],
+  exports: [PlayerProfileRepository, PlayerProfileService],
 })
 export class PlayerProfileModule {}

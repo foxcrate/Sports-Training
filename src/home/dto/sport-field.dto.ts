@@ -14,5 +14,8 @@ export class SportFieldDto {
   region: String;
 
   @ApiProperty()
-  sport: Number;
+  sportId: Number;
+
+  @ApiProperty()
+  sportName: String;
 }

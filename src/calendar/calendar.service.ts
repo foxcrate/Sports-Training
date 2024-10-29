@@ -12,7 +12,7 @@ import { SESSIONS_STATUSES_ENUM } from 'src/global/enums';
 @Injectable()
 export class CalendarService {
   private readonly toBeAddedMonths = 3;
-  private DEFAULT_LIMIT_MULTI_RESULTS = 10;
+  private DEFAULT_LIMIT_MULTI_RESULTS = 100;
 
   constructor(
     private CalendarRepository: CalendarRepository,
@@ -96,6 +96,8 @@ export class CalendarService {
     status: SESSIONS_STATUSES_ENUM,
     fieldId: number,
   ): Promise<DateSessionsResultDto> {
+    console.log('pageSize:', pageSize);
+
     if (date && !this.globalService.isValidDateFormat(date)) {
       throw new BadRequestException(
         this.i18n.t(`errors.WRONG_DATE_FORMAT`, { lang: I18nContext.current().lang }),

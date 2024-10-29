@@ -78,19 +78,19 @@ export class PlayerProfileRepository {
 
     // console.log('in repo', playerProfile);
 
+    if (!playerProfile[0]) {
+      throw new NotFoundException(
+        this.i18n.t(`errors.PLAYER_PROFILE_NOT_FOUND`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+
     return playerProfile[0];
   }
 
   async getOneDetailedByUserId(userId): Promise<ReturnPlayerProfileDto> {
     let playerProfile = await this.getOneByUserId(userId);
-    console.log('in getOneDetailedByUserId');
-
-    console.log({ playerProfile });
-    if (!playerProfile) {
-      throw new NotFoundException(
-        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
-      );
-    }
 
     let playerProfileWithSports = await this.prisma.$queryRaw`
     WITH UserDetails AS (

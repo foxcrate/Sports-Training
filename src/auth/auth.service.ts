@@ -2,7 +2,6 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
-  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
@@ -52,8 +51,21 @@ export class AuthService {
 
       const newUser = await this.userService.create(signupData);
 
+      // create default player profile
+      await this.userService.createDefaultPlayerProfile(newUser.id);
+
       return newUser;
     }
+  }
+
+  async verifySignupOTP(data: VerifyOtpDto, req): Promise<AuthTokensDTO> {
+    //account already saved
+    let userMobileNumber = await this.checkFirebaseOTP(data.token);
+
+    await this.userService.findRepeatedMobile(userMobileNumber);
+
+    //return token to user
+    return await this.signupUserAndReturnToken(userMobileNumber, req);
   }
 
   async createPassword(userId: number, password: string) {
@@ -87,58 +99,6 @@ export class AuthService {
       const newUser = await this.userService.completeSignup(userId, completeSignupData);
       return newUser;
     }
-  }
-
-  // async sendSignupOtp(mobileNumber: string) {
-  //   await this.userService.findRepeatedMobile(mobileNumber);
-
-  //   await this.saveOTP(mobileNumber, '1234');
-  //   //send otp
-  //   return 'OTP sent successfully';
-  // }
-
-  // async sendChangeMobileOtp(mobileNumber: string) {
-  //   await this.userService.findRepeatedMobile(mobileNumber);
-
-  //   await this.saveOTP(mobileNumber, '1234');
-  //   //send otp
-  //   return 'OTP sent successfully';
-  // }
-
-  // async sendMobileOtp(mobileNumber: string) {
-  //   let theUser = await this.userRepository.getByMobileNumber(mobileNumber);
-  //   if (!theUser) {
-  //     throw new NotFoundException(
-  //       this.i18n.t(`errors.USER_NOT_FOUND`, { lang: I18nContext.current().lang }),
-  //     );
-  //   }
-
-  //   await this.saveOTP(theUser.mobileNumber, '1234');
-  //   //send otp
-  //   return 'OTP sent successfully';
-  // }
-
-  // async sendForgetPasswordOtp(mobileNumber: string) {
-  //   await this.userService.findByMobile(mobileNumber);
-
-  //   await this.saveOTP(mobileNumber, '1234');
-  //   //send otp
-  //   return 'OTP sent successfully';
-  // }
-
-  async verifySignupOTP(data: VerifyOtpDto, req): Promise<AuthTokensDTO> {
-    //account already saved
-    let userMobileNumber = await this.checkFirebaseOTP(data.token);
-
-    await this.userService.findRepeatedMobile(userMobileNumber);
-
-    // //throw error if not passed
-    // await this.checkSavedOTP(data.mobileNumber, data.otp);
-
-    // await this.deletePastOTP(data.mobileNumber);
-
-    //return token to user
-    return await this.signupUserAndReturnToken(userMobileNumber, req);
   }
 
   async verifyChangeMobileOTP(data: VerifyOtpDto, userId: number) {
@@ -197,86 +157,18 @@ export class AuthService {
     return await this.generateNormalAndRefreshJWTToken(AvailableRoles.User, user.id, req);
   }
 
-  private async checkFirebaseOTP(firebaseToken: string): Promise<string> {
-    try {
-      // if (userFirebaseId === '01550307033') {
-      //   return true;
-      // }
-      const decodedToken: DecodedIdToken = await admin
-        .auth()
-        .verifyIdToken(firebaseToken, true);
-
-      const user: UserRecord = await admin.auth().getUser(decodedToken.uid);
-
-      console.log('firebaseUser: ', user);
-
-      const parsedDateTime = moment(user.metadata.lastSignInTime);
-      console.log('lastSignin: ', parsedDateTime);
-
-      const currentDateTime = moment();
-
-      console.log('current dataTime: ', currentDateTime);
-
-      const diffInMinutes = currentDateTime.diff(parsedDateTime, 'minutes');
-
-      console.log('diffInMinutes: ', diffInMinutes);
-
-      // if (diffInMinutes > 3) {
-      //   // throw new UnauthorizedException('Time expired for last otp');
-      //   throw new UnauthorizedException(
-      //     this.i18n.t(`errors.EXPIRED_FIREBASE_TOKEN_ERROR`, {
-      //       lang: I18nContext.current().lang,
-      //     }),
-      //   );
-      // }
-      return user.phoneNumber;
-    } catch (error: any) {
-      console.log('firebase error: ', error);
-
-      if (error instanceof UnauthorizedException) {
+  async userSignin(signinData: SigninUserDto, req): Promise<AuthTokensDTO> {
+    //administeration login for testing
+    if (signinData.mobileNumber[0] === '$') {
+      signinData.mobileNumber = signinData.mobileNumber.substring(1);
+      const user = await this.userService.findByMobile(signinData.mobileNumber);
+      if (!user.isActivated) {
         throw new UnauthorizedException(
-          this.i18n.t(`errors.EXPIRED_FIREBASE_TOKEN_ERROR`, {
+          this.i18n.t(`errors.ACCOUNT_NOT_ACTIVATED`, {
             lang: I18nContext.current().lang,
           }),
         );
       }
-      // else if (error.errorInfo.code === 'auth/user-not-found') {
-      //   throw new UnauthorizedException('User not found');
-      // } else if (error.errorInfo.code === 'auth/invalid-phone-number') {
-      //   throw new BadRequestException('Invalid phone number');
-      // }
-
-      throw new UnauthorizedException(
-        this.i18n.t(`errors.FIREBASE_TOKEN_ERROR`, {
-          lang: I18nContext.current().lang,
-        }),
-      );
-    }
-  }
-
-  private async signupUserAndReturnToken(
-    mobileNumber: string,
-    req,
-  ): Promise<AuthTokensDTO> {
-    let createdUser = await this.userService.createByMobile(mobileNumber);
-    return await this.generateNormalAndRefreshJWTToken(
-      AvailableRoles.User,
-      createdUser.id,
-      req,
-    );
-  }
-
-  async userSignin(signinData: SigninUserDto, req): Promise<AuthTokensDTO> {
-    const user = await this.userService.findByMobile(signinData.mobileNumber);
-
-    if (!user.isActivated) {
-      throw new UnauthorizedException(
-        this.i18n.t(`errors.ACCOUNT_NOT_ACTIVATED`, { lang: I18nContext.current().lang }),
-      );
-    }
-
-    //administeration password for testing
-    if (signinData.password === 'qweasd123') {
       if (user.userType == AvailableRoles.User) {
         return await this.generateNormalAndRefreshJWTToken(
           AvailableRoles.User,
@@ -296,6 +188,14 @@ export class AuthService {
           req,
         );
       }
+    }
+
+    const user = await this.userService.findByMobile(signinData.mobileNumber);
+
+    if (!user.isActivated) {
+      throw new UnauthorizedException(
+        this.i18n.t(`errors.ACCOUNT_NOT_ACTIVATED`, { lang: I18nContext.current().lang }),
+      );
     }
 
     if (!user.password) {
@@ -335,33 +235,6 @@ export class AuthService {
       );
     }
   }
-
-  // async childSignin(signinData: SigninUserDto, req): Promise<AuthTokensDTO> {
-  //   const child = await this.userService.findByMobile(signinData.mobileNumber);
-
-  //   if (!child.isActivated) {
-  //     throw new UnauthorizedException(
-  //       this.i18n.t(`errors.ACCOUNT_NOT_ACTIVATED`, { lang: I18nContext.current().lang }),
-  //     );
-  //   }
-
-  //   const validPassword = await this.globalService.verifyPassword(
-  //     signinData.password,
-  //     child.password,
-  //   );
-
-  //   if (!validPassword) {
-  //     throw new UnauthorizedException(
-  //       this.i18n.t(`errors.WRONG_CREDENTIALS`, { lang: I18nContext.current().lang }),
-  //     );
-  //   }
-
-  //   return await this.generateNormalAndRefreshJWTToken(
-  //     AvailableRoles.Child,
-  //     child.id,
-  //     req,
-  //   );
-  // }
 
   async refreshToken(refreshToken: string, req) {
     let payload: IAuthToken = this.verifyRefreshToken(refreshToken);
@@ -574,6 +447,79 @@ export class AuthService {
         this.i18n.t(`errors.APPLE_TOKEN_ERROR`, { lang: I18nContext.current().lang }),
       );
     }
+  }
+
+  private async checkFirebaseOTP(firebaseToken: string): Promise<string> {
+    try {
+      // if (userFirebaseId === '01550307033') {
+      //   return true;
+      // }
+      const decodedToken: DecodedIdToken = await admin
+        .auth()
+        .verifyIdToken(firebaseToken, true);
+
+      const user: UserRecord = await admin.auth().getUser(decodedToken.uid);
+
+      console.log('firebaseUser: ', user);
+
+      const parsedDateTime = moment(user.metadata.lastSignInTime);
+      console.log('lastSignin: ', parsedDateTime);
+
+      const currentDateTime = moment();
+
+      console.log('current dataTime: ', currentDateTime);
+
+      const diffInMinutes = currentDateTime.diff(parsedDateTime, 'minutes');
+
+      console.log('diffInMinutes: ', diffInMinutes);
+
+      // if (diffInMinutes > 3) {
+      //   // throw new UnauthorizedException('Time expired for last otp');
+      //   throw new UnauthorizedException(
+      //     this.i18n.t(`errors.EXPIRED_FIREBASE_TOKEN_ERROR`, {
+      //       lang: I18nContext.current().lang,
+      //     }),
+      //   );
+      // }
+      return user.phoneNumber;
+    } catch (error: any) {
+      console.log('firebase error: ', error);
+
+      if (error instanceof UnauthorizedException) {
+        throw new UnauthorizedException(
+          this.i18n.t(`errors.EXPIRED_FIREBASE_TOKEN_ERROR`, {
+            lang: I18nContext.current().lang,
+          }),
+        );
+      }
+      // else if (error.errorInfo.code === 'auth/user-not-found') {
+      //   throw new UnauthorizedException('User not found');
+      // } else if (error.errorInfo.code === 'auth/invalid-phone-number') {
+      //   throw new BadRequestException('Invalid phone number');
+      // }
+
+      throw new UnauthorizedException(
+        this.i18n.t(`errors.FIREBASE_TOKEN_ERROR`, {
+          lang: I18nContext.current().lang,
+        }),
+      );
+    }
+  }
+
+  private async signupUserAndReturnToken(
+    mobileNumber: string,
+    req,
+  ): Promise<AuthTokensDTO> {
+    let createdUser = await this.userService.createByMobile(mobileNumber);
+
+    // create default player profile
+    await this.userService.createDefaultPlayerProfile(createdUser.id);
+
+    return await this.generateNormalAndRefreshJWTToken(
+      AvailableRoles.User,
+      createdUser.id,
+      req,
+    );
   }
 
   private async key(kid) {

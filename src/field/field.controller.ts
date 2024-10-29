@@ -35,7 +35,6 @@ import { FieldCreateDto } from './dtos/create.dto';
 import { FieldReturnDto } from './dtos/return.dto';
 import { ReserveSlotDto } from 'src/doctor-clinic/dtos/reserve-slot.dto';
 import { FieldCardFormatDto } from './dtos/field-card-format.dto';
-import { RegionIdValidation } from './validations/regionId.validation';
 import { GetAllFilterDto } from './dtos/get-all-filter.dto';
 
 @Controller('field')

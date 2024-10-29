@@ -93,15 +93,16 @@ export class UserRepository {
     await this.prisma.$queryRaw`
         UPDATE User
         SET
-        firstName = ${data.firstName},
-        lastName = ${data.lastName},
-        email = ${data.email},
-        profileImage = ${data.profileImage},
-        birthday = ${new Date(data.birthday)}
+        firstName = IFNULL(${data.firstName},firstName),
+        lastName = IFNULL(${data.lastName},lastName),
+        email = IFNULL(${data.email},email),
+        profileImage = IFNULL(${data.profileImage},profileImage),
+        birthday = IFNULL(${data.birthday},birthday)
         WHERE
         id = ${userId};
       `;
   }
+  // birthday = ${new Date(data.birthday)}
 
   async completeSignup(userId: number, data: CompleteSignupUserDto) {
     //complete profile

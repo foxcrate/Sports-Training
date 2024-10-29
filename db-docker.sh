@@ -1,0 +1,1 @@
+docker run --name instaplay-mysql -p 8001:3306 -e MYSQL_ROOT_PASSWORD=MKASIWQ76AS12CAS -e MYSQL_USER=instaplay_dba -e MYSQL_PASSWORD=GpGw8s_3WQMhMNe6W -e MYSQL_DATABASE=instaplay_dev -v instaplay_db:/var/lib/mysql -d mysql:latest

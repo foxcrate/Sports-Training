@@ -5,20 +5,19 @@ import { GlobalService } from 'src/global/global.service';
 import {
   ACCEPTANCE_STATUSES_ENUM,
   RATEABLE_TYPES_ENUM,
+  SESSION_REQUEST_STATUSES_ENUM,
   SESSIONS_STATUSES_ENUM,
 } from 'src/global/enums';
 import moment from 'moment-timezone';
 import { SearchResultDto, SearchResultsDto } from './dto/search-result.dto';
 import { ReturnSportDto } from 'src/sport/dtos/return.dto';
-import { I18nContext, I18nService } from 'nestjs-i18n';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class HomeModel {
+export class HomeRepository {
   constructor(
     private prisma: PrismaService,
     private globalService: GlobalService,
-    private readonly i18n: I18nService,
     private configService: ConfigService,
   ) {}
 
@@ -620,7 +619,7 @@ export class HomeModel {
       AND
       TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.ACTIVE}
       AND
-      TrainerBookedSession.date > CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+      TrainerBookedSession.date > CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 8 DAY)
     `;
 
     console.log('trainerSessions:', trainerSessions);
@@ -677,6 +676,7 @@ export class HomeModel {
       FROM
       TrainerBookedSession
       LEFT JOIN TrainerProfile ON TrainerBookedSession.trainerProfileId = TrainerProfile.id
+      LEFT JOIN SessionRequest ON TrainerBookedSession.id = SessionRequest.trainerBookedSessionId
       LEFT JOIN User ON TrainerBookedSession.userId = User.id
       LEFT JOIN TrainerProfileSports ON TrainerProfileSports.trainerProfileId = TrainerProfile.id
       LEFT JOIN Sport ON TrainerProfileSports.sportId = Sport.id
@@ -688,7 +688,9 @@ export class HomeModel {
       AND
       TrainerBookedSession.status = ${SESSIONS_STATUSES_ENUM.NOT_ACTIVE}
       AND
-      TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 2 DAY)
+      SessionRequest.status = ${SESSION_REQUEST_STATUSES_ENUM.PENDING}
+      AND
+      TrainerBookedSession.date >= CURDATE() AND TrainerBookedSession.date < DATE_ADD(CURDATE(), INTERVAL 8 DAY)
     `;
 
     console.log('trainerSessions:', trainerSessions[0].sessions);
@@ -726,7 +728,8 @@ export class HomeModel {
       Field.name AS name,
       Field.profileImage AS profileImage,
       Region.name AS region,
-      Sport.name AS sport
+      Sport.name AS sportName,
+      Sport.id AS sportId
       FROM
       Field
       LEFT JOIN Sport ON Field.sportId = Sport.id
@@ -843,14 +846,3 @@ export class HomeModel {
     return playerFeedbacks[0].feedbacks;
   }
 }
-
-// ,
-//     trainerPackages AS (
-//       SELECT
-//       id
-//       Package
-//       WHERE
-//       trainerProfileId in (SELECT trainerProfileId FROM sportsTrainers)
-//     )
-// ,
-// (SELECT * FROM trainerPackages) AS trainerPackages

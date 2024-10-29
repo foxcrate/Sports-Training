@@ -235,23 +235,6 @@ export class SessionRepository {
     newSessionDate: string,
     newSlotId: number,
   ) {
-    //   await this.prisma.$queryRaw`
-    //   INSERT INTO SessionRequest
-    //   (
-    //     trainerBookedSessionId,
-    //     status,
-    //     type,
-    //     newSessionDate,
-    //     newSlotId
-    //   )
-    //   VALUES
-    // (
-    //   ${trainerBookedSessionId},
-    //   ${SESSION_REQUEST_STATUSES_ENUM.PENDING},
-    //   'change',
-    //   ${newSessionDate},
-    //   ${newSlotId},
-    // )`;
     await this.prisma.$queryRaw`
     UPDATE SessionRequest
     SET
@@ -261,6 +244,7 @@ export class SessionRepository {
     newSlotId = ${newSlotId}
     WHERE trainerBookedSessionId = ${trainerBookedSessionId};
     `;
+    return true;
   }
 
   async createTrainerBookedSession(
@@ -452,7 +436,7 @@ export class SessionRepository {
     });
 
     newPending = newPending.filter((session) => {
-      if (moment(`${session.date} ${session.slot.fromTime}`) > moment()) {
+      if (moment(`${session.date} ${session.slot.fromTime}`) >= moment()) {
         return session;
       }
     });
@@ -501,6 +485,7 @@ export class SessionRepository {
         END AS sports,
         Slot.fromTime AS fromTime,
         Slot.toTime AS toTime,
+        Slot.id AS slotId,
         tp.cost AS cost 
       FROM
         TrainerBookedSession tbs
@@ -550,6 +535,7 @@ export class SessionRepository {
         END AS sports,
         Slot.fromTime AS fromTime,
         Slot.toTime AS toTime,
+        Slot.id AS slotId,
         tp.cost AS cost 
       FROM
         TrainerBookedSession tbs
@@ -781,6 +767,8 @@ export class SessionRepository {
   }
 
   async getFieldTrainingSession(sessionId: number) {
+    console.log(I18nContext.current().lang);
+
     return this.prisma.$queryRaw`
       SELECT
         fbh.id AS fieldBookedHoursId,
@@ -790,7 +778,7 @@ export class SessionRepository {
         f.name AS name,
         f.profileImage AS profileImage,
         MAX(RegionTranslation.name) AS region,
-        SportTranslation.name AS sport,
+        MAX(SportTranslation.name) AS sport,
         f.slotDuration AS slotDuration,
         f.description AS description,
         f.cost AS cost 
