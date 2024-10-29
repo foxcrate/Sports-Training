@@ -11,6 +11,9 @@ import { PlayerProfileRepository } from 'src/player-profile/player-profile.repos
 import { TrainerProfileRepository } from 'src/trainer-profile/trainer-profile.repository';
 import { UserRepository } from 'src/user/user.repository';
 import { UserInfoDto } from './dto/user-info.dto';
+import { FIND_BY as trainerProfileFindBy } from 'src/trainer-profile/trainer-profile-enums';
+import { FIND_BY as userFindBy } from 'src/user/user-enums';
+import { FIND_BY as playerProfileFindBy } from 'src/player-profile/player-profile-enums';
 
 @Injectable()
 export class HomeService {
@@ -40,7 +43,10 @@ export class HomeService {
   }
 
   async getPlayerHome(userId: number): Promise<PlayerHomeDto> {
-    let playerProfile = await this.playerProfileRepository.getOneByUserId(userId);
+    let playerProfile = await this.playerProfileRepository.getOneBy(
+      playerProfileFindBy.USER_ID,
+      userId,
+    );
     if (!playerProfile) {
       throw new BadRequestException(
         this.i18n.t(`errors.PLAYER_PROFILE_NOT_FOUND`, {
@@ -64,7 +70,7 @@ export class HomeService {
     // get trainer packages for child
     let packages: any[] = await this.homeRepository.getPackages(userId);
 
-    let theUser = await this.userRepository.getById(userId);
+    let theUser = await this.userRepository.findBy(userFindBy.ID, userId);
     let theUserInfo: UserInfoDto = {
       id: theUser.id,
       firstName: theUser.firstName,
@@ -84,7 +90,10 @@ export class HomeService {
   }
 
   async getTrainerHome(userId: number): Promise<TrainerHomeDto> {
-    let trainerProfile = await this.tainerProfileRepository.getByUserId(userId);
+    let trainerProfile = await this.tainerProfileRepository.findBy(
+      trainerProfileFindBy.USER_ID,
+      userId,
+    );
     // get sports fields
     let sportsFields: any[] = await this.homeRepository.getSportsFields(userId);
 
@@ -99,7 +108,7 @@ export class HomeService {
     let lastSessionsTrainees: any[] =
       await this.homeRepository.getLastSessionsTrainees(userId);
 
-    let theUser = await this.userRepository.getById(userId);
+    let theUser = await this.userRepository.findBy(userFindBy.ID, userId);
     let theUserInfo: UserInfoDto = {
       id: theUser.id,
       firstName: theUser.firstName,
@@ -118,7 +127,10 @@ export class HomeService {
   }
 
   async getChildHome(userId: number): Promise<ChildHomeDto> {
-    let childProfile = await this.playerProfileRepository.getOneByUserId(userId);
+    let childProfile = await this.playerProfileRepository.getOneBy(
+      playerProfileFindBy.USER_ID,
+      userId,
+    );
     if (!childProfile) {
       throw new BadRequestException(
         this.i18n.t(`errors.PLAYER_PROFILE_NOT_FOUND`, {
@@ -127,7 +139,7 @@ export class HomeService {
       );
     }
 
-    let theUser = await this.userRepository.getById(userId);
+    let theUser = await this.userRepository.findBy(userFindBy.ID, userId);
     let theUserInfo: UserInfoDto = {
       id: theUser.id,
       firstName: theUser.firstName,

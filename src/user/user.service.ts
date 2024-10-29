@@ -7,11 +7,12 @@ import {
 } from '@nestjs/common';
 import { SignupUserDto } from 'src/user/dtos/signup.dto';
 import { ReturnUserDto } from './dtos/return.dto';
-import { NativeUserDto } from './dtos/native.dto';
 import { I18nContext, I18nService } from 'nestjs-i18n';
 import { CompleteSignupUserDto } from './dtos/complete-signup.dto';
 import { UserRepository } from './user.repository';
 import { PlayerProfileRepository } from 'src/player-profile/player-profile.repository';
+import { ADDITIONAL_SELECT_COLUMNS, FIND_BY as userFindBy } from './user-enums';
+import { FIND_BY as playerProfileFindBy } from '../player-profile/player-profile-enums';
 
 @Injectable()
 export class UserService {
@@ -24,42 +25,48 @@ export class UserService {
   async create(signupData: SignupUserDto): Promise<ReturnUserDto> {
     await this.userRepository.create(signupData);
 
-    let newUser = await this.userRepository.getByMobileNumber(signupData.mobileNumber);
+    let newUser = await this.userRepository.findBy(
+      userFindBy.MOBILE_NUMBER,
+      signupData.mobileNumber,
+    );
 
     return newUser;
   }
 
   async createByMobile(mobileNumber: string): Promise<ReturnUserDto> {
-    await this.userRepository.createByMobile(mobileNumber);
-    let createdUser = await this.userRepository.getByMobileNumber(mobileNumber);
+    await this.userRepository.create({ mobileNumber: mobileNumber });
+    let createdUser = await this.userRepository.findBy(
+      userFindBy.MOBILE_NUMBER,
+      mobileNumber,
+    );
     return createdUser;
   }
 
-  async getAll(): Promise<NativeUserDto[]> {
+  async getAll(): Promise<ReturnUserDto[]> {
     let allUsers = await this.userRepository.getAll();
     return allUsers;
   }
 
   async completeSignup(userId: number, completeSignupUserDto: CompleteSignupUserDto) {
-    let theUser = await this.userRepository.getById(userId);
+    let theUser = await this.userRepository.findBy(userFindBy.MOBILE_NUMBER, userId);
 
     //complete profile
     await this.userRepository.completeSignup(userId, completeSignupUserDto);
 
-    return await this.userRepository.getById(theUser.id);
+    return await this.userRepository.findBy(userFindBy.ID, theUser.id);
   }
 
   async update(reqBody, userId): Promise<ReturnUserDto> {
-    let user = await this.userRepository.getById(userId);
+    let user = await this.userRepository.findBy(userFindBy.ID, userId);
 
     //update
     await this.userRepository.updateById(userId, reqBody);
 
-    return await this.userRepository.getById(user.id);
+    return await this.userRepository.findBy(userFindBy.ID, user.id);
   }
 
   async getOne(userId): Promise<ReturnUserDto> {
-    let user = await this.userRepository.getById(userId);
+    let user = await this.userRepository.findBy(userFindBy.ID, userId);
 
     return user;
   }
@@ -73,7 +80,10 @@ export class UserService {
 
     await this.userRepository.createChild(reqBody, userId);
 
-    let newChild = await this.userRepository.getByMobileNumber(reqBody.mobileNumber);
+    let newChild = await this.userRepository.findBy(
+      userFindBy.MOBILE_NUMBER,
+      reqBody.mobileNumber,
+    );
 
     // create default player profile
     await this.createDefaultPlayerProfile(newChild.id);
@@ -98,7 +108,7 @@ export class UserService {
 
     await this.userRepository.updateById(child.id, reqBody);
 
-    let updatedChild = await this.userRepository.getById(child.id);
+    let updatedChild = await this.userRepository.findBy(userFindBy.ID, child.id);
 
     return updatedChild;
   }
@@ -106,11 +116,14 @@ export class UserService {
   async deleteChild(childId, userId): Promise<ReturnUserDto> {
     let child = await this.authorizeChildResource(userId, childId);
 
-    let childProfile = await this.playerProfileRepository.getOneByUserId(childId);
+    let childProfile = await this.playerProfileRepository.getOneBy(
+      playerProfileFindBy.USER_ID,
+      childId,
+    );
 
     Promise.all([
       await this.playerProfileRepository.deletePlayerSports(childProfile?.id),
-      await this.playerProfileRepository.deleteByUserId(childId),
+      await this.playerProfileRepository.deleteBy(playerProfileFindBy.USER_ID, childId),
       await this.userRepository.deleteChildRelations(childId),
     ]);
 
@@ -119,8 +132,17 @@ export class UserService {
     return child;
   }
 
-  async findByMobile(mobileNumber: string): Promise<NativeUserDto> {
-    let foundedAccount = await this.userRepository.getNativeByMobileNumber(mobileNumber);
+  async findByMobile(mobileNumber: string): Promise<ReturnUserDto> {
+    let foundedAccount = await this.userRepository.findBy(
+      userFindBy.MOBILE_NUMBER,
+      mobileNumber,
+      [
+        ADDITIONAL_SELECT_COLUMNS.PASSWORD,
+        ADDITIONAL_SELECT_COLUMNS.IS_ACTIVATED,
+        ADDITIONAL_SELECT_COLUMNS.IS_PHONE_VERIFIED,
+        ADDITIONAL_SELECT_COLUMNS.USER_TYPE,
+      ],
+    );
 
     if (!foundedAccount) {
       throw new UnauthorizedException(
@@ -143,7 +165,10 @@ export class UserService {
 
   async findRepeatedMobile(mobileNumber): Promise<boolean> {
     //Chick existed  phone number
-    let repeatedMobile = await this.userRepository.getByMobileNumber(mobileNumber);
+    let repeatedMobile = await this.userRepository.findBy(
+      userFindBy.MOBILE_NUMBER,
+      mobileNumber,
+    );
 
     if (repeatedMobile) {
       if (repeatedMobile.mobileNumber == mobileNumber) {
@@ -159,7 +184,7 @@ export class UserService {
 
   async findRepeatedEmail(email): Promise<boolean> {
     //Chick existed email or phone number
-    let repeatedEmail = await this.userRepository.getByEmail(email);
+    let repeatedEmail = await this.userRepository.findBy(userFindBy.EMAIL, email);
 
     if (repeatedEmail) {
       if (repeatedEmail.email == email) {
@@ -175,7 +200,7 @@ export class UserService {
 
   async validateParentChildRelation(parentId: number, childId: number): Promise<boolean> {
     //get child
-    let child = await this.userRepository.getById(childId);
+    let child = await this.userRepository.findBy(userFindBy.ID, childId);
     if (!child) {
       throw new NotFoundException(
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
@@ -196,7 +221,8 @@ export class UserService {
     childId: number,
   ): Promise<ReturnUserDto> {
     //get childProfile
-    let child = await this.userRepository.getById(childId);
+
+    let child = await this.userRepository.findBy(userFindBy.ID, childId);
     if (!child) {
       throw new NotFoundException(
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),

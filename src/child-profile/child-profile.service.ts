@@ -11,6 +11,8 @@ import { ReturnPlayerProfileWithUserAndSportsDto } from '../player-profile/dtos/
 import { PlayerProfileRepository } from '../player-profile/player-profile.repository';
 import { UserRepository } from 'src/user/user.repository';
 import { PlayerProfileService } from 'src/player-profile/player-profile.service';
+import { FIND_BY as userFindBy } from 'src/user/user-enums';
+import { FIND_BY as playerProfileFindBy } from 'src/player-profile/player-profile-enums';
 
 @Injectable()
 export class ChildProfileService {
@@ -26,7 +28,7 @@ export class ChildProfileService {
     childId,
     userId,
   ): Promise<ReturnPlayerProfileDto> {
-    let child = await this.userRepository.getById(childId);
+    let child = await this.userRepository.findBy(userFindBy.ID, childId);
 
     if (!child) {
       throw new NotFoundException(
@@ -44,7 +46,11 @@ export class ChildProfileService {
 
     await this.playerProfileService.set(createData, childId);
 
-    return await this.playerProfileRepository.getOneDetailedByUserId(childId);
+    return await this.playerProfileRepository.getOneDetailedBy(
+      playerProfileFindBy.USER_ID,
+      childId,
+      { level: true, sports: true, user: true, region: true, packages: true },
+    );
   }
 
   async update(
@@ -61,8 +67,12 @@ export class ChildProfileService {
       );
     }
 
-    await this.playerProfileRepository.updateById(createData, childProfile.id);
-    return await this.playerProfileRepository.getOneDetailedByUserId(childProfile.userId);
+    await this.playerProfileRepository.setById(createData, childProfile.id);
+    return await this.playerProfileRepository.getOneDetailedBy(
+      playerProfileFindBy.USER_ID,
+      childProfile.userId,
+      { level: true, sports: true, user: true, region: true, packages: true },
+    );
   }
 
   async delete(userId, childProfileId): Promise<ReturnPlayerProfileDto> {
@@ -70,9 +80,13 @@ export class ChildProfileService {
     await this.authorizeResource(userId, childProfileId);
 
     let deletedChildProfile: ReturnPlayerProfileDto =
-      await this.playerProfileRepository.getOneById(childProfileId);
+      await this.playerProfileRepository.getOneBy(playerProfileFindBy.ID, childProfileId);
 
-    await this.playerProfileRepository.deleteById(deletedChildProfile.id);
+    await this.playerProfileRepository.deletePlayerSports(deletedChildProfile.id);
+    await this.playerProfileRepository.deleteBy(
+      playerProfileFindBy.ID,
+      deletedChildProfile.id,
+    );
 
     return deletedChildProfile;
   }
@@ -86,7 +100,7 @@ export class ChildProfileService {
       return [];
     }
 
-    return await this.playerProfileRepository.getManyByUserIds(childsIds);
+    return await this.playerProfileRepository.getManyChildrenByUserIds(childsIds);
   }
 
   async getOne(userId, childProfileId): Promise<ReturnPlayerProfileWithUserAndSportsDto> {
@@ -95,11 +109,14 @@ export class ChildProfileService {
 
     //get childProfile
 
-    return await this.playerProfileRepository.getOneDetailedById(childProfile.id);
+    return await this.playerProfileRepository.getOneChildDetailedById(childProfile.id);
   }
 
   private async findRepeated(childId): Promise<boolean> {
-    let repeatedChildProfile = await this.playerProfileRepository.getOneByUserId(childId);
+    let repeatedChildProfile = await this.playerProfileRepository.getOneBy(
+      playerProfileFindBy.USER_ID,
+      childId,
+    );
 
     if (repeatedChildProfile) {
       throw new BadRequestException(
@@ -114,13 +131,11 @@ export class ChildProfileService {
     childProfileId: number,
   ): Promise<ReturnPlayerProfileDto> {
     //get childProfile
-    let childProfile = await this.playerProfileRepository.getOneById(childProfileId);
+    let childProfile = await this.playerProfileRepository.getOneBy(
+      playerProfileFindBy.ID,
+      childProfileId,
+    );
 
-    if (!childProfile) {
-      throw new NotFoundException(
-        this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
-      );
-    }
     let childId = childProfile.userId;
 
     //get current user childs

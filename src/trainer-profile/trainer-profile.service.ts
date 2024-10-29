@@ -6,6 +6,7 @@ import { TrainerProfileRepository } from './trainer-profile.repository';
 import { ReturnTrainerProfileDetailsDto } from './dtos/details-return.dto';
 import { TrainerScheduleRepository } from 'src/trainer-schedule/trainer-schedule.repository';
 import { PACKAGE_STATUS } from 'src/global/enums';
+import { FIND_BY } from './trainer-profile-enums';
 
 @Injectable()
 export class TrainerProfileService {
@@ -17,6 +18,8 @@ export class TrainerProfileService {
   ) {}
 
   async getOne(userId): Promise<ReturnTrainerProfileDetailsDto> {
+    // console.log('alo');
+
     let trainerProfileWithSports =
       await this.trainerProfileRepository.getOneDetailed(userId);
     if (!trainerProfileWithSports) {
@@ -29,7 +32,10 @@ export class TrainerProfileService {
   }
 
   async playerGetOne(trainerProfileId: number): Promise<ReturnTrainerProfileDetailsDto> {
-    let trainerProfile = await this.trainerProfileRepository.getByID(trainerProfileId);
+    let trainerProfile = await this.trainerProfileRepository.findBy(
+      FIND_BY.ID,
+      trainerProfileId,
+    );
     let trainerProfileWithSports = await this.trainerProfileRepository.getOneDetailed(
       trainerProfile.userId,
     );
@@ -72,7 +78,10 @@ export class TrainerProfileService {
     userId,
   ): Promise<ReturnTrainerProfileDetailsDto> {
     //check profile existence
-    let trainerProfile = await this.trainerProfileRepository.getByUserId(userId);
+    let trainerProfile = await this.trainerProfileRepository.findBy(
+      FIND_BY.USER_ID,
+      userId,
+    );
     if (!trainerProfile) {
       throw new NotFoundException(
         this.i18n.t(`errors.RECORD_NOT_FOUND`, { lang: I18nContext.current().lang }),
@@ -89,7 +98,10 @@ export class TrainerProfileService {
 
   async delete(userId): Promise<ReturnTrainerProfileDto> {
     //get deleted playerProfile
-    let deletedTrainerProfile = await this.trainerProfileRepository.getByUserId(userId);
+    let deletedTrainerProfile = await this.trainerProfileRepository.findBy(
+      FIND_BY.USER_ID,
+      userId,
+    );
 
     if (!deletedTrainerProfile) {
       throw new NotFoundException(
@@ -133,7 +145,10 @@ export class TrainerProfileService {
   }
 
   async addNotAvailableDays(userId: number, datesArray: string[]) {
-    let theTrainerProfile = await this.trainerProfileRepository.getByUserId(userId);
+    let theTrainerProfile = await this.trainerProfileRepository.findBy(
+      FIND_BY.USER_ID,
+      userId,
+    );
     return await this.trainerProfileRepository.insertNotAvailableDays(
       theTrainerProfile.id,
       datesArray,

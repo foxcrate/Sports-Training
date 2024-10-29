@@ -5,6 +5,6 @@ export class PlayerProfileCreateDto {
   levelId: Number;
   @ApiProperty()
   regionId: Number;
-  @ApiProperty()
+  @ApiProperty({ type: Number, isArray: true })
   sports: Number[];
 }

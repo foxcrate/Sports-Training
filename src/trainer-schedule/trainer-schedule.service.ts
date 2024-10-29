@@ -24,6 +24,8 @@ import { FieldRepository } from 'src/field/field.repository';
 import { PackageReturnDto } from 'src/package/dtos/package-return.dto';
 import { UserService } from 'src/user/user.service';
 import { PlayerProfileRepository } from 'src/player-profile/player-profile.repository';
+import { FIND_BY } from 'src/trainer-profile/trainer-profile-enums';
+import { FIND_BY as playerProfileFindBy } from '../player-profile/player-profile-enums';
 
 @Injectable()
 export class TrainerScheduleService {
@@ -41,7 +43,10 @@ export class TrainerScheduleService {
 
   async getAll(userId: number): Promise<ScheduleSlotsDetailsDTO[]> {
     //get user traienr profile
-    let trainerProfile = await this.trainerProfileRepository.getByUserId(userId);
+    let trainerProfile = await this.trainerProfileRepository.findBy(
+      FIND_BY.USER_ID,
+      userId,
+    );
 
     return await this.trainerScheduleRepository.getAll(trainerProfile.id);
   }
@@ -59,7 +64,10 @@ export class TrainerScheduleService {
     userId: number,
     reqBody: ScheduleCreateDto,
   ): Promise<ScheduleSlotsDetailsDTO> {
-    let trainerProfile = await this.trainerProfileRepository.getByUserId(userId);
+    let trainerProfile = await this.trainerProfileRepository.findBy(
+      FIND_BY.USER_ID,
+      userId,
+    );
 
     ///////// Temproray, Trainer has one schedule /////////
     let trainerSchedules = await this.getAll(trainerProfile.userId);
@@ -216,7 +224,10 @@ export class TrainerScheduleService {
       slotId,
     );
 
-    let theTrainerProfile = await this.trainerProfileRepository.getByID(trainerProfileId);
+    let theTrainerProfile = await this.trainerProfileRepository.findBy(
+      FIND_BY.ID,
+      trainerProfileId,
+    );
 
     await this.sessionRepository.createNewTrainerSessionRequest(trainerBookedSession.id);
 
@@ -256,7 +267,10 @@ export class TrainerScheduleService {
     await this.userService.validateParentChildRelation(userId, childId);
 
     //validate child has a profile
-    let childProfile = await this.playerProfileRepository.getOneByUserId(childId);
+    let childProfile = await this.playerProfileRepository.getOneBy(
+      playerProfileFindBy.USER_ID,
+      childId,
+    );
 
     if (!childProfile) {
       throw new BadRequestException(
@@ -275,7 +289,10 @@ export class TrainerScheduleService {
       slotId,
     );
 
-    let theTrainerProfile = await this.trainerProfileRepository.getByID(trainerProfileId);
+    let theTrainerProfile = await this.trainerProfileRepository.findBy(
+      FIND_BY.ID,
+      trainerProfileId,
+    );
 
     await this.sessionRepository.createNewTrainerSessionRequest(trainerBookedSession.id);
 
@@ -339,7 +356,10 @@ export class TrainerScheduleService {
     slotId: number,
   ): Promise<boolean> {
     let theSlot = await this.trainerScheduleRepository.getSlotById(slotId);
-    let theTrainerProfile = await this.trainerProfileRepository.getByID(trainerProfileId);
+    let theTrainerProfile = await this.trainerProfileRepository.findBy(
+      FIND_BY.ID,
+      trainerProfileId,
+    );
     let theSchedule = await this.trainerScheduleRepository.getByID(
       null,
       theSlot.scheduleId,
